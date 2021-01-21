@@ -1,0 +1,25 @@
+namespaces:
+- author:
+  - Ryan Ly
+  - Ben Dichter
+  - Alexander Mathis
+  contact:
+  - rly@lbl.gov
+  - bdichter@lbl.gov
+  - alexander.mathis@epfl.ch
+  doc: NWB extension to store pose estimation data
+  name: ndx-pose
+  schema:
+  - namespace: core
+    neurodata_types:
+    - ElectricalSeries
+    - TimeSeries
+    - NWBDataInterface
+    - NWBContainer
+  - namespace: hdmf-common
+    neurodata_types:
+    - DynamicTableRegion
+    - VectorData
+    - Data
+  - source: ndx-pose.extensions.yaml
+  version: 0.1.0
