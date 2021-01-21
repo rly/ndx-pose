@@ -100,7 +100,7 @@ def main():
             NWBDatasetSpec(
                 name='dimensions',
                 doc='Dimensions of each labeled video file.',
-                dtype='text',
+                dtype='uint8',
                 dims=['num_files', 'width, height'],
                 shape=[None, 2],
                 quantity='?',

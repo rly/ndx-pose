@@ -68,7 +68,7 @@ groups:
       of camera devices.
     quantity: '?'
   - name: dimensions
-    dtype: text
+    dtype: uint8
     dims:
     - num_files
     - width, height
