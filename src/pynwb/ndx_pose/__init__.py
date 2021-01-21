@@ -21,6 +21,4 @@ if not os.path.exists(ndx_pose_specpath):
 # Load the namespace
 load_namespaces(ndx_pose_specpath)
 
-# TODO: import your classes here or define your class using get_class to make
-# them accessible at the package level
-TetrodeSeries = get_class('TetrodeSeries', 'ndx-pose')
+from .pose import PoseEstimationSeries, PoseEstimation
