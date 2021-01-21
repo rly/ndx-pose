@@ -25,6 +25,7 @@ class TestPoseEstimationSeriesConstructor(TestCase):
             reference_frame='(0,0,0) corresponds to ...',
             timestamps=timestamps,
             confidence=confidence,
+            confidence_definition='Softmax output of the deep neural network.',
         )
 
         self.assertEqual(pes.name, 'front_left_paw')
@@ -34,6 +35,7 @@ class TestPoseEstimationSeriesConstructor(TestCase):
         self.assertEqual(pes.reference_frame, '(0,0,0) corresponds to ...')
         np.testing.assert_array_equal(pes.timestamps, timestamps)
         np.testing.assert_array_equal(pes.confidence, confidence)
+        self.assertEqual(pes.confidence_definition, 'Softmax output of the deep neural network.')
 
 
 class TestPoseEstimationConstructor(TestCase):
@@ -44,7 +46,6 @@ class TestPoseEstimationConstructor(TestCase):
             identifier='identifier',
             session_start_time=datetime.datetime.now(datetime.timezone.utc)
         )
-
         nwbfile.create_device(name='camera1')
         nwbfile.create_device(name='camera2')
 

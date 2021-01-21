@@ -10,23 +10,29 @@ class PoseEstimationSeries(TimeSeries):
     """
     """  # TODO
 
-    __nwbfields__ = ('reference_frame', 'confidence')
+    __nwbfields__ = ('reference_frame', 'confidence', 'confidence_definition')
 
-    @docval({'name': 'name', 'type': str, 'doc': ('')},  # required TODO
+    # custom mapper maps 'confidence' dataset > 'definition' attribute to 'confidence_definition' field here
+
+    # TODO fill in doc
+    @docval({'name': 'name', 'type': str, 'doc': ('')},  # required
             {'name': 'data', 'type': ('array_data', 'data', TimeSeries), 'shape': ((None, 2), (None, 3)),  # required
-             'doc': ('')},  # TODO
-            {'name': 'unit', 'type': str, 'doc': ('')},  # required TODO
+             'doc': ('')},
+            {'name': 'unit', 'type': str, 'doc': ('')},  # required
             {'name': 'reference_frame', 'type': str,   # required
              'doc': 'Description defining what the zero-position (0, 0) or (0, 0, 0) is.'},
-            {'name': 'confidence', 'type': ('array_data', 'data'), 'shape': (None, ), 'doc': ('')},  # required TODO
+            {'name': 'confidence', 'type': ('array_data', 'data'), 'shape': (None, ), 'doc': ('')},  # required
+            {'name': 'confidence_definition', 'type': str, 'doc': (''), 'default': None},
             *get_docval(TimeSeries.__init__, 'conversion', 'resolution', 'timestamps', 'starting_time', 'rate',
                         'comments', 'description', 'control', 'control_description'))
     def __init__(self, **kwargs):
         """Construct a new PoseEstimationSeries representing pose estimates for a particular body part."""
-        reference_frame, confidence = popargs('reference_frame', 'confidence', kwargs)
+        reference_frame, confidence, confidence_definition = popargs('reference_frame', 'confidence',
+                                                                     'confidence_definition', kwargs)
         call_docval_func(super().__init__, kwargs)
         self.reference_frame = reference_frame
         self.confidence = confidence
+        self.confidence_definition = confidence_definition
 
         # TODO SpatialSeries does not allow the 'unit' argument to be different from 'meters'. This needs to be updated
         # for the inheritance to work correctly here. In the meantime, just inherit from TimeSeries

@@ -50,7 +50,7 @@ def main():
                 shape=[None],
                 attributes=[
                     NWBAttributeSpec(
-                        name='description',
+                        name='definition',
                         dtype='text',
                         doc=("Description of how the confidence was computed, e.g., "
                              "'Softmax output of the deep neural network'."),

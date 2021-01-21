@@ -1,7 +1,17 @@
 from pynwb import register_map
+from pynwb.io.base import TimeSeriesMap
 from pynwb.io.core import NWBContainerMapper
 
-from ..pose import PoseEstimation
+from ..pose import PoseEstimation, PoseEstimationSeries
+
+
+@register_map(PoseEstimationSeries)
+class PoseEstimationSeriesMap(TimeSeriesMap):
+
+    def __init__(self, spec):
+        super().__init__(spec)
+        confidence_spec = self.spec.get_dataset('confidence')
+        self.map_spec('confidence_definition', confidence_spec.get_attribute('definition'))
 
 
 @register_map(PoseEstimation)

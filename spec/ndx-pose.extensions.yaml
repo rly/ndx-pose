@@ -33,7 +33,7 @@ groups:
     doc: Confidence or likelihood of the estimated positions, scaled to be between
       0 and 1.
     attributes:
-    - name: description
+    - name: definition
       dtype: text
       doc: Description of how the confidence was computed, e.g., 'Softmax output of
         the deep neural network'.
