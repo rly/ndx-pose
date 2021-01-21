@@ -12,14 +12,9 @@ namespaces:
   schema:
   - namespace: core
     neurodata_types:
-    - ElectricalSeries
+    - SpatialSeries
     - TimeSeries
     - NWBDataInterface
     - NWBContainer
-  - namespace: hdmf-common
-    neurodata_types:
-    - DynamicTableRegion
-    - VectorData
-    - Data
   - source: ndx-pose.extensions.yaml
   version: 0.1.0
