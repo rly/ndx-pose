@@ -21,4 +21,5 @@ if not os.path.exists(ndx_pose_specpath):
 # Load the namespace
 load_namespaces(ndx_pose_specpath)
 
+from . import io as __io
 from .pose import PoseEstimationSeries, PoseEstimation

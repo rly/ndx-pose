@@ -1,8 +1,9 @@
 from hdmf.utils import docval, popargs, get_docval, call_docval_func
 
-from pynwb import register_class, CORE_NAMESPACE, TimeSeries
+from pynwb import register_class, TimeSeries
 # from pynwb.behavior import SpatialSeries
 from pynwb.core import MultiContainerInterface
+from pynwb.device import Device
 
 
 @register_class('PoseEstimationSeries', 'ndx-pose')
@@ -43,16 +44,26 @@ class PoseEstimation(MultiContainerInterface):
     """
     """  # TODO
 
-    __clsconf__ = {
-        'add': 'add_pose_estimation_series',
-        'get': 'get_pose_estimation_series',
-        'create': 'create_pose_estimation_series',
-        'type': PoseEstimationSeries,
-        'attr': 'pose_estimation_series'
-    }
+    __clsconf__ = [
+        {
+            'add': 'add_pose_estimation_series',
+            'get': 'get_pose_estimation_series',
+            'create': 'create_pose_estimation_series',
+            'type': PoseEstimationSeries,
+            'attr': 'pose_estimation_series'
+        },
+        {
+            'add': 'add_device',
+            'get': 'get_devices',
+            'type': Device,
+            'attr': 'devices'
+            # TODO prevent these from being children / add better support for links
+            # may require update to HDMF to add a key 'child': False
+        }
+    ]
 
     __nwbfields__ = ('description', 'original_videos', 'labeled_videos', 'dimensions', 'scorer', 'source_software',
-                     'source_software_version', 'nodes', 'edges', 'camera')
+                     'source_software_version', 'nodes', 'edges')
 
     # custom mapper maps 'source_software' dataset > 'version' attribute to 'source_software_version' field here
 
@@ -71,7 +82,7 @@ class PoseEstimation(MultiContainerInterface):
             {'name': 'source_software_version', 'type': str, 'doc': (''), 'default': None},
             {'name': 'nodes', 'type': ('array_data', 'data'), 'doc': (''), 'default': None},
             {'name': 'edges', 'type': ('array_data', 'data'), 'doc': (''), 'default': None},
-            {'name': 'cameras', 'type': ('array_data', 'data'), 'doc': (''), 'default': None},
+            {'name': 'devices', 'type': ('array_data', 'data'), 'doc': (''), 'default': None},
             )
     def __init__(self, **kwargs):
         """
@@ -81,7 +92,7 @@ class PoseEstimation(MultiContainerInterface):
         dimensions, scorer = popargs('dimensions', 'scorer', kwargs)
         source_software, source_software_version = popargs('source_software', 'source_software_version', kwargs)
         nodes, edges = popargs('nodes', 'edges', kwargs)
-        cameras = popargs('cameras', kwargs)
+        devices = popargs('devices', kwargs)
         call_docval_func(super().__init__, kwargs)
         self.pose_estimation_series = pose_estimation_series
         self.description = description
@@ -93,9 +104,9 @@ class PoseEstimation(MultiContainerInterface):
         self.source_software_version = source_software_version
         self.nodes = nodes
         self.edges = edges
-        self.cameras = cameras
+        self.devices = devices
 
         # TODO include calibration images for 3D estimates?
 
-        # TODO validate lengths of original_videos, labeled_videos, dimensions, and cameras
+        # TODO validate lengths of original_videos, labeled_videos, dimensions, and devices
         # TODO validate nodes and edges correspondence, convert edges to uint
