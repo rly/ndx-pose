@@ -54,6 +54,56 @@ class TestPoseEstimationSeriesRoundtrip(TestCase):
             read_nwbfile = io.read()
             self.assertContainerEqual(pes, read_nwbfile.processing['behavior']['front_left_paw'])
 
+    def test_roundtrip_link_timestamps(self):
+        """
+        Test roundtrip of two PoseEstimationSeries where the timestamps of one links to the timestamps of the other.
+        """
+        data = np.random.rand(100, 3)  # num_frames x (x, y, z)
+        timestamps = np.linspace(0, 10, num=100)  # a timestamp for every frame
+        confidence = np.random.rand(100)  # a confidence value for every frame
+        front_left_paw = PoseEstimationSeries(
+            name='front_left_paw',
+            description='Marker placed around fingers of front left paw.',
+            data=data,
+            unit='pixels',
+            reference_frame='(0,0,0) corresponds to ...',
+            timestamps=timestamps,
+            confidence=confidence,
+            confidence_definition='Softmax output of the deep neural network.',
+        )
+
+        data = np.random.rand(100, 3)  # num_frames x (x, y, z)
+        timestamps = np.linspace(0, 10, num=100)  # a timestamp for every frame
+        confidence = np.random.rand(100)  # a confidence value for every frame
+        front_right_paw = PoseEstimationSeries(
+            name='front_right_paw',
+            description='Marker placed around fingers of front left paw.',
+            data=data,
+            unit='pixels',
+            reference_frame='(0,0,0) corresponds to ...',
+            timestamps=front_left_paw,  # link to timestamps of front_left_paw
+            confidence=confidence,
+            confidence_definition='Softmax output of the deep neural network.',
+        )
+
+        # ideally the PoseEstimationSeries is added to a PoseEstiamtion object but here, test just the series
+        behavior_pm = self.nwbfile.create_processing_module(
+            name='behavior',
+            description='processed behavioral data'
+        )
+        behavior_pm.add(front_left_paw)
+        behavior_pm.add(front_right_paw)
+
+        with NWBHDF5IO(self.path, mode='w') as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode='r', load_namespaces=True) as io:
+            read_nwbfile = io.read()
+            self.assertContainerEqual(front_left_paw, read_nwbfile.processing['behavior']['front_left_paw'])
+            self.assertContainerEqual(front_right_paw, read_nwbfile.processing['behavior']['front_right_paw'])
+            self.assertIs(read_nwbfile.processing['behavior']['front_left_paw'].timestamps,
+                          read_nwbfile.processing['behavior']['front_right_paw'].timestamps)
+
 
 class TestPoseEstimationSeriesRoundtripPyNWB(NWBH5IOMixin, TestCase):
     """Complex, more complete roundtrip test for PoseEstimationSeries using pynwb.testing infrastructure."""

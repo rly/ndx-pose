@@ -31,7 +31,7 @@ def create_series():
         data=data,
         unit='pixels',
         reference_frame='(0,0,0) corresponds to ...',
-        timestamps=timestamps,
+        timestamps=front_left_paw,  # link to timestamps of front_left_paw
         confidence=confidence,
         confidence_definition='Softmax output of the deep neural network.',
     )
