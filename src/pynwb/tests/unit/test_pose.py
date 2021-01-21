@@ -19,6 +19,7 @@ def create_series():
         reference_frame='(0,0,0) corresponds to ...',
         timestamps=timestamps,
         confidence=confidence,
+        confidence_definition='Softmax output of the deep neural network.',
     )
 
     data = np.random.rand(100, 2)  # num_frames x (x, y)
@@ -32,6 +33,7 @@ def create_series():
         reference_frame='(0,0,0) corresponds to ...',
         timestamps=timestamps,
         confidence=confidence,
+        confidence_definition='Softmax output of the deep neural network.',
     )
 
     return [front_left_paw, front_right_paw]

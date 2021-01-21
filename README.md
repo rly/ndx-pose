@@ -30,6 +30,7 @@ front_left_paw = PoseEstimationSeries(
     reference_frame='(0,0,0) corresponds to ...',
     timestamps=timestamps,
     confidence=confidence,
+    confidence_definition='Softmax output of the deep neural network.',
 )
 
 data = np.random.rand(100, 2)  # num_frames x (x, y)
@@ -43,6 +44,7 @@ front_right_paw = PoseEstimationSeries(
     reference_frame='(0,0,0) corresponds to ...',
     timestamps=timestamps,
     confidence=confidence,
+    confidence_definition='Softmax output of the deep neural network.',
 )
 
 pose_estimation_series = [front_left_paw, front_right_paw]
