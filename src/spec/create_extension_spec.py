@@ -144,14 +144,14 @@ def main():
                 quantity='?',
             ),
         ],
-        links=[
-            NWBLinkSpec(
-                name='camera',
-                target_type='Device',
-                doc='Camera(s) used to record the videos.',
-                quantity='*',
-            ),
-        ],
+        # TODO: collections of multiple links is currently buggy in PyNWB/HDMF
+        # links=[
+        #     NWBLinkSpec(
+        #         target_type='Device',
+        #         doc='Camera(s) used to record the videos.',
+        #         quantity='*',
+        #     ),
+        # ],
     )
 
     new_data_types = [pose_estimation_series, pose_estimation]
