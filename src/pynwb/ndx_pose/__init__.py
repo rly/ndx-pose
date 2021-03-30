@@ -23,3 +23,6 @@ load_namespaces(ndx_pose_specpath)
 
 from . import io as __io
 from .pose import PoseEstimationSeries, PoseEstimation
+
+PoseGroupingSeries = get_class("PoseGroupingSeries", "ndx-pose")
+AnimalIdentitySeries = get_class("AnimalIdentitySeries", "ndx-pose")
