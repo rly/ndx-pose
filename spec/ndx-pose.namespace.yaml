@@ -3,11 +3,13 @@ namespaces:
   - Ryan Ly
   - Ben Dichter
   - Alexander Mathis
+  - Talmo Pereira
   contact:
   - rly@lbl.gov
   - bdichter@lbl.gov
   - alexander.mathis@epfl.ch
-  doc: NWB extension to store pose estimation data
+  - talmo@princeton.edu
+  doc: NWB extension to store single or multi-animal pose tracking.
   name: ndx-pose
   schema:
   - namespace: core
@@ -17,4 +19,4 @@ namespaces:
     - NWBDataInterface
     - NWBContainer
   - source: ndx-pose.extensions.yaml
-  version: 0.1.0
+  version: 0.2.0

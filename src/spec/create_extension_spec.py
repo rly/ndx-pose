@@ -7,11 +7,11 @@ from pynwb.spec import export_spec, NWBAttributeSpec, NWBDatasetSpec, NWBGroupSp
 def main():
     # these arguments were auto-generated from your cookiecutter inputs
     ns_builder = NWBNamespaceBuilder(
-        doc='NWB extension to store pose estimation data',
+        doc='NWB extension to store single or multi-animal pose tracking.',
         name='ndx-pose',
-        version='0.1.0',
-        author=['Ryan Ly', 'Ben Dichter', 'Alexander Mathis'],
-        contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch'],
+        version='0.2.0',
+        author=['Ryan Ly', 'Ben Dichter', 'Alexander Mathis', 'Talmo Pereira'],
+        contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch', 'talmo@princeton.edu'],
     )
 
     ns_builder.include_type('SpatialSeries', namespace='core')
@@ -61,6 +61,77 @@ def main():
         ],
     )
 
+    pose_grouping_series = NWBGroupSpec(
+        neurodata_type_def='PoseGroupingSeries',
+        neurodata_type_inc='TimeSeries',
+        doc='Instance-level part grouping timeseries for the individual animal. This contains metadata of the part grouping procedure for multi-animal pose trackers.',
+        datasets=[
+            NWBDatasetSpec(
+                name='score',
+                doc='Score of the grouping approach that associated all of the keypoints to the same animal within the frame.',
+                dtype='float32',
+                dims=['num_frames'],
+                shape=[None],
+                attributes=[
+                    NWBAttributeSpec(
+                        name='definition',
+                        dtype='text',
+                        doc=("Description of how the score was computed, e.g., "
+                             "'Centroid localization score' or 'Part matching score'."),
+                        required=True,
+                    ),
+                ],
+            ),
+            NWBDatasetSpec(
+                name='location',
+                doc='Animal location for two-stage (top-down) multi-animal models, e.g., centroid or bounding box.',
+                dtype='float32',
+                dims=[['num_frames', 'x, y'], ['num_frames', 'x, y, z'], ['num_frames', 'x1, y1, x2, y2'], ['num_frames', 'x1, y1, z1, x2, y2, z2']],
+                shape=[[None, 2], [None, 3], [None, 4], [None, 6]],
+                attributes=[
+                    NWBAttributeSpec(
+                        name='definition',
+                        dtype='text',
+                        doc=("Description of the type of localization, e.g., "
+                             "'Centroid' or 'Bounding box'."),
+                        required=True,
+                    ),
+                ],
+            ),
+        ],
+    )
+
+
+    animal_identity_series = NWBGroupSpec(
+        neurodata_type_def='AnimalIdentitySeries',
+        neurodata_type_inc='TimeSeries',
+        doc='Identity of the animal predicted by a tracking or re-ID algorithm in multi-animal experiments.',
+        datasets=[
+            NWBDatasetSpec(
+                name='score',
+                doc='Score of the identity assignment approach that associated all of the keypoints to the same animal over frames.',
+                dtype='float32',
+                dims=['num_frames'],
+                shape=[None],
+                attributes=[
+                    NWBAttributeSpec(
+                        name='definition',
+                        dtype='text',
+                        doc=("Description of how the score was computed, e.g., "
+                             "'MOT tracking score' or 'ID classification probability'."),
+                        required=True,
+                    ),
+                ],
+            ),
+            NWBDatasetSpec(
+                name='name',
+                doc='Unique animal identifier, track label, or class name used to identify this animal in the experiment.',
+                dtype='text',
+                quantity='?',
+            ),
+        ],
+    )
+
     pose_estimation = NWBGroupSpec(
         neurodata_type_def='PoseEstimation',
         neurodata_type_inc='NWBDataInterface',
@@ -72,6 +143,16 @@ def main():
                 neurodata_type_inc='PoseEstimationSeries',
                 doc='Estimated position data for each body part.',
                 quantity='*',
+            ),
+            NWBGroupSpec(
+                neurodata_type_inc='PoseGroupingSeries',
+                doc='Part grouping metadata for the individual in multi-animal experiments.',
+                quantity='?',
+            ),
+            NWBGroupSpec(
+                neurodata_type_inc='AnimalIdentitySeries',
+                doc='Predicted identity of the individual in multi-animal experiments.',
+                quantity='?',
             ),
         ],
         datasets=[
@@ -154,7 +235,7 @@ def main():
         # ],
     )
 
-    new_data_types = [pose_estimation_series, pose_estimation]
+    new_data_types = [pose_estimation_series, pose_estimation, pose_grouping_series, animal_identity_series]
 
     # export the spec to yaml files in the spec folder
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'spec'))

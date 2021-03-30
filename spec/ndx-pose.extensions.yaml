@@ -115,3 +115,77 @@ groups:
   - neurodata_type_inc: PoseEstimationSeries
     doc: Estimated position data for each body part.
     quantity: '*'
+  - neurodata_type_inc: PoseGroupingSeries
+    doc: Part grouping metadata for the individual in multi-animal experiments.
+    quantity: '?'
+  - neurodata_type_inc: AnimalIdentitySeries
+    doc: Predicted identity of the individual in multi-animal experiments.
+    quantity: '?'
+- neurodata_type_def: PoseGroupingSeries
+  neurodata_type_inc: TimeSeries
+  doc: Instance-level part grouping timeseries for the individual animal. This contains
+    metadata of the part grouping procedure for multi-animal pose trackers.
+  datasets:
+  - name: score
+    dtype: float32
+    dims:
+    - num_frames
+    shape:
+    - null
+    doc: Score of the grouping approach that associated all of the keypoints to the
+      same animal within the frame.
+    attributes:
+    - name: definition
+      dtype: text
+      doc: Description of how the score was computed, e.g., 'Centroid localization
+        score' or 'Part matching score'.
+  - name: location
+    dtype: float32
+    dims:
+    - - num_frames
+      - x, y
+    - - num_frames
+      - x, y, z
+    - - num_frames
+      - x1, y1, x2, y2
+    - - num_frames
+      - x1, y1, z1, x2, y2, z2
+    shape:
+    - - null
+      - 2
+    - - null
+      - 3
+    - - null
+      - 4
+    - - null
+      - 6
+    doc: Animal location for two-stage (top-down) multi-animal models, e.g., centroid
+      or bounding box.
+    attributes:
+    - name: definition
+      dtype: text
+      doc: Description of the type of localization, e.g., 'Centroid' or 'Bounding
+        box'.
+- neurodata_type_def: AnimalIdentitySeries
+  neurodata_type_inc: TimeSeries
+  doc: Identity of the animal predicted by a tracking or re-ID algorithm in multi-animal
+    experiments.
+  datasets:
+  - name: score
+    dtype: float32
+    dims:
+    - num_frames
+    shape:
+    - null
+    doc: Score of the identity assignment approach that associated all of the keypoints
+      to the same animal over frames.
+    attributes:
+    - name: definition
+      dtype: text
+      doc: Description of how the score was computed, e.g., 'MOT tracking score' or
+        'ID classification probability'.
+  - name: name
+    dtype: text
+    doc: Unique animal identifier, track label, or class name used to identify this
+      animal in the experiment.
+    quantity: '?'
