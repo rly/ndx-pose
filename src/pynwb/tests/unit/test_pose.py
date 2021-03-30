@@ -4,10 +4,10 @@ import numpy as np
 from pynwb import NWBFile
 from pynwb.testing import TestCase
 
-from ndx_pose import PoseEstimationSeries, PoseEstimation
+from ndx_pose import PoseEstimationSeries, PoseEstimation, PoseGroupingSeries, AnimalIdentitySeries
 
 
-def create_series():
+def create_pose_series():
     data = np.random.rand(100, 3)  # num_frames x (x, y, z)
     timestamps = np.linspace(0, 10, num=100)  # a timestamp for every frame
     confidence = np.random.rand(100)  # a confidence value for every frame
@@ -81,7 +81,7 @@ class TestPoseEstimationConstructor(TestCase):
 
     def test_constructor(self):
         """Test that the constructor for PoseEstimation sets values as expected."""
-        pose_estimation_series = create_series()
+        pose_estimation_series = create_pose_series()
         pe = PoseEstimation(
             pose_estimation_series=pose_estimation_series,
             description='Estimated positions of front paws using DeepLabCut.',
@@ -112,3 +112,23 @@ class TestPoseEstimationConstructor(TestCase):
         # self.assertEqual(len(pe.devices), 2)
         # self.assertIs(pe.devices['camera1'], self.nwbfile.devices['camera1'])
         # self.assertIs(pe.devices['camera2'], self.nwbfile.devices['camera2'])
+
+
+class TestPoseGroupingSeriesConstructor(TestCase):
+
+    def test_constructor(self):
+        timestamps = np.linspace(0, 10, num=10)  # a timestamp for every frame
+        score = np.random.rand(10,)  # num_frames
+        location_ctr = np.random.rand(10, 2)  # location of animal for every frame
+
+        s = PoseGroupingSeries(
+            timestamps=timestamp,
+            score=score,
+            location=location_ctr,
+            location_definition='Centroid location of the animal.',
+        )
+
+        np.testing.assert_array_equal(s.timestamps, timestamp)
+        np.testing.assert_array_equal(s.score, score)
+        np.testing.assert_array_equal(s.location, location)
+        self.assertEqual(s.location_definition, 'Centroid location of the animal.')
