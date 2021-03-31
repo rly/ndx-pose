@@ -67,20 +67,16 @@ def main():
         doc='Instance-level part grouping timeseries for the individual animal. This contains metadata of the part grouping procedure for multi-animal pose trackers.',
         datasets=[
             NWBDatasetSpec(
-                name='score',
+                name='name',
+                doc="Description of the type of localization, e.g., 'Centroid' or 'Bounding box'.",
+                dtype='text'
+            ),
+            NWBDatasetSpec(
+                name='data',
                 doc='Score of the grouping approach that associated all of the keypoints to the same animal within the frame.',
                 dtype='float32',
                 dims=['num_frames'],
-                shape=[None],
-                attributes=[
-                    NWBAttributeSpec(
-                        name='definition',
-                        dtype='text',
-                        doc=("Description of how the score was computed, e.g., "
-                             "'Centroid localization score' or 'Part matching score'."),
-                        required=True,
-                    ),
-                ],
+                shape=[None]
             ),
             NWBDatasetSpec(
                 name='location',
@@ -88,15 +84,7 @@ def main():
                 dtype='float32',
                 dims=[['num_frames', 'x, y'], ['num_frames', 'x, y, z'], ['num_frames', 'x1, y1, x2, y2'], ['num_frames', 'x1, y1, z1, x2, y2, z2']],
                 shape=[[None, 2], [None, 3], [None, 4], [None, 6]],
-                attributes=[
-                    NWBAttributeSpec(
-                        name='definition',
-                        dtype='text',
-                        doc=("Description of the type of localization, e.g., "
-                             "'Centroid' or 'Bounding box'."),
-                        required=True,
-                    ),
-                ],
+                quantity="?"
             ),
         ],
     )
@@ -108,26 +96,16 @@ def main():
         doc='Identity of the animal predicted by a tracking or re-ID algorithm in multi-animal experiments.',
         datasets=[
             NWBDatasetSpec(
-                name='score',
-                doc='Score of the identity assignment approach that associated all of the keypoints to the same animal over frames.',
+                name='data',
+                doc='Score of the identity assignment approach that associated all of the keypoints to the same animal over frames, e.g., MOT tracking score or ID classification probability.',
                 dtype='float32',
                 dims=['num_frames'],
                 shape=[None],
-                attributes=[
-                    NWBAttributeSpec(
-                        name='definition',
-                        dtype='text',
-                        doc=("Description of how the score was computed, e.g., "
-                             "'MOT tracking score' or 'ID classification probability'."),
-                        required=True,
-                    ),
-                ],
             ),
             NWBDatasetSpec(
                 name='name',
                 doc='Unique animal identifier, track label, or class name used to identify this animal in the experiment.',
-                dtype='text',
-                quantity='?',
+                dtype='text'
             ),
         ],
     )

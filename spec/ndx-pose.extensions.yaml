@@ -126,7 +126,10 @@ groups:
   doc: Instance-level part grouping timeseries for the individual animal. This contains
     metadata of the part grouping procedure for multi-animal pose trackers.
   datasets:
-  - name: score
+  - name: name
+    dtype: text
+    doc: Description of the type of localization, e.g., 'Centroid' or 'Bounding box'.
+  - name: data
     dtype: float32
     dims:
     - num_frames
@@ -134,11 +137,6 @@ groups:
     - null
     doc: Score of the grouping approach that associated all of the keypoints to the
       same animal within the frame.
-    attributes:
-    - name: definition
-      dtype: text
-      doc: Description of how the score was computed, e.g., 'Centroid localization
-        score' or 'Part matching score'.
   - name: location
     dtype: float32
     dims:
@@ -161,31 +159,22 @@ groups:
       - 6
     doc: Animal location for two-stage (top-down) multi-animal models, e.g., centroid
       or bounding box.
-    attributes:
-    - name: definition
-      dtype: text
-      doc: Description of the type of localization, e.g., 'Centroid' or 'Bounding
-        box'.
+    quantity: '?'
 - neurodata_type_def: AnimalIdentitySeries
   neurodata_type_inc: TimeSeries
   doc: Identity of the animal predicted by a tracking or re-ID algorithm in multi-animal
     experiments.
   datasets:
-  - name: score
+  - name: data
     dtype: float32
     dims:
     - num_frames
     shape:
     - null
     doc: Score of the identity assignment approach that associated all of the keypoints
-      to the same animal over frames.
-    attributes:
-    - name: definition
-      dtype: text
-      doc: Description of how the score was computed, e.g., 'MOT tracking score' or
-        'ID classification probability'.
+      to the same animal over frames, e.g., MOT tracking score or ID classification
+      probability.
   - name: name
     dtype: text
     doc: Unique animal identifier, track label, or class name used to identify this
       animal in the experiment.
-    quantity: '?'

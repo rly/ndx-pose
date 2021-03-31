@@ -118,17 +118,106 @@ class TestPoseGroupingSeriesConstructor(TestCase):
 
     def test_constructor(self):
         timestamps = np.linspace(0, 10, num=10)  # a timestamp for every frame
+        centroid = np.random.rand(10, 2)  # location of animal for every frame
         score = np.random.rand(10,)  # num_frames
-        location_ctr = np.random.rand(10, 2)  # location of animal for every frame
 
         s = PoseGroupingSeries(
-            timestamps=timestamp,
-            score=score,
-            location=location_ctr,
-            location_definition='Centroid location of the animal.',
+            name="Centroid",
+            timestamps=timestamps,
+            data=score,
+            location=centroid,
+        )
+        self.assertEqual(s.name, "Centroid")
+        np.testing.assert_array_equal(s.timestamps, timestamps)
+        np.testing.assert_array_equal(s.data, score)
+        np.testing.assert_array_equal(s.location, centroid)
+
+        bbox = np.random.rand(10, 4)
+
+        s = PoseGroupingSeries(
+            name="Bounding box",
+            timestamps=timestamps,
+            data=score,
+            location=bbox,
+        )
+        self.assertEqual(s.name, "Bounding box")
+        np.testing.assert_array_equal(s.timestamps, timestamps)
+        np.testing.assert_array_equal(s.data, score)
+        np.testing.assert_array_equal(s.location, bbox)
+
+        s = PoseGroupingSeries(
+            name="PAF matching score",
+            timestamps=timestamps,
+            data=score,
+        )
+        self.assertEqual(s.name, "PAF matching score")
+        np.testing.assert_array_equal(s.timestamps, timestamps)
+        np.testing.assert_array_equal(s.data, score)
+
+
+class TestAnimalIdentitySeriesConstructor(TestCase):
+
+    def test_constructor(self):
+        timestamps = np.linspace(0, 10, num=10)  # a timestamp for every frame
+        score = np.random.rand(10,)  # num_frames
+
+        s = AnimalIdentitySeries(
+            name="Mouse1",
+            timestamps=timestamps,
+            data=score,
+        )
+        self.assertEqual(s.name, "Mouse1")
+        np.testing.assert_array_equal(s.timestamps, timestamps)
+        np.testing.assert_array_equal(s.data, score)
+
+
+
+class TestPoseEstimationMultiAnimalConstructor(TestCase):
+
+    def test_constructor(self):
+        """Test that the constructor for PoseEstimation sets values as expected."""
+        pose_estimation_series = create_pose_series()
+        n_frames = pose_estimation_series[0].data.shape[0]
+        pose_grouping_series = PoseGroupingSeries(
+            name="Centroid",
+            timestamps=pose_estimation_series[0].timestamps,
+            data=np.random.rand(n_frames),
+            location=np.random.rand(n_frames, 3),
+        )
+        animal_identity_series = AnimalIdentitySeries(
+            name="Mouse1",
+            timestamps=pose_estimation_series[0].timestamps,
+            data=np.random.rand(n_frames),
         )
 
-        np.testing.assert_array_equal(s.timestamps, timestamp)
-        np.testing.assert_array_equal(s.score, score)
-        np.testing.assert_array_equal(s.location, location)
-        self.assertEqual(s.location_definition, 'Centroid location of the animal.')
+        pe = PoseEstimation(
+            pose_estimation_series=pose_estimation_series,
+            pose_grouping_series=[pose_grouping_series],
+            animal_identity_series=[animal_identity_series],
+            description='Estimated positions of front paws using DeepLabCut.',
+            original_videos=['camera1.mp4', 'camera2.mp4'],
+            labeled_videos=['camera1_labeled.mp4', 'camera2_labeled.mp4'],
+            dimensions=[[640, 480], [1024, 768]],
+            scorer='DLC_resnet50_openfieldOct30shuffle1_1600',
+            source_software='DeepLabCut',
+            source_software_version='2.2b8',
+            nodes=['front_left_paw', 'front_right_paw'],
+            edges=[[0, 1]],
+            # devices=[self.nwbfile.devices['camera1'], self.nwbfile.devices['camera2']],
+        )
+
+        self.assertEqual(pe.name, 'PoseEstimation')
+        self.assertEqual(len(pe.pose_estimation_series), 2)
+        self.assertIs(pe.pose_estimation_series['front_left_paw'], pose_estimation_series[0])
+        self.assertIs(pe.pose_estimation_series['front_right_paw'], pose_estimation_series[1])
+        self.assertIs(pe.pose_grouping_series["Centroid"], pose_grouping_series)
+        self.assertIs(pe.animal_identity_series["Mouse1"], animal_identity_series)
+        self.assertEqual(pe.description, 'Estimated positions of front paws using DeepLabCut.')
+        self.assertEqual(pe.original_videos, ['camera1.mp4', 'camera2.mp4'])
+        self.assertEqual(pe.labeled_videos, ['camera1_labeled.mp4', 'camera2_labeled.mp4'])
+        self.assertEqual(pe.dimensions, [[640, 480], [1024, 768]])
+        self.assertEqual(pe.scorer, 'DLC_resnet50_openfieldOct30shuffle1_1600')
+        self.assertEqual(pe.source_software, 'DeepLabCut')
+        self.assertEqual(pe.source_software_version, '2.2b8')
+        self.assertEqual(pe.nodes, ['front_left_paw', 'front_right_paw'])
+        self.assertEqual(pe.edges, [[0, 1]])
