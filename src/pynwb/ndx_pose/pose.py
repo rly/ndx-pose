@@ -1,9 +1,13 @@
 from hdmf.utils import docval, popargs, get_docval, call_docval_func
 
-from pynwb import register_class, TimeSeries
+from pynwb import register_class, TimeSeries, get_class
 # from pynwb.behavior import SpatialSeries
 from pynwb.core import MultiContainerInterface
 from pynwb.device import Device
+
+
+PoseGroupingSeries = get_class("PoseGroupingSeries", "ndx-pose")
+AnimalIdentitySeries = get_class("AnimalIdentitySeries", "ndx-pose")
 
 
 @register_class('PoseEstimationSeries', 'ndx-pose')
@@ -53,6 +57,20 @@ class PoseEstimation(MultiContainerInterface):
             'attr': 'pose_estimation_series'
         },
         {
+            'add': 'add_pose_grouping_series',
+            'get': 'get_pose_grouping_series',
+            'create': 'create_pose_grouping_series',
+            'type': PoseGroupingSeries,
+            'attr': 'pose_grouping_series'
+        },
+        {
+            'add': 'add_animal_identity_series',
+            'get': 'get_animal_identity_series',
+            'create': 'create_animal_identity_series',
+            'type': AnimalIdentitySeries,
+            'attr': 'animal_identity_series'
+        },
+        {
             'add': 'add_device',
             'get': 'get_devices',
             'type': Device,
@@ -69,6 +87,8 @@ class PoseEstimation(MultiContainerInterface):
 
     # TODO fill in doc
     @docval({'name': 'pose_estimation_series', 'type': ('array_data', 'data'), 'doc': (''), 'default': None},
+            {'name': 'pose_grouping_series', 'type': ('array_data', 'data'), 'doc': (''), 'default': None},
+            {'name': 'animal_identity_series', 'type': ('array_data', 'data'), 'doc': (''), 'default': None},
             {'name': 'name', 'type': str, 'doc': (''), 'default': 'PoseEstimation'},
             {'name': 'description', 'type': str, 'doc': (''), 'default': None},
             {'name': 'original_videos', 'type': ('array_data', 'data'), 'shape': (None, ),
@@ -88,6 +108,8 @@ class PoseEstimation(MultiContainerInterface):
         """
         """  # TODO
         pose_estimation_series, description = popargs('pose_estimation_series', 'description', kwargs)
+        pose_grouping_series = popargs('pose_grouping_series', kwargs)
+        animal_identity_series = popargs('animal_identity_series', kwargs)
         original_videos, labeled_videos,  = popargs('original_videos', 'labeled_videos', kwargs)
         dimensions, scorer = popargs('dimensions', 'scorer', kwargs)
         source_software, source_software_version = popargs('source_software', 'source_software_version', kwargs)
@@ -95,6 +117,8 @@ class PoseEstimation(MultiContainerInterface):
         devices = popargs('devices', kwargs)
         call_docval_func(super().__init__, kwargs)
         self.pose_estimation_series = pose_estimation_series
+        self.pose_grouping_series = pose_grouping_series
+        self.animal_identity_series = animal_identity_series
         self.description = description
         self.original_videos = original_videos
         self.labeled_videos = labeled_videos

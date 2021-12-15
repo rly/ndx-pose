@@ -22,4 +22,4 @@ if not os.path.exists(ndx_pose_specpath):
 load_namespaces(ndx_pose_specpath)
 
 from . import io as __io
-from .pose import PoseEstimationSeries, PoseEstimation
+from .pose import PoseEstimationSeries, PoseEstimation, PoseGroupingSeries, AnimalIdentitySeries
