@@ -8,7 +8,7 @@ namespaces:
   - rly@lbl.gov
   - bdichter@lbl.gov
   - alexander.mathis@epfl.ch
-  - talmo@princeton.edu
+  - talmo@salk.edu
   doc: NWB extension to store single or multi-animal pose tracking.
   name: ndx-pose
   schema:
