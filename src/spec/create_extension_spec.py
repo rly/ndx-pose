@@ -15,9 +15,7 @@ def main():
     )
 
     ns_builder.include_type('SpatialSeries', namespace='core')
-    ns_builder.include_type('TimeSeries', namespace='core')
     ns_builder.include_type('NWBDataInterface', namespace='core')
-    ns_builder.include_type('NWBContainer', namespace='core')
 
     pose_estimation_series = NWBGroupSpec(
         neurodata_type_def='PoseEstimationSeries',
@@ -145,13 +143,13 @@ def main():
             ),
         ],
         # TODO: collections of multiple links is currently buggy in PyNWB/HDMF
-        # links=[
-        #     NWBLinkSpec(
-        #         target_type='Device',
-        #         doc='Camera(s) used to record the videos.',
-        #         quantity='*',
-        #     ),
-        # ],
+        links=[
+            NWBLinkSpec(
+                target_type='Device',
+                doc='Camera(s) used to record the videos.',
+                quantity='*',
+            ),
+        ],
     )
 
     new_data_types = [pose_estimation_series, pose_estimation]

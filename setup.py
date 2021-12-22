@@ -31,9 +31,11 @@ setup_args = {
     'url': '',
     'license': 'BSD 3-Clause',
     'install_requires': [
-        'pynwb>=1.3.0'
+        'pynwb>=1.5.0,<3',
+        'hdmf>=2.5.6,<4',
+        'hdmf-docutils>=0.4.4,<1'
     ],
-    'packages': find_packages('src/pynwb'),
+    'packages': find_packages('src/pynwb', exclude=["tests", "tests.*"]),
     'package_dir': {'': 'src/pynwb'},
     'package_data': {'ndx_pose': [
         'spec/ndx-pose.namespace.yaml',
@@ -42,6 +44,13 @@ setup_args = {
     'classifiers': [
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: BSD License"
+    ],
+    'keywords': [
+        'NeurodataWithoutBorders',
+        'NWB',
+        'nwb-extension',
+        'ndx-extension'
     ],
     'zip_safe': False
 }

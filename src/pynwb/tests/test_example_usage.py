@@ -10,6 +10,17 @@ def test_example_usage():
         session_start_time=datetime.datetime.now(datetime.timezone.utc)
     )
 
+    camera1 = nwbfile.create_device(
+        name='camera1',
+        description='left camera',
+        manufacturer='my manufacturer'
+    )
+    camera2 = nwbfile.create_device(
+        name='camera2',
+        description='right camera',
+        manufacturer='my manufacturer'
+    )
+
     data = np.random.rand(100, 3)  # num_frames x (x, y, z)
     timestamps = np.linspace(0, 10, num=100)  # a timestamp for every frame
     confidence = np.random.rand(100)  # a confidence value for every frame
@@ -45,13 +56,13 @@ def test_example_usage():
         description='Estimated positions of front paws using DeepLabCut.',
         original_videos=['camera1.mp4', 'camera2.mp4'],
         labeled_videos=['camera1_labeled.mp4', 'camera2_labeled.mp4'],
-        dimensions=[[640, 480], [1024, 768]],
+        dimensions=np.array([[640, 480], [1024, 768]], dtype='uint8'),
         scorer='DLC_resnet50_openfieldOct30shuffle1_1600',
         source_software='DeepLabCut',
         source_software_version='2.2b8',
         nodes=['front_left_paw', 'front_right_paw'],
-        edges=[[0, 1]],
-        # devices=[self.nwbfile.devices['camera1'], self.nwbfile.devices['camera2']],
+        edges=np.array([[0, 1]], dtype='uint8'),
+        devices=[camera1, camera2],
     )
 
     behavior_pm = nwbfile.create_processing_module(

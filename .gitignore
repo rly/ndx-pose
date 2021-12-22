@@ -1,8 +1,5 @@
 # generated docs
-docs/_build
 docs/source/_format_auto_docs
-docs/source/_static
-!docs/source/_static/theme_overrides.css
 
 # copied spec files
 src/pynwb/ndx_pose/spec/*.yaml

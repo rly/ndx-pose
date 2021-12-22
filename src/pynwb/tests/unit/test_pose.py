@@ -87,13 +87,13 @@ class TestPoseEstimationConstructor(TestCase):
             description='Estimated positions of front paws using DeepLabCut.',
             original_videos=['camera1.mp4', 'camera2.mp4'],
             labeled_videos=['camera1_labeled.mp4', 'camera2_labeled.mp4'],
-            dimensions=[[640, 480], [1024, 768]],
+            dimensions=np.array([[640, 480], [1024, 768]], dtype='uint8'),
             scorer='DLC_resnet50_openfieldOct30shuffle1_1600',
             source_software='DeepLabCut',
             source_software_version='2.2b8',
             nodes=['front_left_paw', 'front_right_paw'],
-            edges=[[0, 1]],
-            # devices=[self.nwbfile.devices['camera1'], self.nwbfile.devices['camera2']],
+            edges=np.array([[0, 1]], dtype='uint8'),
+            devices=[self.nwbfile.devices['camera1'], self.nwbfile.devices['camera2']],
         )
 
         self.assertEqual(pe.name, 'PoseEstimation')
@@ -103,12 +103,12 @@ class TestPoseEstimationConstructor(TestCase):
         self.assertEqual(pe.description, 'Estimated positions of front paws using DeepLabCut.')
         self.assertEqual(pe.original_videos, ['camera1.mp4', 'camera2.mp4'])
         self.assertEqual(pe.labeled_videos, ['camera1_labeled.mp4', 'camera2_labeled.mp4'])
-        self.assertEqual(pe.dimensions, [[640, 480], [1024, 768]])
+        np.testing.assert_array_equal(pe.dimensions, np.array([[640, 480], [1024, 768]], dtype='uint8'))
         self.assertEqual(pe.scorer, 'DLC_resnet50_openfieldOct30shuffle1_1600')
         self.assertEqual(pe.source_software, 'DeepLabCut')
         self.assertEqual(pe.source_software_version, '2.2b8')
         self.assertEqual(pe.nodes, ['front_left_paw', 'front_right_paw'])
-        self.assertEqual(pe.edges, [[0, 1]])
-        # self.assertEqual(len(pe.devices), 2)
-        # self.assertIs(pe.devices['camera1'], self.nwbfile.devices['camera1'])
-        # self.assertIs(pe.devices['camera2'], self.nwbfile.devices['camera2'])
+        np.testing.assert_array_equal(pe.edges, np.array([[0, 1]], dtype='uint8'))
+        self.assertEqual(len(pe.devices), 2)
+        self.assertIs(pe.devices['camera1'], self.nwbfile.devices['camera1'])
+        self.assertIs(pe.devices['camera2'], self.nwbfile.devices['camera2'])
