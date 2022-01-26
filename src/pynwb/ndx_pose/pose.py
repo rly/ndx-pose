@@ -60,14 +60,14 @@ class PoseEstimation(MultiContainerInterface):
             'type': PoseEstimationSeries,
             'attr': 'pose_estimation_series'
         },
-        {
-            'add': 'add_device',
-            'get': 'get_devices',
-            'type': Device,
-            'attr': 'devices'
-            # TODO prevent these from being children / add better support for links
-            # may require update to HDMF to add a key 'child': False
-        }
+        # {
+        #     'add': 'add_device',
+        #     'get': 'get_devices',
+        #     'type': Device,
+        #     'attr': 'devices'
+        #     # TODO prevent these from being children / add better support for links
+        #     # may require update to HDMF to add a key 'child': False
+        # }
     ]
 
     __nwbfields__ = ('description', 'original_videos', 'labeled_videos', 'dimensions', 'scorer', 'source_software',
