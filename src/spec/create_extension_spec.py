@@ -9,7 +9,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc='NWB extension to store pose estimation data',
         name='ndx-pose',
-        version='0.1.0',
+        version='0.1.1',
         author=['Ryan Ly', 'Ben Dichter', 'Alexander Mathis'],
         contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch'],
     )
@@ -157,6 +157,7 @@ def main():
     # export the spec to yaml files in the spec folder
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'spec'))
     export_spec(ns_builder, new_data_types, output_dir)
+    print('Spec files generated. Please make sure to rerun `pip install .` to load the changes.')
 
 
 if __name__ == "__main__":

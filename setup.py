@@ -22,7 +22,7 @@ except Exception:
 
 setup_args = {
     'name': 'ndx-pose',
-    'version': '0.1.0',
+    'version': '0.1.1',
     'description': 'NWB extension to store pose estimation data',
     'long_description': readme,
     'long_description_content_type': readme_type,
@@ -33,7 +33,6 @@ setup_args = {
     'install_requires': [
         'pynwb>=1.5.0,<3',
         'hdmf>=2.5.6,<4',
-        'hdmf-docutils>=0.4.4,<1'
     ],
     'packages': find_packages('src/pynwb', exclude=["tests", "tests.*"]),
     'package_dir': {'': 'src/pynwb'},

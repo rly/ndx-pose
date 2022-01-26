@@ -1,3 +1,5 @@
 # pinned dependencies to reproduce an entire development environment to run tests and check code style
 flake8==4.0.1
 pytest==6.2.5
+pytest-subtests==0.6.0
+hdmf-docutils==0.4.4
