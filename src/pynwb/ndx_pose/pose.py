@@ -113,9 +113,9 @@ class PoseEstimation(MultiContainerInterface):
          'doc': ("Array of pairs of indices corresponding to edges between nodes. Index values correspond to row "
                  "indices of the 'nodes' field. Index values use 0-indexing."),
          'default': None},
-        {'name': 'devices', 'type': ('array_data', 'data'),
-         'doc': ('Cameras used to record the videos.'),
-         'default': None},
+        # {'name': 'devices', 'type': ('array_data', 'data'),
+        #  'doc': ('Cameras used to record the videos.'),
+        #  'default': None},
         allow_positional=AllowPositional.ERROR
     )
     def __init__(self, **kwargs):
@@ -124,7 +124,7 @@ class PoseEstimation(MultiContainerInterface):
         dimensions, scorer = popargs('dimensions', 'scorer', kwargs)
         source_software, source_software_version = popargs('source_software', 'source_software_version', kwargs)
         nodes, edges = popargs('nodes', 'edges', kwargs)
-        devices = popargs('devices', kwargs)
+        # devices = popargs('devices', kwargs)
         call_docval_func(super().__init__, kwargs)
         self.pose_estimation_series = pose_estimation_series
         self.description = description
@@ -136,15 +136,15 @@ class PoseEstimation(MultiContainerInterface):
         self.source_software_version = source_software_version
         self.nodes = nodes
         self.edges = edges
-        self.devices = devices
+        # self.devices = devices
 
         # TODO include calibration images for 3D estimates?
 
-        if original_videos is not None and (devices is None or len(original_videos) != len(devices)):
-            raise ValueError("The number of original videos should equal the number of camera devices.")
-        if labeled_videos is not None and (devices is None or len(labeled_videos) != len(devices)):
-            raise ValueError("The number of labeled videos should equal the number of camera devices.")
-        if dimensions is not None and (devices is None or len(dimensions) != len(devices)):
-            raise ValueError("The number of dimensions should equal the number of camera devices.")
+        # if original_videos is not None and (devices is None or len(original_videos) != len(devices)):
+        #     raise ValueError("The number of original videos should equal the number of camera devices.")
+        # if labeled_videos is not None and (devices is None or len(labeled_videos) != len(devices)):
+        #     raise ValueError("The number of labeled videos should equal the number of camera devices.")
+        # if dimensions is not None and (devices is None or len(dimensions) != len(devices)):
+        #     raise ValueError("The number of dimensions should equal the number of camera devices.")
 
         # TODO validate nodes and edges correspondence, convert edges to uint
