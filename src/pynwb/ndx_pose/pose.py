@@ -76,7 +76,6 @@ class PoseEstimation(MultiContainerInterface):
     # custom mapper in ndx_pose.io.pose maps:
     # 'source_software' dataset -> 'version' attribute to 'source_software_version' field
 
-    # TODO fill in doc
     @docval(  # all fields optional
         {'name': 'pose_estimation_series', 'type': ('array_data', 'data'),
          'doc': ('Estimated position data for each body part.'),
