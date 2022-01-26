@@ -97,7 +97,7 @@ groups:
     - num_body_parts
     shape:
     - null
-    doc: Array of body part names corresponding to the names of the SpatialSeries
+    doc: Array of body part names corresponding to the names of the PoseEstimationSeries
       objects within this group.
     quantity: '?'
   - name: edges
@@ -117,5 +117,5 @@ groups:
     quantity: '*'
   links:
   - target_type: Device
-    doc: Camera(s) used to record the videos.
+    doc: Cameras used to record the videos.
     quantity: '*'

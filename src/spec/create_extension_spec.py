@@ -125,8 +125,8 @@ def main():
             ),
             NWBDatasetSpec(
                 name='nodes',
-                doc=('Array of body part names corresponding to the names of the SpatialSeries objects within this '
-                     'group.'),
+                doc=('Array of body part names corresponding to the names of the PoseEstimationSeries objects within '
+                     'this group.'),
                 dtype='text',
                 dims=['num_body_parts'],
                 shape=[None],
@@ -146,7 +146,7 @@ def main():
         links=[
             NWBLinkSpec(
                 target_type='Device',
-                doc='Camera(s) used to record the videos.',
+                doc='Cameras used to record the videos.',
                 quantity='*',
             ),
         ],
