@@ -194,42 +194,45 @@ class TestPoseEstimationRoundtrip(TestCase):
             self.assertContainerEqual(read_pe.devices['camera2'], self.nwbfile.devices['camera2'])
 
 
-class TestPoseEstimationRoundtripPyNWB(NWBH5IOMixin, TestCase):
-    """Complex, more complete roundtrip test for PoseEstimation using pynwb.testing infrastructure."""
+# NOTE it is recommended to add links to devices in the constructor of PoseEstimation. however,
+# the current execution flow of NWBH5IOMixin does not allow tests to create devices on the NWB file
+# prior to creating the container.
+# this may be cleaned up in a future version of PyNWB/HDMF.
 
-    def setUpContainer(self):
-        """ Return the test PoseEstimation to read/write """
-
-        pose_estimation_series = create_series()
-        pe = PoseEstimation(
-            pose_estimation_series=pose_estimation_series,
-            description='Estimated positions of front paws using DeepLabCut.',
-            original_videos=['camera1.mp4', 'camera2.mp4'],
-            labeled_videos=['camera1_labeled.mp4', 'camera2_labeled.mp4'],
-            dimensions=np.array([[640, 480], [1024, 768]], dtype='uint8'),
-            scorer='DLC_resnet50_openfieldOct30shuffle1_1600',
-            source_software='DeepLabCut',
-            source_software_version='2.2b8',
-            nodes=['front_left_paw', 'front_right_paw'],
-            edges=np.array([[0, 1]], dtype='uint8'),
-        )
-        return pe
-
-    def addContainer(self, nwbfile):
-        """ Add the test PoseEstimation to the given NWBFile """
-        self.camera1 = nwbfile.create_device(name='camera1')
-        self.camera2 = nwbfile.create_device(name='camera2')
-        self.container.devices = [self.camera1, self.camera2]
-        # due to the circular nature of NWBH5IOMixin, these devices have to be added to
-        # the nwb file here and then added to the container
-        # this may be cleaned up in a future version of PyNWB/HDMF
-
-        behavior_pm = nwbfile.create_processing_module(
-            name='behavior',
-            description='processed behavioral data'
-        )
-        behavior_pm.add(self.container)
-
-    def getContainer(self, nwbfile):
-        """ Return the test PoseEstimation from the given NWBFile """
-        return nwbfile.processing['behavior'][self.container.name]
+# class TestPoseEstimationRoundtripPyNWB(NWBH5IOMixin, TestCase):
+#     """Complex, more complete roundtrip test for PoseEstimation using pynwb.testing infrastructure."""
+#
+#
+#     def setUpContainer(self):
+#         """ Return the test PoseEstimation to read/write """
+#
+#         pose_estimation_series = create_series()
+#         pe = PoseEstimation(
+#             pose_estimation_series=pose_estimation_series,
+#             description='Estimated positions of front paws using DeepLabCut.',
+#             original_videos=['camera1.mp4', 'camera2.mp4'],
+#             labeled_videos=['camera1_labeled.mp4', 'camera2_labeled.mp4'],
+#             dimensions=np.array([[640, 480], [1024, 768]], dtype='uint8'),
+#             scorer='DLC_resnet50_openfieldOct30shuffle1_1600',
+#             source_software='DeepLabCut',
+#             source_software_version='2.2b8',
+#             nodes=['front_left_paw', 'front_right_paw'],
+#             edges=np.array([[0, 1]], dtype='uint8'),
+#             devices=[self.camera1, self.camera2]
+#         )
+#         return pe
+#
+#     def addContainer(self, nwbfile):
+#         """ Add the test PoseEstimation to the given NWBFile """
+#         # self.camera1 = nwbfile.create_device(name='camera1')
+#         # self.camera2 = nwbfile.create_device(name='camera2')
+#
+#         behavior_pm = nwbfile.create_processing_module(
+#             name='behavior',
+#             description='processed behavioral data'
+#         )
+#         behavior_pm.add(self.container)
+#
+#     def getContainer(self, nwbfile):
+#         """ Return the test PoseEstimation from the given NWBFile """
+#         return nwbfile.processing['behavior'][self.container.name]
