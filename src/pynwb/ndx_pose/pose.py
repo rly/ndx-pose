@@ -36,7 +36,7 @@ class PoseEstimationSeries(SpatialSeries):
          'default': None},
         *get_docval(TimeSeries.__init__, 'conversion', 'resolution', 'timestamps', 'starting_time', 'rate',
                     'comments', 'description', 'control', 'control_description'),
-        allow_positional=AllowPositional.WARNING
+        allow_positional=AllowPositional.ERROR
     )
     def __init__(self, **kwargs):
         """Construct a new PoseEstimationSeries representing pose estimates for a particular body part."""
@@ -116,7 +116,7 @@ class PoseEstimation(MultiContainerInterface):
         {'name': 'devices', 'type': ('array_data', 'data'),
          'doc': ('Cameras used to record the videos.'),
          'default': None},
-        allow_positional=AllowPositional.WARNING
+        allow_positional=AllowPositional.ERROR
     )
     def __init__(self, **kwargs):
         pose_estimation_series, description = popargs('pose_estimation_series', 'description', kwargs)
