@@ -1,10 +1,21 @@
 # ndx-pose Extension for NWB
 
-This is a work in progress and not yet ready for public usage.
+[![PyPI version](https://badge.fury.io/py/ndx-pose.svg)](https://badge.fury.io/py/ndx-pose)
+
+ndx-pose is a standardized format for storing pose estimation data in NWB. It was developed initially to store the
+output of [DeepLabCut](http://www.mackenziemathislab.org/deeplabcut) in NWB, but is also designed to store the output
+of general pose estimation tools. Please post an issue or PR to suggest or add support for your favorite pose 
+estimation tool.
+
+This extension consists of two new neurodata types:
+- `PoseEstimationSeries` which stores the estimated positions (x, y) or (x, y, z) of a body part over time as well as
+the confidence/likelihood of the estimated positions.
+- `PoseEstimation` which stores the estimated position data (`PoseEstimationSeries`) for multiple body parts,
+computed from the same video(s) with the same tool/algorithm.
 
 ## Installation
 
-TBD
+`pip install ndx-pose`
 
 ## Usage
 ```python
