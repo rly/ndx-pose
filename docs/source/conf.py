@@ -18,14 +18,14 @@
 # -- Project information -----------------------------------------------------
 
 project = 'ndx-pose'
-copyright = '2021, Ryan Ly, Ben Dichter, Alexander Mathis'
+copyright = '2021-2022, Ryan Ly, Ben Dichter, Alexander Mathis'
 author = 'Ryan Ly, Ben Dichter, Alexander Mathis'
 
 # The short X.Y version
 version = '0.1.0'
 
 # The full version, including alpha/beta/rc tags
-release = 'alpha'
+release = '0.1.0'
 
 
 # -- General configuration ---------------------------------------------------
