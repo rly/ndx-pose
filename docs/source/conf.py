@@ -18,14 +18,14 @@
 # -- Project information -----------------------------------------------------
 
 project = 'ndx-pose'
-copyright = '2021, Ryan Ly, Ben Dichter, Alexander Mathis'
+copyright = '2021-2022, Ryan Ly, Ben Dichter, Alexander Mathis'
 author = 'Ryan Ly, Ben Dichter, Alexander Mathis'
 
 # The short X.Y version
 version = '0.1.0'
 
 # The full version, including alpha/beta/rc tags
-release = 'alpha'
+release = '0.1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -68,9 +68,11 @@ html_theme = 'alabaster'
 html_static_path = ['_static']
 
 
-# -- Extension configuration -------------------------------------------------
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+}
 
-# -- Options for intersphinx extension ---------------------------------------
 ############################################################################
 #  CUSTOM CONFIGURATIONS ADDED BY THE NWB TOOL FOR GENERATING FORMAT DOCS
 ###########################################################################
@@ -79,7 +81,10 @@ import sphinx_rtd_theme  # noqa: E402
 import textwrap  # noqa: E402
 
 # -- Options for intersphinx  ---------------------------------------------
-intersphinx_mapping = {'core': ('https://nwb-schema.readthedocs.io/en/latest/', None)}
+intersphinx_mapping.update({
+    'core': ('https://nwb-schema.readthedocs.io/en/latest/', None),
+    'hdmf-common': ('https://hdmf-common-schema.readthedocs.io/en/latest/', None),
+})
 
 # -- Generate sources from YAML---------------------------------------------------
 # Always rebuild the source docs from YAML even if the folder with the source files already exists
@@ -102,8 +107,11 @@ def run_doc_autogen(_):
 
 def setup(app):
     app.connect('builder-inited', run_doc_autogen)
-    app.add_stylesheet("theme_overrides.css")  # overrides for wide tables in RTD theme
-
+    # overrides for wide tables in RTD theme
+    try:
+        app.add_css_file("theme_overrides.css")  # Used by newer Sphinx versions
+    except AttributeError:
+        app.add_stylesheet("theme_overrides.css")  # Used by older version of Sphinx
 
 # -- Customize sphinx settings
 numfig = True

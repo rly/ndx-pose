@@ -13,8 +13,6 @@ namespaces:
   - namespace: core
     neurodata_types:
     - SpatialSeries
-    - TimeSeries
     - NWBDataInterface
-    - NWBContainer
   - source: ndx-pose.extensions.yaml
   version: 0.1.0
