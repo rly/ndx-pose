@@ -115,3 +115,7 @@ groups:
   - neurodata_type_inc: PoseEstimationSeries
     doc: Estimated position data for each body part.
     quantity: '*'
+  links:
+  - target_type: Device
+    doc: Cameras used to record the videos.
+    quantity: '*'
