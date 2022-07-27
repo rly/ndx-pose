@@ -17,25 +17,6 @@ def main():
     ns_builder.include_type('SpatialSeries', namespace='core')
     ns_builder.include_type('NWBDataInterface', namespace='core')
 
-    identity = NWBGroupSpec(
-        neurodata_type_def='Identity',
-        neurodata_type_inc='NWBDataInterface',
-        doc='Group that holds identity for a unique Instance.',
-        default_name='Identity',
-        attributes=[
-            NWBAttributeSpec(
-                name='name',
-                doc='Unique name associated with the instance.',
-                dtype='text',
-            ),
-            NWBAttributeSpec(
-                name='description',
-                doc='Description of unique ID. What makes the instance unique?',
-                dtype='text',
-            ),
-        ],
-    )
-
     skeleton = NWBGroupSpec(
         neurodata_type_def='Skeleton',
         neurodata_type_inc='NWBDataInterface',
@@ -44,7 +25,7 @@ def main():
         attributes=[
             NWBAttributeSpec(
                 name='id',
-                doc='Unique id associated with the skeleton.',
+                doc='Unique ID associated with the skeleton.',
                 dtype='uint8',
             ),
         ],
@@ -56,6 +37,7 @@ def main():
                 dtype='text',
                 dims=['num_body_parts'],
                 shape=[None],
+                quantity=1,
             ),
             NWBDatasetSpec(
                 name='edges',
@@ -123,10 +105,12 @@ def main():
                 doc='Estimated position data for each body part.',
                 quantity='*',
             ),
-            NWBGroupSpec(
-                neurodata_type_inc='Skeleton',
+        ],
+        links=[
+            NWBLinkSpec(
                 doc='Layout of body part locations and connections.',
-                quantity='*',
+                target_type='Skeleton',
+                quantity=1
             ),
         ],
         datasets=[
@@ -199,7 +183,7 @@ def main():
         groups=[
             NWBGroupSpec(
                 neurodata_type_inc='Instance',
-                doc='Position data for all instances in a single training frame.',
+                doc='Position data for a single instance in a single training frame.',
                 quantity='*',
             ),
             NWBGroupSpec(
@@ -241,31 +225,39 @@ def main():
     instance = NWBGroupSpec(
         neurodata_type_def='Instance',
         neurodata_type_inc='NWBDataInterface',
-        doc=('Group that holds position data for single subject in a single frame, computed from the same '
-            'video with the same tool/algorithm.'),
+        doc='Group that holds ground-truth pose data for single subject in a single frame.',
         default_name='Instance',
+        links=[
+            NWBLinkSpec(
+                doc='Layout of body part locations and connections.',
+                target_type='Skeleton',
+                quantity=1
+            ),
+        ],
         attributes=[
             NWBAttributeSpec(
-                name='skeleton_id',
-                doc='ID of skeleton used.',
-                dtype='uint8',
-                required=True,
-            ),
-            NWBAttributeSpec(
-                name='instance_id',
+                name='id',
                 doc='ID used to differentiate instances.',
-                dtype='text',
+                dtype='uint8',
                 required=False,
             ),
         ],
         datasets=[
             NWBDatasetSpec(
                 name='node_locations',
-                doc=('Locations (x, y, visible) or (x, y, z, visible) of nodes for single instance in single frame.'),
+                doc=('Locations (x, y) or (x, y, z) of nodes for single instance in single frame.'),
                 dtype='float',
-                # XXX(LM): Should visibility be a part of this array?
-                dims=[['num_body_parts', 'x, y, visible'], ['num_body_parts', 'x, y, z, visible']],
-                shape=[[None, 3], [None, 4]],
+                dims=[['num_body_parts', 'x, y'], ['num_body_parts', 'x, y, z']],
+                shape=[[None, 2], [None, 3]],
+                quantity=1,
+            ),
+            NWBDatasetSpec(
+                name='node_visibility',
+                doc=('Markers for node visibility where true corresponds to a visible node and false corresponds to '
+                'an occluded node.'),
+                dtype='bool',
+                dims=['num_body_parts'],
+                shape=[None],
                 quantity='?',
             ),
         ],
@@ -279,12 +271,7 @@ def main():
         groups=[
             NWBGroupSpec(
                 neurodata_type_inc='Skeleton',
-                doc='Skeletons used in project where each skeleton corresponds to a unique morphology.',
-                quantity='*',
-            ),
-            NWBGroupSpec(
-                neurodata_type_inc='Identity',
-                doc='Unique identifier used to differentiate instances.',
+                doc='Skeleton used in project where each skeleton corresponds to a unique morphology.',
                 quantity='*',
             ),
             NWBGroupSpec(
@@ -295,7 +282,7 @@ def main():
         ],
     )
 
-    new_data_types = [skeleton, identity, pose_estimation_series, pose_estimation, training_frame, instance, pose_training]
+    new_data_types = [skeleton, pose_estimation_series, pose_estimation, training_frame, instance, pose_training]
 
     # export the spec to yaml files in the spec folder
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'spec'))
