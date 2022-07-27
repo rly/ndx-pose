@@ -3,10 +3,12 @@ namespaces:
   - Ryan Ly
   - Ben Dichter
   - Alexander Mathis
+  - Liezl Maree
   contact:
   - rly@lbl.gov
   - bdichter@lbl.gov
   - alexander.mathis@epfl.ch
+  - lmaree@salk.edu
   doc: NWB extension to store pose estimation data
   name: ndx-pose
   schema:
