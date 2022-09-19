@@ -32,6 +32,7 @@ groups:
     - null
     doc: Confidence or likelihood of the estimated positions, scaled to be between
       0 and 1.
+    quantity: '?'
     attributes:
     - name: definition
       dtype: text
