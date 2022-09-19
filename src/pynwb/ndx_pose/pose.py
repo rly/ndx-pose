@@ -23,8 +23,9 @@ class PoseEstimationSeries(SpatialSeries):
          'doc': ('Estimated position (x, y) or (x, y, z).')},
         {'name': 'reference_frame', 'type': str,   # required
          'doc': 'Description defining what the zero-position (0, 0) or (0, 0, 0) is.'},
-        {'name': 'confidence', 'type': ('array_data', 'data'), 'shape': (None, ),  # required
-         'doc': ('Confidence or likelihood of the estimated positions, scaled to be between 0 and 1.')},
+        {'name': 'confidence', 'type': ('array_data', 'data'), 'shape': (None, ), 
+         'doc': ('Confidence or likelihood of the estimated positions, scaled to be between 0 and 1.'),
+          'default': None,},
         {'name': 'unit', 'type': str,
          'doc': ("Base unit of measurement for working with the data. The default value "
                  "is 'pixels'. Actual stored values are not necessarily stored in these units. "
