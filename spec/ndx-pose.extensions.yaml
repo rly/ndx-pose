@@ -138,9 +138,10 @@ groups:
     required: false
   groups:
   - neurodata_type_inc: Instance
-    doc: Position data for a single instance in a single training frame.
+    doc: Position data for a single instance of a skeleton in a single training frame.
     quantity: '*'
   - name: source_video
+    neurodata_type_inc: ImageSeries
     doc: Path to original video file and frame used.
     quantity: '?'
     attributes:
@@ -155,7 +156,7 @@ groups:
   - name: source_frame
     neurodata_type_inc: Image
     doc: Image frame used for training (stored either internally or externally).
-    quantity: '1'
+    quantity: 1
 - neurodata_type_def: Instance
   neurodata_type_inc: NWBDataInterface
   default_name: Instance
@@ -178,7 +179,7 @@ groups:
       - 2
     - - null
       - 3
-    doc: Locations (x, y) or (x, y, z) of nodes for single instance in single frame.
+    doc: Locations (x, y) or (x, y, z) of nodes for single skeleton instance in single frame.
   - name: node_visibility
     dtype: bool
     dims:

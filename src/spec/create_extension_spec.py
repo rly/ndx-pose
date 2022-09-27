@@ -11,7 +11,7 @@ def main():
         name='ndx-pose',
         version='0.1.1',
         author=['Ryan Ly', 'Ben Dichter', 'Alexander Mathis', 'Liezl Maree', 'Chris Brozdowski'],
-        contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch', 'lmaree@salk.edu', 'cbroz@datajoint'],
+        contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch', 'lmaree@salk.edu', 'cbroz@datajoint.com'],
     )
 
     ns_builder.include_type('SpatialSeries', namespace='core')
