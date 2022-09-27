@@ -10,8 +10,8 @@ def main():
         doc='NWB extension to store pose estimation data',
         name='ndx-pose',
         version='0.1.1',
-        author=['Ryan Ly', 'Ben Dichter', 'Alexander Mathis', 'Liezl Maree'],
-        contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch', 'lmaree@salk.edu'],
+        author=['Ryan Ly', 'Ben Dichter', 'Alexander Mathis', 'Liezl Maree', 'Chris Brozdowski'],
+        contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch', 'lmaree@salk.edu', 'cbroz@datajoint'],
     )
 
     ns_builder.include_type('SpatialSeries', namespace='core')
@@ -26,7 +26,7 @@ def main():
             NWBAttributeSpec(
                 name='id',
                 doc='Unique ID associated with the skeleton.',
-                dtype='uint8',
+                dtype='text',
             ),
         ],
         datasets=[
@@ -178,12 +178,12 @@ def main():
     training_frame = NWBGroupSpec(
         neurodata_type_def='TrainingFrame',
         neurodata_type_inc='NWBDataInterface',
-        doc='Group that holds ground-truth position data for all instances in a single frame.',
+        doc='Group that holds ground-truth position data for all instances of a skeleton in a single frame.',
         default_name='TrainingFrame',
         groups=[
             NWBGroupSpec(
                 neurodata_type_inc='Instance',
-                doc='Position data for a single instance in a single training frame.',
+                doc='Position data for a single instance of a skeleton in a single training frame.',
                 quantity='*',
             ),
             NWBGroupSpec(
@@ -225,7 +225,7 @@ def main():
     instance = NWBGroupSpec(
         neurodata_type_def='Instance',
         neurodata_type_inc='NWBDataInterface',
-        doc='Group that holds ground-truth pose data for single subject in a single frame.',
+        doc='Group that holds ground-truth pose data for a single instance of a skeleton in a single frame.',
         default_name='Instance',
         links=[
             NWBLinkSpec(
@@ -237,7 +237,7 @@ def main():
         attributes=[
             NWBAttributeSpec(
                 name='id',
-                doc='ID used to differentiate instances.',
+                doc='ID used to differentiate skeleton instances.',
                 dtype='uint8',
                 required=False,
             ),

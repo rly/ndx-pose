@@ -6,7 +6,7 @@ groups:
     connections to one another.
   attributes:
   - name: id
-    dtype: uint8
+    dtype: text
     doc: Unique ID associated with the skeleton.
   datasets:
   - name: nodes
@@ -130,7 +130,7 @@ groups:
 - neurodata_type_def: TrainingFrame
   neurodata_type_inc: NWBDataInterface
   default_name: TrainingFrame
-  doc: Group that holds ground-truth position data for all instances in a single frame.
+  doc: Group that holds ground-truth position data for all instances of a skeleton in a single frame.
   attributes:
   - name: annotator
     dtype: text
