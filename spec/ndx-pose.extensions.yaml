@@ -146,18 +146,19 @@ groups:
     doc: Path to original video file and frame used.
     quantity: '?'
     attributes:
-    - name: path
-      dtype: text
-      doc: Path to original video file.
-      required: false
     - name: frame_index
       dtype: uint8
       doc: Frame index of TrainingFrame in original video file.
-      required: false
+      required: true
   - name: source_frame
-    neurodata_type_inc: Image
-    doc: Image frame used for training (stored either internally or externally).
+    neurodata_type_inc: Images
+    doc: Collection of images used for training (stored internally or externally).
     quantity: 1
+    attributes:
+    - name: images_index
+      dtype: uint8
+      doc: Index of TrainingFrame in collection of frames stored in Images.
+      required: true
 - neurodata_type_def: Instance
   neurodata_type_inc: NWBDataInterface
   default_name: Instance
