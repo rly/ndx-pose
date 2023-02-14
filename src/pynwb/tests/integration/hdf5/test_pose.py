@@ -170,7 +170,7 @@ class TestPoseEstimationRoundtrip(TestCase):
             source_software_version='2.2b8',
             nodes=['front_left_paw', 'front_right_paw'],
             edges=np.array([[0, 1]], dtype='uint8'),
-            # devices=[self.nwbfile.devices['camera1'], self.nwbfile.devices['camera2']],
+            devices=[self.nwbfile.devices['camera1'], self.nwbfile.devices['camera2']],
         )
 
         behavior_pm = self.nwbfile.create_processing_module(
@@ -189,9 +189,9 @@ class TestPoseEstimationRoundtrip(TestCase):
             self.assertEqual(len(read_pe.pose_estimation_series), 2)
             self.assertContainerEqual(read_pe.pose_estimation_series['front_left_paw'], pose_estimation_series[0])
             self.assertContainerEqual(read_pe.pose_estimation_series['front_right_paw'], pose_estimation_series[1])
-            # self.assertEqual(len(read_pe.devices), 2)
-            # self.assertContainerEqual(read_pe.devices['camera1'], self.nwbfile.devices['camera1'])
-            # self.assertContainerEqual(read_pe.devices['camera2'], self.nwbfile.devices['camera2'])
+            self.assertEqual(len(read_pe.devices), 2)
+            self.assertContainerEqual(read_pe.devices['camera1'], self.nwbfile.devices['camera1'])
+            self.assertContainerEqual(read_pe.devices['camera2'], self.nwbfile.devices['camera2'])
 
 
 # NOTE it is recommended to add links to devices in the constructor of PoseEstimation. however,

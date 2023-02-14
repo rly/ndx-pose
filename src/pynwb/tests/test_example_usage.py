@@ -62,7 +62,7 @@ def test_example_usage():
         source_software_version='2.2b8',
         nodes=['front_left_paw', 'front_right_paw'],
         edges=np.array([[0, 1]], dtype='uint8'),
-        # devices=[camera1, camera2],  # this is not yet supported
+        devices=[camera1, camera2],
     )
 
     behavior_pm = nwbfile.create_processing_module(
