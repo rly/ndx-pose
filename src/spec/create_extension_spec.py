@@ -69,8 +69,8 @@ def main():
         groups=[
             NWBGroupSpec(
                 neurodata_type_inc='PoseEstimationSeries',
-                doc=('Estimated position data for each body part. Deprecated in version 0.2.0. Use the "positions" '
-                     'group instead.'),
+                doc=('Estimated position data for each body part. Deprecated in version 0.2.0. Place the '
+                     'PoseEstimationSeries in the "pose_estimation_series" group instead.'),
                 quantity='*',
             ),
             NWBGroupSpec(

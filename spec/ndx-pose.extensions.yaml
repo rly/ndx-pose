@@ -118,7 +118,7 @@ groups:
   groups:
   - neurodata_type_inc: PoseEstimationSeries
     doc: Estimated position data for each body part. Deprecated in version 0.2.0.
-      Use the "positions" group instead.
+      Place the PoseEstimationSeries in the "pose_estimation_series" group instead.
     quantity: '*'
   - name: pose_estimation_series
     doc: Estimated position data for each body part.
