@@ -9,7 +9,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc='NWB extension to store pose estimation data',
         name='ndx-pose',
-        version='0.1.1',
+        version='0.2.0',
         author=['Ryan Ly', 'Ben Dichter', 'Alexander Mathis'],
         contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch'],
     )
@@ -46,6 +46,7 @@ def main():
                 dtype='float32',
                 dims=['num_frames'],
                 shape=[None],
+                quantity='?',
                 attributes=[
                     NWBAttributeSpec(
                         name='definition',
@@ -68,8 +69,45 @@ def main():
         groups=[
             NWBGroupSpec(
                 neurodata_type_inc='PoseEstimationSeries',
-                doc='Estimated position data for each body part.',
+                doc=('Estimated position data for each body part. Deprecated in version 0.2.0. Use the "positions" '
+                     'group instead.'),
                 quantity='*',
+            ),
+            NWBGroupSpec(
+                name="pose_estimates",
+                doc="Estimated position data for each body part.",
+                groups=[
+                    NWBGroupSpec(
+                        neurodata_type_inc='PoseEstimationSeries',
+                        doc='Estimated position data for each body part.',
+                        quantity='*',
+                    )
+                ],
+                quantity='?',
+            ),
+            NWBGroupSpec(
+                name="original_videos_series",
+                doc="Links to the original video files.",
+                links=[
+                    NWBLinkSpec(
+                        target_type='ImageSeries',
+                        doc='Links to the original video files.',
+                        quantity='*',
+                    ),
+                ],
+                quantity='?',
+            ),
+            NWBGroupSpec(
+                name="labeled_videos_series",
+                doc="The labeled videos. The number of files should equal the number of original videos.",
+                datasets=[
+                    NWBDatasetSpec(
+                        neurodata_type_inc="ImageSeries",
+                        doc='The labeled videos. The number of files should equal the number of original videos.',
+                        quantity='*',
+                    ),
+                ],
+                quantity='?',
             ),
         ],
         datasets=[
@@ -81,7 +119,9 @@ def main():
             ),
             NWBDatasetSpec(
                 name='original_videos',
-                doc='Paths to the original video files. The number of files should equal the number of camera devices.',
+                doc=('Paths to the original video files. The number of files should equal the number of '
+                     'camera devices. Deprecated in version 0.2.0. Use ImageSeries objects in original_videos_series '
+                     'instead'),
                 dtype='text',
                 dims=['num_files'],
                 shape=[None],
@@ -89,7 +129,9 @@ def main():
             ),
             NWBDatasetSpec(
                 name='labeled_videos',
-                doc='Paths to the labeled video files. The number of files should equal the number of camera devices.',
+                doc=('Paths to the labeled video files. The number of files should equal the number of '
+                     'camera devices. Deprecated in version 0.2.0. Use ImageSeries objects in labeled_videos_series '
+                     'instead'),
                 dtype='text',
                 dims=['num_files'],
                 shape=[None],
@@ -97,7 +139,8 @@ def main():
             ),
             NWBDatasetSpec(
                 name='dimensions',
-                doc='Dimensions of each labeled video file.',
+                doc=('Dimensions of each labeled video file. Deprecated in version 0.2.0. '
+                     'Use "dimension" in original_videos_series instead.'),
                 dtype='uint8',
                 dims=['num_files', 'width, height'],
                 shape=[None, 2],
@@ -142,14 +185,6 @@ def main():
                 quantity='?',
             ),
         ],
-        # TODO: collections of multiple links is currently buggy in PyNWB/HDMF
-        # links=[
-        #     NWBLinkSpec(
-        #         target_type='Device',
-        #         doc='Cameras used to record the videos.',
-        #         quantity='*',
-        #     ),
-        # ],
     )
 
     new_data_types = [pose_estimation_series, pose_estimation]
