@@ -57,7 +57,7 @@ class PoseEstimation(MultiContainerInterface):
 
     __clsconf__ = [
         {
-            # NOTE pose_estimation_series was remapped in version 0.2.0 to live under the pose_estimates subgroup
+            # NOTE pose_estimation_series was remapped in version 0.2.0 to live in the pose_estimation_series subgroup
             'add': 'add_pose_estimation_series',
             'get': 'get_pose_estimation_series',
             'create': 'create_pose_estimation_series',
@@ -85,7 +85,7 @@ class PoseEstimation(MultiContainerInterface):
 
     # custom mapper in ndx_pose.io.pose maps:
     # 'source_software' dataset, 'version' attribute to 'source_software_version' field
-    # 'pose_estimates' untyped group, 'PoseEstimationSeries' subgroup to 'pose_estimates' field
+    # 'pose_estimation_series' untyped group, 'PoseEstimationSeries' subgroup to 'pose_estimation_series' field
     # 'original_videos_series' untyped group, 'ImageSeries' subgroup to 'original_videos_series' field
     # 'labeled_videos_series' untyped group, 'ImageSeries' subgroup to 'labeled_videos_series' field
 

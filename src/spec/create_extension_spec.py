@@ -74,7 +74,7 @@ def main():
                 quantity='*',
             ),
             NWBGroupSpec(
-                name="pose_estimates",
+                name="pose_estimation_series",
                 doc="Estimated position data for each body part.",
                 groups=[
                     NWBGroupSpec(

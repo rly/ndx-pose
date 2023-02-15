@@ -25,7 +25,7 @@ class PoseEstimationMap(NWBContainerMapper):
         # TODO if reading a file without the pose_estimates group, load the PoseEstimationSeries from the
         # main PoseEstimation group into the pose_estimation_series variable
 
-        pose_estimates_spec = self.spec.get_group('pose_estimates')
+        pose_estimates_spec = self.spec.get_group('pose_estimation_series')
         self.unmap(pose_estimates_spec)
         self.map_spec('pose_estimation_series', pose_estimates_spec.get_neurodata_type('PoseEstimationSeries'))
 

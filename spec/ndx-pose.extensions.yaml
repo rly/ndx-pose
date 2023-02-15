@@ -58,7 +58,7 @@ groups:
     - null
     doc: Paths to the original video files. The number of files should equal the number
       of camera devices. Deprecated in version 0.2.0. Use ImageSeries objects in original_videos_series
-      instead.
+      instead
     quantity: '?'
   - name: labeled_videos
     dtype: text
@@ -68,7 +68,7 @@ groups:
     - null
     doc: Paths to the labeled video files. The number of files should equal the number
       of camera devices. Deprecated in version 0.2.0. Use ImageSeries objects in labeled_videos_series
-      instead.
+      instead
     quantity: '?'
   - name: dimensions
     dtype: uint8
@@ -120,7 +120,7 @@ groups:
     doc: Estimated position data for each body part. Deprecated in version 0.2.0.
       Use the "positions" group instead.
     quantity: '*'
-  - name: pose_estimates
+  - name: pose_estimation_series
     doc: Estimated position data for each body part.
     quantity: '?'
     groups:
