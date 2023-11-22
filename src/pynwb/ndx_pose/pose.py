@@ -1,11 +1,14 @@
 from hdmf.utils import docval, popargs, get_docval, AllowPositional
 
-from pynwb import register_class, TimeSeries
+from pynwb import register_class, TimeSeries, get_class
 from pynwb.behavior import SpatialSeries
 from pynwb.core import MultiContainerInterface
 from pynwb.device import Device
+from pynwb.image import ImageSeries
 
-from . import Skeleton
+Skeleton = get_class('Skeleton', 'ndx-pose')  # TODO validate nodes and edges correspondence, convert edges to uint
+TrainingFrame = get_class('TrainingFrame', 'ndx-pose')
+Instance = get_class('Instance', 'ndx-pose')
 
 @register_class('PoseEstimationSeries', 'ndx-pose')
 class PoseEstimationSeries(SpatialSeries):
@@ -14,8 +17,8 @@ class PoseEstimationSeries(SpatialSeries):
 
     __nwbfields__ = ('confidence', 'confidence_definition')
 
-    # custom mapper in ndx_pose.io.pose maps:
-    # 'confidence' dataset -> 'definition' attribute to 'confidence_definition' field
+    # NOTE: custom mapper in ndx_pose.io.pose maps:
+    # 'confidence' dataset -> 'definition' attribute in spec to 'confidence_definition' field in Python class
 
     @docval(
         {'name': 'name', 'type': str,
@@ -49,6 +52,7 @@ class PoseEstimationSeries(SpatialSeries):
 
 
 @register_class('PoseEstimation', 'ndx-pose')
+# NOTE NWB MultiContainerInterface extends NWBDataInterface and HDMF MultiContainerInterface
 class PoseEstimation(MultiContainerInterface):
     """Estimated position data for multiple body parts, computed from the same video with the same tool/algorithm.
     The timestamps of each child PoseEstimationSeries type should be the same.
@@ -62,21 +66,21 @@ class PoseEstimation(MultiContainerInterface):
             'type': PoseEstimationSeries,
             'attr': 'pose_estimation_series'
         },
-        # {
-        #     'add': 'add_device',
-        #     'get': 'get_devices',
-        #     'type': Device,
-        #     'attr': 'devices'
-        #     # TODO prevent these from being children / add better support for links
-        #     # may require update to HDMF to add a key 'child': False
-        # }
+        {
+            'add': 'add_camera',
+            'get': 'get_camera',
+            'type': Device,
+            'attr': 'cameras',
+            # TODO prevent these from being children / add better support for links
+            # may require update to HDMF to add a key 'child': False
+        }
     ]
 
     __nwbfields__ = ('description', 'original_videos', 'labeled_videos', 'dimensions', 'scorer', 'source_software',
-                     'source_software_version', 'nodes', 'edges')
+                     'source_software_version', 'skeleton', 'cameras')
 
     # custom mapper in ndx_pose.io.pose maps:
-    # 'source_software' dataset -> 'version' attribute to 'source_software_version' field
+    # 'source_software' dataset -> 'version' attribute in spec to 'source_software_version' field in Python class
 
     @docval(  # all fields optional
         {'name': 'pose_estimation_series', 'type': ('array_data', 'data'),
@@ -109,9 +113,9 @@ class PoseEstimation(MultiContainerInterface):
         {'name': 'skeleton', 'type': Skeleton,
          'doc': ("Layout of body part locations and connections."),
          'default': None},
-        # {'name': 'devices', 'type': ('array_data', 'data'),
-        #  'doc': ('Cameras used to record the videos.'),
-        #  'default': None},
+        {'name': 'cameras', 'type': ('array_data', 'data'),
+         'doc': ('Cameras used to record the videos.'),
+         'default': None},
         allow_positional=AllowPositional.ERROR
     )
     def __init__(self, **kwargs):
@@ -119,8 +123,8 @@ class PoseEstimation(MultiContainerInterface):
         original_videos, labeled_videos,  = popargs('original_videos', 'labeled_videos', kwargs)
         dimensions, scorer = popargs('dimensions', 'scorer', kwargs)
         source_software, source_software_version = popargs('source_software', 'source_software_version', kwargs)
-        nodes, edges, skeleton = popargs('nodes', 'edges', 'skeleton', kwargs)
-        # devices = popargs('devices', kwargs)
+        skeleton = popargs('skeleton', kwargs)
+        cameras = popargs('cameras', kwargs)
         super().__init__(**kwargs)
         self.pose_estimation_series = pose_estimation_series
         self.description = description
@@ -131,15 +135,62 @@ class PoseEstimation(MultiContainerInterface):
         self.source_software = source_software
         self.source_software_version = source_software_version
         self.skeleton = skeleton
-        # self.devices = devices
+        self.cameras = cameras
 
         # TODO include calibration images for 3D estimates?
 
-        # if original_videos is not None and (devices is None or len(original_videos) != len(devices)):
-        #     raise ValueError("The number of original videos should equal the number of camera devices.")
-        # if labeled_videos is not None and (devices is None or len(labeled_videos) != len(devices)):
-        #     raise ValueError("The number of labeled videos should equal the number of camera devices.")
-        # if dimensions is not None and (devices is None or len(dimensions) != len(devices)):
-        #     raise ValueError("The number of dimensions should equal the number of camera devices.")
+        if original_videos is not None and (cameras is None or len(original_videos) != len(cameras)):
+            raise ValueError("The number of original videos should equal the number of camera devices.")
+        if labeled_videos is not None and (cameras is None or len(labeled_videos) != len(cameras)):
+            raise ValueError("The number of labeled videos should equal the number of camera devices.")
+        if dimensions is not None and (cameras is None or len(dimensions) != len(cameras)):
+            raise ValueError("The number of dimensions should equal the number of camera devices.")
 
-        # TODO validate nodes and edges correspondence, convert edges to uint
+
+@register_class('PoseTraining', 'ndx-pose')
+class PoseTraining(MultiContainerInterface):
+
+    __clsconf__ = [
+        {
+            'add': 'add_skeleton',
+            'get': 'get_skeleton',
+            'create': 'create_skeleton',
+            'type': Skeleton,
+            'attr': 'skeletons',
+        },
+        {
+            'add': 'add_training_frame',
+            'get': 'get_training_frame',
+            'create': 'create_training_frame',
+            'type': TrainingFrame,
+            'attr': 'training_frames',
+        },
+        {
+            'add': 'add_source_video',
+            'get': 'get_source_video',
+            'create': 'create_source_video',
+            'type': ImageSeries,
+            'attr': 'source_videos',
+        },
+    ]
+
+    @docval(  # all fields optional
+        {'name': 'name', 'type': str,
+         'doc': ('...'),
+         'default': 'PoseTraining'},
+        {'name': 'skeletons', 'type': ('array_data', 'data'),
+         'doc': ('...'),
+         'default': None},
+        {'name': 'training_frames', 'type': ('array_data', 'data'),
+         'doc': ('...'),
+         'default': None},
+        {'name': 'source_videos', 'type': ('array_data', 'data'),
+         'doc': ('...'),
+         'default': None},
+    )
+    def __init__(self, **kwargs):
+        skeletons, training_frames, source_videos = popargs('skeletons', 'training_frames', 'source_videos', kwargs)
+        super().__init__(**kwargs)
+        self.skeletons = skeletons
+        self.training_frames = training_frames
+        self.source_videos = source_videos

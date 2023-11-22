@@ -124,6 +124,12 @@ groups:
   - neurodata_type_inc: PoseEstimationSeries
     doc: Estimated position data for each body part.
     quantity: '*'
+  - name: cameras
+    doc: Organizational group for links to camera devices used to record the videos.
+    links:
+    - target_type: Device
+      doc: Cameras used to record the videos.
+      quantity: '*'
   links:
   - target_type: Skeleton
     doc: Layout of body part locations and connections.
@@ -144,9 +150,9 @@ groups:
       then `source_video` is required.
     required: false
   groups:
-  - neurodata_type_inc: Instance
+  - name: instance
+    neurodata_type_inc: Instance
     doc: Position data for a single instance of a skeleton in a single training frame.
-    quantity: '*'
   links:
   - name: source_video
     target_type: ImageSeries
@@ -160,7 +166,7 @@ groups:
     quantity: '?'
 - neurodata_type_def: Instance
   neurodata_type_inc: NWBDataInterface
-  default_name: Instance
+  default_name: instance
   doc: Group that holds ground-truth pose data for a single instance of a skeleton
     in a single frame.
   attributes:
@@ -200,9 +206,22 @@ groups:
   doc: Group that holds images, ground-truth annotations, and metadata for training
     a pose estimator.
   groups:
-  - neurodata_type_inc: Skeleton
-    doc: Skeleton used in project where each skeleton corresponds to a unique morphology.
-    quantity: '*'
-  - neurodata_type_inc: TrainingFrame
-    doc: Frames and ground-truth annotations for training a pose estimator.
-    quantity: '*'
+  - name: skeletons
+    doc: Organizational group to hold skeletons
+    groups:
+    - neurodata_type_inc: Skeleton
+      doc: Skeleton used in project where each skeleton corresponds to a unique morphology.
+      quantity: '*'
+  - name: training_frames
+    doc: Organizational group to hold training frames
+    groups:
+    - neurodata_type_inc: TrainingFrame
+      doc: Frames and ground-truth annotations for training a pose estimator.
+      quantity: '*'
+  - name: source_videos
+    doc: Organizational group to hold source videos used for training.
+    groups:
+    - neurodata_type_inc: ImageSeries
+      doc: ImageSeries representing a video of training frames (stored internally
+        or externally
+      quantity: '*'

@@ -104,6 +104,17 @@ def main():
                 doc='Estimated position data for each body part.',
                 quantity='*',
             ),
+            NWBGroupSpec(
+                name="cameras",
+                doc='Organizational group for links to camera devices used to record the videos.',
+                links=[
+                    NWBLinkSpec(
+                        target_type='Device',
+                        doc='Cameras used to record the videos.',
+                        quantity='*',
+                    ),
+                ],
+            ),
         ],
         links=[
             NWBLinkSpec(
@@ -164,14 +175,6 @@ def main():
                 ],
             ),
         ],
-        # TODO: collections of multiple links is currently buggy in PyNWB/HDMF
-        # links=[
-        #     NWBLinkSpec(
-        #         target_type='Device',
-        #         doc='Cameras used to record the videos.',
-        #         quantity='*',
-        #     ),
-        # ],
     )
 
     training_frame = NWBGroupSpec(
@@ -181,9 +184,9 @@ def main():
         default_name='TrainingFrame',
         groups=[
             NWBGroupSpec(
+                name="instance",
                 neurodata_type_inc='Instance',
                 doc='Position data for a single instance of a skeleton in a single training frame.',
-                quantity='*',
             ),
         ],
         attributes=[
@@ -200,17 +203,19 @@ def main():
                 dtype="uint8",
                 required=False,
             ),
+            # TODO add inspector check that either both source_video and source_video_frame_index are provided or
+            # neither are provided
         ],
         links=[
             NWBLinkSpec(
-                name="source_video",  # TODO does the name matter?
+                name="source_video",
                 target_type="ImageSeries",
                 doc=("Link to an ImageSeries representing a video of training frames (stored internally or "
                      "externally). Required if `source_video_frame_index` is provided."),
                 quantity="?"
             ),
             NWBLinkSpec(
-                name="source_frame",  # TODO does the name matter?
+                name="source_frame",
                 target_type="Image",
                 doc=("Link to an internally stored image representing the training frame. The target Image "
                      "should be stored in an Images type in the file."),
@@ -223,7 +228,7 @@ def main():
         neurodata_type_def='Instance',
         neurodata_type_inc='NWBDataInterface',
         doc='Group that holds ground-truth pose data for a single instance of a skeleton in a single frame.',
-        default_name='Instance',
+        default_name='instance',
         links=[
             NWBLinkSpec(
                 doc='Layout of body part locations and connections.',
@@ -267,14 +272,38 @@ def main():
         default_name='PoseTraining',
         groups=[
             NWBGroupSpec(
-                neurodata_type_inc='Skeleton',
-                doc='Skeleton used in project where each skeleton corresponds to a unique morphology.',
-                quantity='*',
+                name="skeletons",
+                doc="Organizational group to hold skeletons",
+                groups=[
+                    NWBGroupSpec(
+                        neurodata_type_inc='Skeleton',
+                        doc='Skeleton used in project where each skeleton corresponds to a unique morphology.',
+                        quantity='*',
+                    ),
+                ],
             ),
             NWBGroupSpec(
-                neurodata_type_inc='TrainingFrame',
-                doc='Frames and ground-truth annotations for training a pose estimator.',
-                quantity='*',
+                name="training_frames",
+                doc="Organizational group to hold training frames",
+                groups=[
+                    NWBGroupSpec(
+                        neurodata_type_inc='TrainingFrame',
+                        doc='Frames and ground-truth annotations for training a pose estimator.',
+                        quantity='*',
+                    ),
+                ],
+            ),
+            NWBGroupSpec(
+                name="source_videos",
+                doc="Organizational group to hold source videos used for training.",
+                groups=[
+                    NWBGroupSpec(
+                        neurodata_type_inc='ImageSeries',
+                        doc=('ImageSeries representing a video of training frames (stored internally or '
+                            'externally'),
+                        quantity='*',
+                    ),
+                ],
             ),
         ],
     )
