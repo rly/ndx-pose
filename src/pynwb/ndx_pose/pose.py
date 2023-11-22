@@ -1,10 +1,11 @@
-from hdmf.utils import docval, popargs, get_docval, call_docval_func, AllowPositional
+from hdmf.utils import docval, popargs, get_docval, AllowPositional
 
 from pynwb import register_class, TimeSeries
 from pynwb.behavior import SpatialSeries
 from pynwb.core import MultiContainerInterface
 from pynwb.device import Device
 
+from . import Skeleton
 
 @register_class('PoseEstimationSeries', 'ndx-pose')
 class PoseEstimationSeries(SpatialSeries):
@@ -23,7 +24,7 @@ class PoseEstimationSeries(SpatialSeries):
          'doc': ('Estimated position (x, y) or (x, y, z).')},
         {'name': 'reference_frame', 'type': str,   # required
          'doc': 'Description defining what the zero-position (0, 0) or (0, 0, 0) is.'},
-        {'name': 'confidence', 'type': ('array_data', 'data'), 'shape': (None, ), 
+        {'name': 'confidence', 'type': ('array_data', 'data'), 'shape': (None, ),
          'doc': ('Confidence or likelihood of the estimated positions, scaled to be between 0 and 1.'),
           'default': None,},
         {'name': 'unit', 'type': str,
@@ -42,7 +43,7 @@ class PoseEstimationSeries(SpatialSeries):
     def __init__(self, **kwargs):
         """Construct a new PoseEstimationSeries representing pose estimates for a particular body part."""
         confidence, confidence_definition = popargs('confidence', 'confidence_definition', kwargs)
-        call_docval_func(super().__init__, kwargs)
+        super().__init__(**kwargs)
         self.confidence = confidence
         self.confidence_definition = confidence_definition
 
@@ -105,13 +106,8 @@ class PoseEstimation(MultiContainerInterface):
         {'name': 'source_software_version', 'type': str,
          'doc': ('Version string of the software tool used.'),
          'default': None},
-        {'name': 'nodes', 'type': ('array_data', 'data'),
-         'doc': ('Array of body part names corresponding to the names of the PoseEstimationSeries objects within '
-                 'this container.'),
-         'default': None},
-        {'name': 'edges', 'type': ('array_data', 'data'),
-         'doc': ("Array of pairs of indices corresponding to edges between nodes. Index values correspond to row "
-                 "indices of the 'nodes' field. Index values use 0-indexing."),
+        {'name': 'skeleton', 'type': Skeleton,
+         'doc': ("Layout of body part locations and connections."),
          'default': None},
         # {'name': 'devices', 'type': ('array_data', 'data'),
         #  'doc': ('Cameras used to record the videos.'),
@@ -123,9 +119,9 @@ class PoseEstimation(MultiContainerInterface):
         original_videos, labeled_videos,  = popargs('original_videos', 'labeled_videos', kwargs)
         dimensions, scorer = popargs('dimensions', 'scorer', kwargs)
         source_software, source_software_version = popargs('source_software', 'source_software_version', kwargs)
-        nodes, edges = popargs('nodes', 'edges', kwargs)
+        nodes, edges, skeleton = popargs('nodes', 'edges', 'skeleton', kwargs)
         # devices = popargs('devices', kwargs)
-        call_docval_func(super().__init__, kwargs)
+        super().__init__(**kwargs)
         self.pose_estimation_series = pose_estimation_series
         self.description = description
         self.original_videos = original_videos
@@ -134,8 +130,7 @@ class PoseEstimation(MultiContainerInterface):
         self.scorer = scorer
         self.source_software = source_software
         self.source_software_version = source_software_version
-        self.nodes = nodes
-        self.edges = edges
+        self.skeleton = skeleton
         # self.devices = devices
 
         # TODO include calibration images for 3D estimates?

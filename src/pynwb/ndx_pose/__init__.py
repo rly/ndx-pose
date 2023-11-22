@@ -21,5 +21,10 @@ if not os.path.exists(ndx_pose_specpath):
 # Load the namespace
 load_namespaces(ndx_pose_specpath)
 
+Skeleton = get_class('Skeleton', 'ndx-pose')
+TrainingFrame = get_class('TrainingFrame', 'ndx-pose')
+Instance = get_class('Instance', 'ndx-pose')
+PoseTraining = get_class('PoseTraining', 'ndx-pose')
+
 from . import io as __io
 from .pose import PoseEstimationSeries, PoseEstimation

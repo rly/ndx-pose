@@ -22,17 +22,17 @@ except Exception:
 
 setup_args = {
     'name': 'ndx-pose',
-    'version': '0.1.1',
+    'version': '0.2.0',
     'description': 'NWB extension to store pose estimation data',
     'long_description': readme,
     'long_description_content_type': readme_type,
-    'author': 'Ryan Ly, Ben Dichter, Alexander Mathis',
-    'author_email': 'rly@lbl.gov, bdichter@lbl.gov, alexander.mathis@epfl.ch',
+    'author': 'Ryan Ly, Ben Dichter, Alexander Mathis, Liezl Maree, Chris Brozdowski',
+    'author_email': 'rly@lbl.gov, bdichter@lbl.gov, alexander.mathis@epfl.ch, lmaree@salk.edu, cbroz@datajoint.com',
     'url': '',
     'license': 'BSD 3-Clause',
     'install_requires': [
-        'pynwb>=1.5.0,<3',
-        'hdmf>=2.5.6,<4',
+        'pynwb>=2',
+        'hdmf>=3.1',
     ],
     'packages': find_packages('src/pynwb', exclude=["tests", "tests.*"]),
     'package_dir': {'': 'src/pynwb'},

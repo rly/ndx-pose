@@ -61,7 +61,6 @@ groups:
     - null
     doc: Confidence or likelihood of the estimated positions, scaled to be between
       0 and 1.
-    quantity: '?'
     attributes:
     - name: definition
       dtype: text
@@ -128,45 +127,46 @@ groups:
   links:
   - target_type: Skeleton
     doc: Layout of body part locations and connections.
+    quantity: '?'
 - neurodata_type_def: TrainingFrame
   neurodata_type_inc: NWBDataInterface
   default_name: TrainingFrame
-  doc: Group that holds ground-truth position data for all instances of a skeleton in a single frame.
+  doc: Group that holds ground-truth position data for all instances of a skeleton
+    in a single frame.
   attributes:
   - name: annotator
     dtype: text
     doc: Name of annotator who labeled the TrainingFrame.
     required: false
+  - name: source_video_frame_index
+    dtype: uint8
+    doc: Frame index of training frame in the original video `source_video`. If provided,
+      then `source_video` is required.
+    required: false
   groups:
   - neurodata_type_inc: Instance
     doc: Position data for a single instance of a skeleton in a single training frame.
     quantity: '*'
+  links:
   - name: source_video
-    neurodata_type_inc: ImageSeries
-    doc: Path to original video file and frame used.
+    target_type: ImageSeries
+    doc: Link to an ImageSeries representing a video of training frames (stored internally
+      or externally). Required if `source_video_frame_index` is provided.
     quantity: '?'
-    attributes:
-    - name: frame_index
-      dtype: uint8
-      doc: Frame index of TrainingFrame in original video file.
-      required: true
   - name: source_frame
-    neurodata_type_inc: Images
-    doc: Collection of images used for training (stored internally or externally).
-    quantity: 1
-    attributes:
-    - name: images_index
-      dtype: uint8
-      doc: Index of TrainingFrame in collection of frames stored in Images.
-      required: true
+    target_type: Image
+    doc: Link to an internally stored image representing the training frame. The target
+      Image should be stored in an Images type in the file.
+    quantity: '?'
 - neurodata_type_def: Instance
   neurodata_type_inc: NWBDataInterface
   default_name: Instance
-  doc: Group that holds ground-truth pose data for single subject in a single frame.
+  doc: Group that holds ground-truth pose data for a single instance of a skeleton
+    in a single frame.
   attributes:
   - name: id
     dtype: uint8
-    doc: ID used to differentiate instances.
+    doc: ID used to differentiate skeleton instances.
     required: false
   datasets:
   - name: node_locations
@@ -181,7 +181,7 @@ groups:
       - 2
     - - null
       - 3
-    doc: Locations (x, y) or (x, y, z) of nodes for single skeleton instance in single frame.
+    doc: Locations (x, y) or (x, y, z) of nodes for single instance in single frame.
   - name: node_visibility
     dtype: bool
     dims:

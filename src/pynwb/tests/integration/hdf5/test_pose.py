@@ -4,7 +4,7 @@ import numpy as np
 from pynwb import NWBHDF5IO, NWBFile
 from pynwb.testing import TestCase, remove_test_file, NWBH5IOMixin
 
-from ndx_pose import PoseEstimationSeries, PoseEstimation
+from ndx_pose import PoseEstimationSeries, PoseEstimation, Skeleton
 from ...unit.test_pose import create_series
 
 
@@ -158,6 +158,11 @@ class TestPoseEstimationRoundtrip(TestCase):
         """
         Add a PoseEstimation to an NWBFile, write it, read it, and test that the read object matches the original.
         """
+        skeleton = Skeleton(
+            id=1,
+            nodes=['front_left_paw', 'front_right_paw'],
+            edges=np.array([[0, 1]], dtype='uint8'),
+        )
         pose_estimation_series = create_series()
         pe = PoseEstimation(
             pose_estimation_series=pose_estimation_series,
@@ -168,8 +173,7 @@ class TestPoseEstimationRoundtrip(TestCase):
             scorer='DLC_resnet50_openfieldOct30shuffle1_1600',
             source_software='DeepLabCut',
             source_software_version='2.2b8',
-            nodes=['front_left_paw', 'front_right_paw'],
-            edges=np.array([[0, 1]], dtype='uint8'),
+            skeleton=skeleton,
             # devices=[self.nwbfile.devices['camera1'], self.nwbfile.devices['camera2']],
         )
 

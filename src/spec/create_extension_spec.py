@@ -9,13 +9,12 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc='NWB extension to store pose estimation data',
         name='ndx-pose',
-        version='0.1.1',
+        version='0.2.0',
         author=['Ryan Ly', 'Ben Dichter', 'Alexander Mathis', 'Liezl Maree', 'Chris Brozdowski'],
         contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch', 'lmaree@salk.edu', 'cbroz@datajoint.com'],
     )
 
-    ns_builder.include_type('SpatialSeries', namespace='core')
-    ns_builder.include_type('NWBDataInterface', namespace='core')
+    ns_builder.include_namespace(namespace='core')
 
     skeleton = NWBGroupSpec(
         neurodata_type_def='Skeleton',
@@ -110,7 +109,7 @@ def main():
             NWBLinkSpec(
                 doc='Layout of body part locations and connections.',
                 target_type='Skeleton',
-                quantity=1
+                quantity="?",
             ),
         ],
         datasets=[
@@ -186,31 +185,6 @@ def main():
                 doc='Position data for a single instance of a skeleton in a single training frame.',
                 quantity='*',
             ),
-            NWBGroupSpec(
-                name='source_video',
-                doc='Path to original video file and frame used.',
-                quantity='?',
-                attributes=[
-                    NWBAttributeSpec(
-                        name='path',
-                        doc='Path to original video file.',
-                        dtype='text',
-                        required=False,
-                    ),
-                    NWBAttributeSpec(
-                        name='frame_index',
-                        doc='Frame index of TrainingFrame in original video file.',
-                        dtype='uint8',
-                        required=False,
-                    ),
-                ],
-            ),
-            NWBGroupSpec(
-                neurodata_type_inc='Image',
-                name='source_frame',
-                doc='Image frame used for training (stored either internally or externally).',
-                quantity='1',
-            ),
         ],
         attributes=[
             NWBAttributeSpec(
@@ -219,7 +193,30 @@ def main():
                 dtype='text',
                 required=False,
             ),
+            NWBAttributeSpec(
+                name='source_video_frame_index',
+                doc=("Frame index of training frame in the original video `source_video`. "
+                     "If provided, then `source_video` is required."),
+                dtype="uint8",
+                required=False,
+            ),
         ],
+        links=[
+            NWBLinkSpec(
+                name="source_video",  # TODO does the name matter?
+                target_type="ImageSeries",
+                doc=("Link to an ImageSeries representing a video of training frames (stored internally or "
+                     "externally). Required if `source_video_frame_index` is provided."),
+                quantity="?"
+            ),
+            NWBLinkSpec(
+                name="source_frame",  # TODO does the name matter?
+                target_type="Image",
+                doc=("Link to an internally stored image representing the training frame. The target Image "
+                     "should be stored in an Images type in the file."),
+                quantity="?"
+            )
+        ]
     )
 
     instance = NWBGroupSpec(

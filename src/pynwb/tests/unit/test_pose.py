@@ -4,7 +4,7 @@ import numpy as np
 from pynwb import NWBFile
 from pynwb.testing import TestCase
 
-from ndx_pose import PoseEstimationSeries, PoseEstimation
+from ndx_pose import PoseEstimationSeries, PoseEstimation, Skeleton
 
 
 def create_series():
@@ -112,3 +112,12 @@ class TestPoseEstimationConstructor(TestCase):
         # self.assertEqual(len(pe.devices), 2)
         # self.assertIs(pe.devices['camera1'], self.nwbfile.devices['camera1'])
         # self.assertIs(pe.devices['camera2'], self.nwbfile.devices['camera2'])
+
+
+# class TestSkeleton(TestCase):
+
+#     def test_init(self):
+#         skeleton = Skeleton(
+#             id=0,
+#             nodes
+#         )
