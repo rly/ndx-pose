@@ -31,7 +31,7 @@ class PoseEstimationMap(NWBContainerMapper):
 
         original_videos_series_spec = self.spec.get_group('original_videos_series')
         self.unmap(original_videos_series_spec)
-        self.map_spec('original_videos_series', original_videos_series_spec.get_neurodata_type('ImageSeries'))
+        self.map_spec('original_videos_series', original_videos_series_spec.get_target_type('ImageSeries'))
 
         labeled_videos_series_spec = self.spec.get_group('labeled_videos_series')
         self.unmap(labeled_videos_series_spec)
