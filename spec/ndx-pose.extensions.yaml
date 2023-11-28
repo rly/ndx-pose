@@ -86,7 +86,8 @@ groups:
     shape:
     - null
     doc: Paths to the original video files. The number of files should equal the number
-      of camera devices.
+      of camera devices. Deprecated in version 0.2.0. Use ImageSeries objects in original_videos_series
+      instead
     quantity: '?'
   - name: labeled_videos
     dtype: text
@@ -95,7 +96,8 @@ groups:
     shape:
     - null
     doc: Paths to the labeled video files. The number of files should equal the number
-      of camera devices.
+      of camera devices. Deprecated in version 0.2.0. Use ImageSeries objects in labeled_videos_series
+      instead
     quantity: '?'
   - name: dimensions
     dtype: uint8
@@ -105,7 +107,8 @@ groups:
     shape:
     - null
     - 2
-    doc: Dimensions of each labeled video file.
+    doc: Dimensions of each labeled video file. Deprecated in version 0.2.0. Use "dimension"
+      in original_videos_series instead.
     quantity: '?'
   - name: scorer
     dtype: text
@@ -200,9 +203,35 @@ groups:
   doc: Group that holds images, ground-truth annotations, and metadata for training
     a pose estimator.
   groups:
+  - neurodata_type_inc: PoseEstimationSeries
+    doc: Estimated position data for each body part. Deprecated in version 0.2.0.
+      Place the PoseEstimationSeries in the "pose_estimation_series" group instead.
   - neurodata_type_inc: Skeleton
     doc: Skeleton used in project where each skeleton corresponds to a unique morphology.
     quantity: '*'
   - neurodata_type_inc: TrainingFrame
     doc: Frames and ground-truth annotations for training a pose estimator.
     quantity: '*'
+  - name: pose_estimation_series
+    doc: Estimated position data for each body part.
+    quantity: '?'
+    groups:
+    - neurodata_type_inc: PoseEstimationSeries
+      doc: Estimated position data for each body part.
+      quantity: '*'
+  - name: original_videos_series
+    doc: Links to the original video files.
+    quantity: '?'
+    links:
+    - target_type: ImageSeries
+      doc: Links to the original video files.
+      quantity: '*'
+  - name: labeled_videos_series
+    doc: The labeled videos. The number of files should equal the number of original
+      videos.
+    quantity: '?'
+    datasets:
+    - neurodata_type_inc: ImageSeries
+      doc: The labeled videos. The number of files should equal the number of original
+        videos.
+      quantity: '*'
