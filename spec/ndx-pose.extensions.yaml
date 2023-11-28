@@ -1,4 +1,33 @@
 groups:
+- neurodata_type_def: Skeleton
+  neurodata_type_inc: NWBDataInterface
+  default_name: Skeleton
+  doc: Group that holds node and edge data for defining parts of a pose and their
+    connections to one another.
+  attributes:
+  - name: id
+    dtype: text
+    doc: Unique ID associated with the skeleton.
+  datasets:
+  - name: nodes
+    dtype: text
+    dims:
+    - num_body_parts
+    shape:
+    - null
+    doc: Array of body part names corresponding to the names of the PoseEstimationSeries
+      objects or PoseTraining objects.
+  - name: edges
+    dtype: uint8
+    dims:
+    - num_edges
+    - nodes_index, nodes_index
+    shape:
+    - null
+    - 2
+    doc: Array of pairs of indices corresponding to edges between nodes. Index values
+      correspond to row indices of the 'nodes' dataset. Index values use 0-indexing.
+    quantity: '?'
 - neurodata_type_def: PoseEstimationSeries
   neurodata_type_inc: SpatialSeries
   doc: Estimated position (x, y) or (x, y, z) of a body part over time.
@@ -95,30 +124,93 @@ groups:
       dtype: text
       doc: Version string of the software tool used.
       required: false
-  - name: nodes
+  groups:
+  - neurodata_type_inc: PoseEstimationSeries
+    doc: Estimated position data for each body part.
+    quantity: '*'
+  links:
+  - target_type: Skeleton
+    doc: Layout of body part locations and connections.
+- neurodata_type_def: TrainingFrame
+  neurodata_type_inc: NWBDataInterface
+  default_name: TrainingFrame
+  doc: Group that holds ground-truth position data for all instances of a skeleton in a single frame.
+  attributes:
+  - name: annotator
     dtype: text
+    doc: Name of annotator who labeled the TrainingFrame.
+    required: false
+  groups:
+  - neurodata_type_inc: Instance
+    doc: Position data for a single instance of a skeleton in a single training frame.
+    quantity: '*'
+  - name: source_video
+    neurodata_type_inc: ImageSeries
+    doc: Path to original video file and frame used.
+    quantity: '?'
+    attributes:
+    - name: frame_index
+      dtype: uint8
+      doc: Frame index of TrainingFrame in original video file.
+      required: true
+  - name: source_frame
+    neurodata_type_inc: Images
+    doc: Collection of images used for training (stored internally or externally).
+    quantity: 1
+    attributes:
+    - name: images_index
+      dtype: uint8
+      doc: Index of TrainingFrame in collection of frames stored in Images.
+      required: true
+- neurodata_type_def: Instance
+  neurodata_type_inc: NWBDataInterface
+  default_name: Instance
+  doc: Group that holds ground-truth pose data for single subject in a single frame.
+  attributes:
+  - name: id
+    dtype: uint8
+    doc: ID used to differentiate instances.
+    required: false
+  datasets:
+  - name: node_locations
+    dtype: float
+    dims:
+    - - num_body_parts
+      - x, y
+    - - num_body_parts
+      - x, y, z
+    shape:
+    - - null
+      - 2
+    - - null
+      - 3
+    doc: Locations (x, y) or (x, y, z) of nodes for single skeleton instance in single frame.
+  - name: node_visibility
+    dtype: bool
     dims:
     - num_body_parts
     shape:
     - null
-    doc: Array of body part names corresponding to the names of the PoseEstimationSeries
-      objects within this group.
+    doc: Markers for node visibility where true corresponds to a visible node and
+      false corresponds to an occluded node.
     quantity: '?'
-  - name: edges
-    dtype: uint8
-    dims:
-    - num_edges
-    - nodes_index, nodes_index
-    shape:
-    - null
-    - 2
-    doc: Array of pairs of indices corresponding to edges between nodes. Index values
-      correspond to row indices of the 'nodes' dataset. Index values use 0-indexing.
-    quantity: '?'
+  links:
+  - target_type: Skeleton
+    doc: Layout of body part locations and connections.
+- neurodata_type_def: PoseTraining
+  neurodata_type_inc: NWBDataInterface
+  default_name: PoseTraining
+  doc: Group that holds images, ground-truth annotations, and metadata for training
+    a pose estimator.
   groups:
   - neurodata_type_inc: PoseEstimationSeries
     doc: Estimated position data for each body part. Deprecated in version 0.2.0.
       Place the PoseEstimationSeries in the "pose_estimation_series" group instead.
+  - neurodata_type_inc: Skeleton
+    doc: Skeleton used in project where each skeleton corresponds to a unique morphology.
+    quantity: '*'
+  - neurodata_type_inc: TrainingFrame
+    doc: Frames and ground-truth annotations for training a pose estimator.
     quantity: '*'
   - name: pose_estimation_series
     doc: Estimated position data for each body part.

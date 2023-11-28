@@ -10,12 +10,46 @@ def main():
         doc='NWB extension to store pose estimation data',
         name='ndx-pose',
         version='0.2.0',
-        author=['Ryan Ly', 'Ben Dichter', 'Alexander Mathis'],
-        contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch'],
+        author=['Ryan Ly', 'Ben Dichter', 'Alexander Mathis', 'Liezl Maree', 'Chris Brozdowski'],
+        contact=['rly@lbl.gov', 'bdichter@lbl.gov', 'alexander.mathis@epfl.ch', 'lmaree@salk.edu', 'cbroz@datajoint.com'],
     )
 
     ns_builder.include_type('SpatialSeries', namespace='core')
     ns_builder.include_type('NWBDataInterface', namespace='core')
+
+    skeleton = NWBGroupSpec(
+        neurodata_type_def='Skeleton',
+        neurodata_type_inc='NWBDataInterface',
+        doc='Group that holds node and edge data for defining parts of a pose and their connections to one another.',
+        default_name='Skeleton',
+        attributes=[
+            NWBAttributeSpec(
+                name='id',
+                doc='Unique ID associated with the skeleton.',
+                dtype='text',
+            ),
+        ],
+        datasets=[
+            NWBDatasetSpec(
+                name='nodes',
+                doc=('Array of body part names corresponding to the names of the PoseEstimationSeries objects or '
+                     'PoseTraining objects.'),
+                dtype='text',
+                dims=['num_body_parts'],
+                shape=[None],
+                quantity=1,
+            ),
+            NWBDatasetSpec(
+                name='edges',
+                doc=("Array of pairs of indices corresponding to edges between nodes. Index values correspond to row "
+                     "indices of the 'nodes' dataset. Index values use 0-indexing."),
+                dtype='uint8',
+                dims=['num_edges', 'nodes_index, nodes_index'],
+                shape=[None, 2],
+                quantity='?',
+            ),
+        ]
+    )
 
     pose_estimation_series = NWBGroupSpec(
         neurodata_type_def='PoseEstimationSeries',
@@ -110,6 +144,13 @@ def main():
                 quantity='?',
             ),
         ],
+        links=[
+            NWBLinkSpec(
+                doc='Layout of body part locations and connections.',
+                target_type='Skeleton',
+                quantity=1
+            ),
+        ],
         datasets=[
             NWBDatasetSpec(
                 name='description',
@@ -166,28 +207,117 @@ def main():
                     ),
                 ],
             ),
-            NWBDatasetSpec(
-                name='nodes',
-                doc=('Array of body part names corresponding to the names of the PoseEstimationSeries objects within '
-                     'this group.'),
-                dtype='text',
-                dims=['num_body_parts'],
-                shape=[None],
+        ],
+    )
+
+    training_frame = NWBGroupSpec(
+        neurodata_type_def='TrainingFrame',
+        neurodata_type_inc='NWBDataInterface',
+        doc='Group that holds ground-truth position data for all instances of a skeleton in a single frame.',
+        default_name='TrainingFrame',
+        groups=[
+            NWBGroupSpec(
+                neurodata_type_inc='Instance',
+                doc='Position data for a single instance of a skeleton in a single training frame.',
+                quantity='*',
+            ),
+            NWBGroupSpec(
+                name='source_video',
+                doc='Path to original video file and frame used.',
                 quantity='?',
+                attributes=[
+                    NWBAttributeSpec(
+                        name='path',
+                        doc='Path to original video file.',
+                        dtype='text',
+                        required=False,
+                    ),
+                    NWBAttributeSpec(
+                        name='frame_index',
+                        doc='Frame index of TrainingFrame in original video file.',
+                        dtype='uint8',
+                        required=False,
+                    ),
+                ],
+            ),
+            NWBGroupSpec(
+                neurodata_type_inc='Image',
+                name='source_frame',
+                doc='Image frame used for training (stored either internally or externally).',
+                quantity='1',
+            ),
+        ],
+        attributes=[
+            NWBAttributeSpec(
+                name='annotator',
+                doc='Name of annotator who labeled the TrainingFrame.',
+                dtype='text',
+                required=False,
+            ),
+        ],
+    )
+
+    instance = NWBGroupSpec(
+        neurodata_type_def='Instance',
+        neurodata_type_inc='NWBDataInterface',
+        doc='Group that holds ground-truth pose data for a single instance of a skeleton in a single frame.',
+        default_name='Instance',
+        links=[
+            NWBLinkSpec(
+                doc='Layout of body part locations and connections.',
+                target_type='Skeleton',
+                quantity=1
+            ),
+        ],
+        attributes=[
+            NWBAttributeSpec(
+                name='id',
+                doc='ID used to differentiate skeleton instances.',
+                dtype='uint8',
+                required=False,
+            ),
+        ],
+        datasets=[
+            NWBDatasetSpec(
+                name='node_locations',
+                doc=('Locations (x, y) or (x, y, z) of nodes for single instance in single frame.'),
+                dtype='float',
+                dims=[['num_body_parts', 'x, y'], ['num_body_parts', 'x, y, z']],
+                shape=[[None, 2], [None, 3]],
+                quantity=1,
             ),
             NWBDatasetSpec(
-                name='edges',
-                doc=("Array of pairs of indices corresponding to edges between nodes. Index values correspond to row "
-                     "indices of the 'nodes' dataset. Index values use 0-indexing."),
-                dtype='uint8',
-                dims=['num_edges', 'nodes_index, nodes_index'],
-                shape=[None, 2],
+                name='node_visibility',
+                doc=('Markers for node visibility where true corresponds to a visible node and false corresponds to '
+                'an occluded node.'),
+                dtype='bool',
+                dims=['num_body_parts'],
+                shape=[None],
                 quantity='?',
             ),
         ],
     )
 
-    new_data_types = [pose_estimation_series, pose_estimation]
+    pose_training = NWBGroupSpec(
+        neurodata_type_def='PoseTraining',
+        neurodata_type_inc='NWBDataInterface',
+        doc='Group that holds images, ground-truth annotations, and metadata for training a pose estimator.',
+        default_name='PoseTraining',
+        groups=[
+            NWBGroupSpec(
+                neurodata_type_inc='Skeleton',
+                doc='Skeleton used in project where each skeleton corresponds to a unique morphology.',
+                quantity='*',
+            ),
+            NWBGroupSpec(
+                neurodata_type_inc='TrainingFrame',
+                doc='Frames and ground-truth annotations for training a pose estimator.',
+                quantity='*',
+            ),
+        ],
+    )
+
+    new_data_types = [skeleton, pose_estimation_series, pose_estimation, training_frame, instance, pose_training]
 
     # export the spec to yaml files in the spec folder
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'spec'))
