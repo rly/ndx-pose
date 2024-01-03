@@ -1,13 +1,8 @@
 groups:
 - neurodata_type_def: Skeleton
   neurodata_type_inc: NWBDataInterface
-  default_name: Skeleton
   doc: Group that holds node and edge data for defining parts of a pose and their
-    connections to one another.
-  attributes:
-  - name: id
-    dtype: text
-    doc: Unique ID associated with the skeleton.
+    connections to one another. Names should be unique in a file.
   datasets:
   - name: nodes
     dtype: text
@@ -124,16 +119,13 @@ groups:
   - neurodata_type_inc: PoseEstimationSeries
     doc: Estimated position data for each body part.
     quantity: '*'
-  - name: cameras
-    doc: Organizational group for links to camera devices used to record the videos.
-    links:
-    - target_type: Device
-      doc: Cameras used to record the videos.
-      quantity: '*'
   links:
   - target_type: Skeleton
     doc: Layout of body part locations and connections.
     quantity: '?'
+  - target_type: Device
+    doc: Cameras used to record the videos.
+    quantity: '*'
 - neurodata_type_def: TrainingFrame
   neurodata_type_inc: NWBDataInterface
   default_name: TrainingFrame
@@ -150,8 +142,8 @@ groups:
       then `source_video` is required.
     required: false
   groups:
-  - name: instance
-    neurodata_type_inc: Instance
+  - name: skeleton_instance
+    neurodata_type_inc: SkeletonInstance
     doc: Position data for a single instance of a skeleton in a single training frame.
   links:
   - name: source_video
@@ -164,11 +156,11 @@ groups:
     doc: Link to an internally stored image representing the training frame. The target
       Image should be stored in an Images type in the file.
     quantity: '?'
-- neurodata_type_def: Instance
+- neurodata_type_def: SkeletonInstance
   neurodata_type_inc: NWBDataInterface
-  default_name: instance
+  default_name: skeleton_instance
   doc: Group that holds ground-truth pose data for a single instance of a skeleton
-    in a single frame.
+    in a single frame. This is meant to be used within a TrainingFrame.
   attributes:
   - name: id
     dtype: uint8
@@ -200,6 +192,30 @@ groups:
   links:
   - target_type: Skeleton
     doc: Layout of body part locations and connections.
+- neurodata_type_def: TrainingFrames
+  neurodata_type_inc: NWBDataInterface
+  default_name: training_frames
+  doc: Organizational group to hold training frames.
+  groups:
+  - neurodata_type_inc: TrainingFrame
+    doc: Ground-truth position data for all instances of a skeleton in a single frame.
+    quantity: '*'
+- neurodata_type_def: SourceVideos
+  neurodata_type_inc: NWBDataInterface
+  default_name: source_videos
+  doc: Organizational group to hold source videos used for training.
+  groups:
+  - neurodata_type_inc: ImageSeries
+    doc: Video of training frames (stored internally or externally
+    quantity: '*'
+- neurodata_type_def: Skeletons
+  neurodata_type_inc: NWBDataInterface
+  default_name: skeletons
+  doc: Organizational group to hold skeletons.
+  groups:
+  - neurodata_type_inc: Skeleton
+    doc: Skeleton used in project where each skeleton corresponds to a unique morphology.
+    quantity: '*'
 - neurodata_type_def: PoseTraining
   neurodata_type_inc: NWBDataInterface
   default_name: PoseTraining
@@ -207,21 +223,11 @@ groups:
     a pose estimator.
   groups:
   - name: skeletons
-    doc: Organizational group to hold skeletons
-    groups:
-    - neurodata_type_inc: Skeleton
-      doc: Skeleton used in project where each skeleton corresponds to a unique morphology.
-      quantity: '*'
+    neurodata_type_inc: Skeletons
+    doc: Organizational group to hold skeletons.
   - name: training_frames
+    neurodata_type_inc: TrainingFrames
     doc: Organizational group to hold training frames
-    groups:
-    - neurodata_type_inc: TrainingFrame
-      doc: Frames and ground-truth annotations for training a pose estimator.
-      quantity: '*'
   - name: source_videos
+    neurodata_type_inc: SourceVideos
     doc: Organizational group to hold source videos used for training.
-    groups:
-    - neurodata_type_inc: ImageSeries
-      doc: ImageSeries representing a video of training frames (stored internally
-        or externally
-      quantity: '*'

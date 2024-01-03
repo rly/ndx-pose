@@ -188,9 +188,40 @@ with NWBHDF5IO(path, mode='r', load_namespaces=True) as io:
 ```
 
 
+## Discussion
+
+1. Should we map `PoseEstimationSeries.confidence__definition` -> `PoseEstimationSeries.confidence_definition` and
+`PoseEstimation.source_software__version` -> `PoseEstimation.source_software_version` in the Python API?
+Note that the Matlab API uses a different format for accessing these fields.
+- Pros:
+    - Stays consistent with version 0.1.0-0.1.1
+    - When ndx-pose is integrated into the NWB core, the con below will not be relevant, and we will probably
+      want to use the single underscore version because it's slightly more readable and consistent with the
+      rest of PyNWB, so it would be better to start using that version now.
+- Cons:
+    - When reading data in Python, the code is different depending on whether the Python classes from ndx-pose
+      are used or the classes are generated from the schema directly.
+
+2. Should we create a typed group that would be contained within a `PoseTraining` object to contain `Skeleton` objects,
+e.g., a `Skeletons` group? This would be similar to the `Position` group containing `SpatialSeries` objects and a `BehavioralTimeSeries` group containing `TimeSeries` objects, except that unlike `SpatialSeries` and `TimeSeries`,
+`Skeleton` is not really a multi-purpose neurodata type. This makes the most sense for `SourceVideos`, because
+`ImageSeries` (i.e., a video), is pretty generic, and `SourceVideos` would tag the video as a source video for training
+and the auto-generated functions and variables in the parent `PoseTraining` object would use
+"source_videos" instead of "image_series".
+
+Similarly, should we create typed groups that would be contained within a `PoseTraining` object to contain
+`TrainingFrame` objects and `ImageSeries` objects? This type would be purely organizational.
+`NWBFile` has an untyped `acquisition` group and an untyped `processing` group for organization and tagging.
+A `ProcessingModule` is a typed group that exists solely for organization and tagging with custom names and
+descriptions.
+
+
 ## Contributors
 - @rly
 - @bendichter
 - @AlexEMG
+- @roomrys
+- @CBroz1
+- @h-mayorquin
 
 This extension was created using [ndx-template](https://github.com/nwb-extensions/ndx-template).
