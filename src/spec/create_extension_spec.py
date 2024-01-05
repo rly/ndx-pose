@@ -352,12 +352,14 @@ def main():
             NWBGroupSpec(
                 name="training_frames",
                 neurodata_type_inc="TrainingFrames",
-                doc="Organizational group to hold training frames",
+                doc="Organizational group to hold training frames.",
+                quantity="?",
             ),
             NWBGroupSpec(
                 name="source_videos",
                 neurodata_type_inc="SourceVideos",
                 doc="Organizational group to hold source videos used for training.",
+                quantity="?",
             ),
         ],
     )

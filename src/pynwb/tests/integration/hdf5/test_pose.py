@@ -2,10 +2,10 @@ import datetime
 import numpy as np
 
 from pynwb import NWBHDF5IO, NWBFile
-from pynwb.testing import TestCase, remove_test_file, NWBH5IOMixin
+from pynwb.testing import TestCase, remove_test_file, NWBH5IOFlexMixin
 
-from ndx_pose import PoseEstimationSeries, PoseEstimation, Skeleton, PoseTraining
-from ...unit.test_pose import create_series
+from ndx_pose import PoseEstimationSeries, PoseEstimation, PoseTraining, Skeletons
+from ndx_pose.testing.mock.pose import mock_PoseEstimationSeries, mock_Skeleton
 
 
 class TestPoseEstimationSeriesRoundtrip(TestCase):
@@ -40,7 +40,7 @@ class TestPoseEstimationSeriesRoundtrip(TestCase):
             confidence_definition="Softmax output of the deep neural network.",
         )
 
-        # ideally the PoseEstimationSeries is added to a PoseEstiamtion object but here, test just the series
+        # ideally the PoseEstimationSeries is added to a PoseEstimation object but here, test just the series
         behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
         behavior_pm.add(pes)
 
@@ -70,7 +70,6 @@ class TestPoseEstimationSeriesRoundtrip(TestCase):
         )
 
         data = np.random.rand(100, 3)  # num_frames x (x, y, z)
-        timestamps = np.linspace(0, 10, num=100)  # a timestamp for every frame
         confidence = np.random.rand(100)  # a confidence value for every frame
         front_right_paw = PoseEstimationSeries(
             name="front_right_paw",
@@ -101,34 +100,21 @@ class TestPoseEstimationSeriesRoundtrip(TestCase):
             )
 
 
-class TestPoseEstimationSeriesRoundtripPyNWB(NWBH5IOMixin, TestCase):
+class TestPoseEstimationSeriesRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
     """Complex, more complete roundtrip test for PoseEstimationSeries using pynwb.testing infrastructure."""
 
-    def setUpContainer(self):
-        """Return the test PoseEstimationSeries to read/write"""
-        data = np.random.rand(100, 3)  # num_frames x (x, y, z)
-        timestamps = np.linspace(0, 10, num=100)  # a timestamp for every frame
-        confidence = np.random.rand(100)  # a confidence value for every frame
-        pes = PoseEstimationSeries(
-            name="front_left_paw",
-            description="Marker placed around fingers of front left paw.",
-            data=data,
-            unit="pixels",
-            reference_frame="(0,0,0) corresponds to ...",
-            timestamps=timestamps,
-            confidence=confidence,
-            confidence_definition="Softmax output of the deep neural network.",
-        )
-        return pes
+    def getContainerType(self):
+        return "PoseEstimationSeries"
 
-    def addContainer(self, nwbfile):
-        """Add the test PoseEstimationSeries to the given NWBFile"""
-        behavior_pm = nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
-        behavior_pm.add(self.container)
+    def addContainer(self):
+        """Add the test PoseEstimationSeries to the given NWBFile """
+        pes = mock_PoseEstimationSeries(name="test_PES")
 
-    def getContainer(self, nwbfile):
-        """Return the test PoseEstimationSeries from the given NWBFile"""
-        return nwbfile.processing["behavior"][self.container.name]
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm.add(pes)
+
+    def getContainer(self, nwbfile: NWBFile):
+        return nwbfile.processing["behavior"]["test_PES"]
 
 
 class TestPoseEstimationRoundtrip(TestCase):
@@ -151,26 +137,23 @@ class TestPoseEstimationRoundtrip(TestCase):
         """
         Add a PoseEstimation to an NWBFile, write it, read it, and test that the read object matches the original.
         """
-        skeleton = Skeleton(
-            id="subject1",
-            nodes=["front_left_paw", "front_right_paw"],
-            edges=np.array([[0, 1]], dtype="uint8"),
-        )
-        pose_estimation_series = create_series()
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
         pe = PoseEstimation(
             pose_estimation_series=pose_estimation_series,
             description="Estimated positions of front paws using DeepLabCut.",
             original_videos=["camera1.mp4"],
             labeled_videos=["camera1_labeled.mp4"],
             dimensions=np.array([[640, 480]], dtype="uint16"),
+            devices=[self.nwbfile.devices["camera1"]],
             scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
             source_software="DeepLabCut",
             source_software_version="2.2b8",
             skeleton=skeleton,
-            cameras=[self.nwbfile.devices["camera1"]],
         )
 
-        pose_training = PoseTraining(skeletons=[skeleton])
+        skeletons = Skeletons(skeletons=[skeleton])
+        pose_training = PoseTraining(skeletons=skeletons)
 
         behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
         behavior_pm.add(pe)
@@ -183,11 +166,13 @@ class TestPoseEstimationRoundtrip(TestCase):
             read_nwbfile = io.read()
             read_pe = read_nwbfile.processing["behavior"]["PoseEstimation"]
             self.assertContainerEqual(read_pe, pe)
-            self.assertEqual(len(read_pe.pose_estimation_series), 2)
-            self.assertContainerEqual(read_pe.pose_estimation_series["front_left_paw"], pose_estimation_series[0])
-            self.assertContainerEqual(read_pe.pose_estimation_series["front_right_paw"], pose_estimation_series[1])
-            self.assertEqual(len(read_pe.cameras), 1)
-            self.assertContainerEqual(read_pe.cameras[0], self.nwbfile.devices["camera1"])
+            self.assertEqual(len(read_pe.pose_estimation_series), 3)
+            self.assertContainerEqual(read_pe.pose_estimation_series["node1"], pose_estimation_series[0])
+            self.assertContainerEqual(read_pe.pose_estimation_series["node2"], pose_estimation_series[1])
+            self.assertContainerEqual(read_pe.pose_estimation_series["node3"], pose_estimation_series[2])
+            self.assertContainerEqual(read_pe.skeleton, skeleton)
+            self.assertEqual(len(read_pe.devices), 1)
+            self.assertContainerEqual(read_pe.devices[0], self.nwbfile.devices["camera1"])
 
 
 # NOTE it is recommended to add links to devices in the constructor of PoseEstimation. however,

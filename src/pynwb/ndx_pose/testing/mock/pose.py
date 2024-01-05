@@ -24,7 +24,7 @@ def mock_PoseEstimationSeries(
     confidence_definition: Optional[str] = "Softmax output of the deep neural network.",
 ):
     if data is None:
-        data = np.arange(30).reshape((10, 3))
+        data = np.arange(30, dtype=np.float64).reshape((10, 3))
     if timestamps is not None:
         rate = None
     if timestamps is None and rate is None:
@@ -60,7 +60,7 @@ def mock_Skeleton(
 ):
     if nodes is None and edges is None:
         nodes = ["node1", "node2", "node3"]
-        edges = [(0, 1), (1, 2)]
+        edges = np.array([(0, 1), (1, 2)], dtype="uint8")
     skeleton = Skeleton(
         name=name or name_generator("Skeleton"),
         nodes=nodes,

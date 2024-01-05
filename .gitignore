@@ -1,3 +1,5 @@
+*.nwb
+
 # generated docs
 docs/source/_format_auto_docs
 

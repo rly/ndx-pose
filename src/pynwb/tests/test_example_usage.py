@@ -1,3 +1,4 @@
+"""An example of how to use the ndx-pose extension, packaged as a test so that it is run by pytest."""
 def test_example_usage():
     import datetime
     import numpy as np
