@@ -129,9 +129,9 @@ def test_example_usage():
     # the order of the nodes is defined by the skeleton.
     node_locations = np.array(
         [
-            [10, 10],  # front_left_paw
-            [20, 20],  # body
-            [30, 10],  # front_right_paw
+            [10.0, 10.0],  # front_left_paw
+            [20.0, 20.0],  # body
+            [30.0, 10.0],  # front_right_paw
         ]
     )
 

@@ -1,10 +1,12 @@
 from typing import Optional, Any
 
 import numpy as np
+from pynwb import NWBFile
 from pynwb.image import ImageSeries
 from pynwb.testing.mock.utils import name_generator
+from pynwb.testing.mock.device import mock_Device
 
-from ...pose import PoseEstimationSeries, Skeleton, SkeletonInstance, TrainingFrame
+from ...pose import PoseEstimationSeries, Skeleton, PoseEstimation, SkeletonInstance, TrainingFrame, Skeletons, PoseTraining
 
 
 def mock_PoseEstimationSeries(
@@ -70,6 +72,52 @@ def mock_Skeleton(
     return skeleton
 
 
+def mock_PoseEstimation(
+    *,
+    nwbfile: NWBFile,
+    pose_estimation_series: Optional[list] = None,
+    skeleton: Optional[Skeleton] = None,
+    devices: Optional[list] = None,
+    description: Optional[str] = "Estimated positions of front paws using DeepLabCut.",
+    original_videos: Optional[list] = None,
+    labeled_videos: Optional[list] = None,
+    dimensions: Optional[np.ndarray] = None,
+    scorer: Optional[str] = "DLC_resnet50_openfieldOct30shuffle1_1600",
+    source_software: Optional[str] = "DeepLabCut",
+    source_software_version: Optional[str] = "2.2b8",
+):
+    """Create a mock PoseEstimation object.
+
+    NWBFile should be provided so that the skeleton can be added to the NWBFile in a PoseTraining object.
+    """
+    skeleton = skeleton or mock_Skeleton()
+    pose_estimation_series = pose_estimation_series or [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+    pe = PoseEstimation(
+        pose_estimation_series=pose_estimation_series,
+        description=description,
+        original_videos=original_videos or ["camera1.mp4"],
+        labeled_videos=labeled_videos or ["camera1_labeled.mp4"],
+        dimensions=dimensions or np.array([[640, 480]], dtype="uint16"),
+        devices=devices or [mock_Device(nwbfile=nwbfile)],
+        scorer=scorer,
+        source_software=source_software,
+        source_software_version=source_software_version,
+        skeleton=skeleton,
+    )
+
+    if nwbfile is not None:
+        skeletons = Skeletons(skeletons=[skeleton])
+        pose_training = PoseTraining(skeletons=skeletons)
+
+        if "behavior" not in nwbfile.processing:
+            behavior_pm = nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        else:
+            behavior_pm = nwbfile.processing["behavior"]
+        behavior_pm.add(pe)
+        behavior_pm.add(pose_training)
+
+    return pe
+
 def mock_SkeletonInstance(
     *,
     id: Optional[np.uint] = np.uint(10),
@@ -90,7 +138,7 @@ def mock_SkeletonInstance(
             edges=np.array([[0, 1]], dtype="uint8"),
         )
     if node_locations is None:
-        node_locations = np.arange(num_nodes * 2).reshape((num_nodes, 2))
+        node_locations = np.arange(num_nodes * 2, dtype=np.float64).reshape((num_nodes, 2))
     if node_visibility is None:
         node_visibility = np.ones(num_nodes, dtype="bool")
     skeleton_instance = SkeletonInstance(
