@@ -2,7 +2,7 @@ from typing import Optional, Any
 
 import numpy as np
 from pynwb import NWBFile
-from pynwb.image import ImageSeries
+from pynwb.image import ImageSeries, Image, RGBImage
 from pynwb.testing.mock.utils import name_generator
 from pynwb.testing.mock.device import mock_Device
 
@@ -166,6 +166,11 @@ def mock_source_video(
     )
     return source_video
 
+def mock_source_frame(
+    *,
+    name: Optional[str] = None,
+):
+    return RGBImage(name=name, data=np.random.rand(640, 480, 3).astype("uint8"))
 
 def mock_TrainingFrame(
     *,
@@ -173,13 +178,15 @@ def mock_TrainingFrame(
     annotator: Optional[str] = "Awesome Possum",
     skeleton_instance: SkeletonInstance = None,
     source_video: ImageSeries = None,
+    source_frame: Image = None,
     source_video_frame_index: np.uint = np.uint(10),
 ):
     training_frame = TrainingFrame(
         name=name or name_generator("TrainingFrame"),
         annotator=annotator,
         skeleton_instance=skeleton_instance or mock_SkeletonInstance(),
-        source_video=source_video or mock_source_video(),
+        source_video=source_video or (mock_source_video() if source_frame is None else None),
+        source_frame=source_frame,
         source_video_frame_index=source_video_frame_index,
     )
     return training_frame
