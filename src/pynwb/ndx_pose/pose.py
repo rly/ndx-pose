@@ -1,5 +1,6 @@
-from hdmf.utils import docval, popargs, get_docval, AllowPositional
+import warnings
 
+from hdmf.utils import docval, popargs, get_docval, AllowPositional
 from pynwb import register_class, TimeSeries, get_class
 from pynwb.behavior import SpatialSeries
 from pynwb.core import MultiContainerInterface
@@ -118,6 +119,8 @@ class PoseEstimation(MultiContainerInterface):
         "scorer",
         "source_software",
         "source_software_version",
+        "nodes",
+        "edges",
         "skeleton",
     )
 
@@ -220,25 +223,30 @@ class PoseEstimation(MultiContainerInterface):
         allow_positional=AllowPositional.ERROR,
     )
     def __init__(self, **kwargs):
-        nodes, edges = popargs("nodes", "edges", kwargs)
+        nodes, edges, skeleton = popargs("nodes", "edges", "skeleton", kwargs)
         if nodes is not None or edges is not None:
-            raise ValueError(
-                "The 'nodes' and 'edges' arguments are deprecated. Please use the 'skeleton' argument " "instead."
+            if skeleton is not None:
+                raise ValueError("Cannot specify both 'nodes' and 'edges' and 'skeleton'.")
+            skeleton = Skeleton(name="subject", nodes=nodes, edges=edges)
+            warnings.warn(
+                "The 'nodes' and 'edges' arguments are deprecated. Please use the 'skeleton' argument instead.",
+                DeprecationWarning, stacklevel=2
             )
 
+        # devices must be added to the NWBFile before being linked to from a PoseEstimation object.
+        # otherwise, they will be added as children of the PoseEstimation object.
         devices = popargs("devices", kwargs)
         if devices is not None:
             for device in devices:
                 if device.parent is None:
                     raise ValueError(
-                        "All devices linked to from a PoseEstimation object " "must be added to the NWBFile first."
+                        "All devices linked to from a PoseEstimation object must be added to the NWBFile first."
                     )
 
         pose_estimation_series, description = popargs("pose_estimation_series", "description", kwargs)
         original_videos, labeled_videos = popargs("original_videos", "labeled_videos", kwargs)
         dimensions, scorer = popargs("dimensions", "scorer", kwargs)
         source_software, source_software_version = popargs("source_software", "source_software_version", kwargs)
-        skeleton = popargs("skeleton", kwargs)
         super().__init__(**kwargs)
         self.pose_estimation_series = pose_estimation_series
         self.description = description
@@ -250,8 +258,12 @@ class PoseEstimation(MultiContainerInterface):
         self.source_software = source_software
         self.source_software_version = source_software_version
         self.skeleton = skeleton
+        self.fields["nodes"] = nodes
+        self.fields["edges"] = edges
 
         # TODO include calibration images for 3D estimates?
+
+        # TODO validate that the nodes correspond to the names of the pose estimation series objects
 
         # validate that len(original_videos) == len(labeled_videos) == len(dimensions) == len(cameras)
         if original_videos is not None and (devices is None or len(original_videos) != len(devices)):
@@ -260,3 +272,19 @@ class PoseEstimation(MultiContainerInterface):
             raise ValueError("The number of labeled videos should equal the number of camera devices.")
         if dimensions is not None and (devices is None or len(dimensions) != len(devices)):
             raise ValueError("The number of dimensions should equal the number of camera devices.")
+
+    @property
+    def nodes(self):
+        return self.skeleton.nodes
+
+    @nodes.setter
+    def nodes(self, value):
+        raise ValueError("'nodes' is deprecated. Please use the 'skeleton' field instead.")
+
+    @property
+    def edges(self):
+        return self.skeleton.edges
+
+    @edges.setter
+    def edges(self, value):
+        raise ValueError("'edges' is deprecated. Please use the 'skeleton' field instead.")

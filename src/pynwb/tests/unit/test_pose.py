@@ -2,7 +2,7 @@ import datetime
 import numpy as np
 
 from pynwb import NWBFile
-from pynwb.image import ImageSeries
+from pynwb.device import Device
 from pynwb.testing import TestCase
 
 from ndx_pose import (
@@ -129,6 +129,84 @@ class TestPoseEstimationConstructor(TestCase):
         self.assertEqual(pe.source_software, "DeepLabCut")
         self.assertEqual(pe.source_software_version, "2.2b8")
         self.assertIs(pe.skeleton, skeleton)
+
+    def test_bad_device_link(self):
+        front_left_paw = mock_PoseEstimationSeries(
+            name="front_left_paw",
+        )
+        body = mock_PoseEstimationSeries(
+            name="body",
+            timestamps=front_left_paw,  # link to timestamps of front_left_paw
+        )
+        front_right_paw = mock_PoseEstimationSeries(
+            name="front_right_paw",
+            timestamps=front_left_paw,  # link to timestamps of front_left_paw
+        )
+        pose_estimation_series = [front_left_paw, body, front_right_paw]
+        skeleton = mock_Skeleton(
+            nodes=["front_left_paw", "body", "front_right_paw"],
+            # edge between front left paw and body, edge between body and front right paw.
+            # the values are the indices of the nodes in the nodes list.
+            edges=np.array([[0, 1], [1, 2]], dtype="uint8"),
+        )
+        camera1 = Device(name="camera1")
+        camera2 = Device(name="camera2")
+
+        msg = "All devices linked to from a PoseEstimation object must be added to the NWBFile first."
+        with self.assertRaisesWith(ValueError, msg):
+            PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                description="Estimated positions of front paws using DeepLabCut.",
+                original_videos=["camera1.mp4", "camera2.mp4"],
+                labeled_videos=["camera1_labeled.mp4", "camera2_labeled.mp4"],
+                dimensions=np.array([[640, 480], [1024, 768]], dtype="uint16"),
+                devices=[camera1, camera2],
+                scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
+                source_software="DeepLabCut",
+                source_software_version="2.2b8",
+                skeleton=skeleton,
+            )
+
+    def test_constructor_nodes_edges(self):
+        """Test the old constructor for PoseEstimation with nodes and edges."""
+        front_left_paw = mock_PoseEstimationSeries(
+            name="front_left_paw",
+        )
+        body = mock_PoseEstimationSeries(
+            name="body",
+            timestamps=front_left_paw,  # link to timestamps of front_left_paw
+        )
+        front_right_paw = mock_PoseEstimationSeries(
+            name="front_right_paw",
+            timestamps=front_left_paw,  # link to timestamps of front_left_paw
+        )
+        pose_estimation_series = [front_left_paw, body, front_right_paw]
+
+        msg = "The 'nodes' and 'edges' arguments are deprecated. Please use the 'skeleton' argument instead."
+        with self.assertWarnsWith(DeprecationWarning, msg):
+            pe = PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                description="Estimated positions of front paws using DeepLabCut.",
+                original_videos=["camera1.mp4", "camera2.mp4"],
+                labeled_videos=["camera1_labeled.mp4", "camera2_labeled.mp4"],
+                dimensions=np.array([[640, 480], [1024, 768]], dtype="uint16"),
+                devices=[self.nwbfile.devices["camera1"], self.nwbfile.devices["camera2"]],
+                scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
+                source_software="DeepLabCut",
+                source_software_version="2.2b8",
+                nodes=["front_left_paw", "body", "front_right_paw"],
+                edges=np.array([[0, 1], [1, 2]], dtype="uint8"),
+            )
+        self.assertEqual(pe.nodes, ["front_left_paw", "body", "front_right_paw"])
+        np.testing.assert_array_equal(pe.edges, np.array([[0, 1], [1, 2]], dtype="uint8"))
+        skeleton = Skeleton(
+            name="subject",
+            nodes=["front_left_paw", "body", "front_right_paw"],
+            edges=np.array([[0, 1], [1, 2]], dtype="uint8"),
+        )
+        self.assertEqual(pe.skeleton.name, skeleton.name)
+        self.assertEqual(pe.skeleton.nodes, skeleton.nodes)
+        np.testing.assert_array_equal(pe.skeleton.edges, skeleton.edges)
 
 
 class TestSkeletonInstance(TestCase):
