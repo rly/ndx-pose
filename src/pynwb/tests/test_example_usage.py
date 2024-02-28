@@ -1,4 +1,6 @@
 """An example of how to use the ndx-pose extension, packaged as a test so that it is run by pytest."""
+
+
 def test_example_usage():
     import datetime
     import numpy as np
@@ -13,6 +15,7 @@ def test_example_usage():
         Skeletons,
         TrainingFrames,
         SourceVideos,
+        SkeletonInstances,
     )
     from pynwb.image import ImageSeries
 
@@ -97,7 +100,9 @@ def test_example_usage():
         description="Estimated positions of front paws using DeepLabCut.",
         original_videos=["path/to/camera1.mp4"],
         labeled_videos=["path/to/camera1_labeled.mp4"],
-        dimensions=np.array([[640, 480]], dtype="uint16"),  # pixel dimensions of the video
+        dimensions=np.array(
+            [[640, 480]], dtype="uint16"
+        ),  # pixel dimensions of the video
         devices=[camera1],
         scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
         source_software="DeepLabCut",
@@ -135,11 +140,15 @@ def test_example_usage():
         ]
     )
 
-    skeleton_instances = []
+    # create 50 training frames using the training video and the skeleton instances.
+    # the skeleton instances start with video frame 0 and end with video frame 49.
+    training_frames_list = []
     for i in range(50):
+        skeleton_instances_list = []
         # add some noise to the node locations from the location on the previous frame
         node_locations = node_locations + np.random.rand(3, 2)
-        instance = SkeletonInstance(
+        instance_1 = SkeletonInstance(
+            name=f"skeleton1_instance{i}",
             id=np.uint(i),
             node_locations=node_locations,
             node_visibility=[
@@ -149,17 +158,33 @@ def test_example_usage():
             ],
             skeleton=skeleton,  # link to the skeleton
         )
-        skeleton_instances.append(instance)
+        skeleton_instances_list.append(instance_1)
 
-    # create 50 training frames using the training video and the skeleton instances.
-    # the skeleton instances start with video frame 0 and end with video frame 49.
-    training_frames_list = []
-    for i in range(50):
+        # add some noise to the node locations from the location on the previous frame
+        node_locations = node_locations + np.random.rand(3, 2)
+        instance_2 = SkeletonInstance(
+            name=f"skeleton2_instance{i}",
+            id=np.uint(i),
+            node_locations=node_locations,
+            node_visibility=[
+                True,  # front_left_paw
+                True,  # body
+                True,  # front_right_paw
+            ],
+            skeleton=skeleton,  # link to the skeleton
+        )
+        skeleton_instances_list.append(instance_2)
+
+        # store the skeleton instances in a SkeletonInstances object
+        skeleton_instances = SkeletonInstances(
+            skeleton_instances=skeleton_instances_list
+        )
+
         # names must be unique within a PoseTraining object (we will add them to a PoseTraining object below)
         training_frame = TrainingFrame(
             name="frame_{}".format(i),
             annotator="Bilbo Baggins",
-            skeleton_instance=skeleton_instances[i],
+            skeleton_instances=skeleton_instances,
             source_video=training_video1,
             source_video_frame_index=np.uint(i),
         )

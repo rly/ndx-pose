@@ -215,7 +215,6 @@ def main():
         neurodata_type_inc="NWBDataInterface",
         doc=(
             "Group that holds ground-truth pose data for a single instance of a skeleton in a single frame. "
-            "This is meant to be used within a TrainingFrame."
         ),
         default_name="skeleton_instance",
         links=[
@@ -235,7 +234,9 @@ def main():
         datasets=[
             NWBDatasetSpec(
                 name="node_locations",
-                doc=("Locations (x, y) or (x, y, z) of nodes for single instance in single frame."),
+                doc=(
+                    "Locations (x, y) or (x, y, z) of nodes for single instance in single frame."
+                ),
                 dtype="float",
                 dims=[["num_body_parts", "x, y"], ["num_body_parts", "x, y, z"]],
                 shape=[[None, 2], [None, 3]],
@@ -251,6 +252,23 @@ def main():
                 dims=["num_body_parts"],
                 shape=[None],
                 quantity="?",
+            ),
+        ],
+    )
+
+    skeleton_instances = NWBGroupSpec(
+        neurodata_type_def="SkeletonInstances",
+        neurodata_type_inc="NWBDataInterface",
+        doc=(
+            "Organizational group to hold skeleton instances."
+            "This is meant to be used within a TrainingFrame."
+        ),
+        default_name="skeleton_instances",
+        groups=[
+            NWBGroupSpec(
+                neurodata_type_inc="SkeletonInstance",
+                doc="Ground-truth position data for a single instance of a skeleton in a single training frame.",
+                quantity="*",
             ),
         ],
     )
@@ -277,9 +295,9 @@ def main():
         default_name="TrainingFrame",
         groups=[
             NWBGroupSpec(
-                name="skeleton_instance",
-                neurodata_type_inc="SkeletonInstance",
-                doc="Position data for a single instance of a skeleton in a single training frame.",
+                name="skeleton_instances",
+                neurodata_type_inc="SkeletonInstances",
+                doc="Position data for all instances of a skeleton in a single training frame.",
             ),
         ],
         attributes=[
@@ -371,15 +389,20 @@ def main():
         training_frame,
         skeleton_instance,
         training_frames,
+        skeleton_instances,
         source_videos,
         skeletons,
         pose_training,
     ]
 
     # export the spec to yaml files in the spec folder
-    output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "spec"))
+    output_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "spec")
+    )
     export_spec(ns_builder, new_data_types, output_dir)
-    print("Spec files generated. Please make sure to rerun `pip install .` to load the changes.")
+    print(
+        "Spec files generated. Please make sure to rerun `pip install .` to load the changes."
+    )
 
 
 if __name__ == "__main__":

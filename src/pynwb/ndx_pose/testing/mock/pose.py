@@ -6,7 +6,16 @@ from pynwb.image import ImageSeries, Image, RGBImage
 from pynwb.testing.mock.utils import name_generator
 from pynwb.testing.mock.device import mock_Device
 
-from ...pose import PoseEstimationSeries, Skeleton, PoseEstimation, SkeletonInstance, TrainingFrame, Skeletons, PoseTraining
+from ...pose import (
+    PoseEstimationSeries,
+    Skeleton,
+    PoseEstimation,
+    SkeletonInstance,
+    SkeletonInstances,
+    TrainingFrame,
+    Skeletons,
+    PoseTraining,
+)
 
 
 def mock_PoseEstimationSeries(
@@ -91,7 +100,9 @@ def mock_PoseEstimation(
     NWBFile should be provided so that the skeleton can be added to the NWBFile in a PoseTraining object.
     """
     skeleton = skeleton or mock_Skeleton()
-    pose_estimation_series = pose_estimation_series or [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+    pose_estimation_series = pose_estimation_series or [
+        mock_PoseEstimationSeries(name=name) for name in skeleton.nodes
+    ]
     pe = PoseEstimation(
         pose_estimation_series=pose_estimation_series,
         description=description,
@@ -110,7 +121,9 @@ def mock_PoseEstimation(
         pose_training = PoseTraining(skeletons=skeletons)
 
         if "behavior" not in nwbfile.processing:
-            behavior_pm = nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+            behavior_pm = nwbfile.create_processing_module(
+                name="behavior", description="processed behavioral data"
+            )
         else:
             behavior_pm = nwbfile.processing["behavior"]
         behavior_pm.add(pe)
@@ -118,8 +131,10 @@ def mock_PoseEstimation(
 
     return pe
 
+
 def mock_SkeletonInstance(
     *,
+    name: Optional[str] = None,
     id: Optional[np.uint] = np.uint(10),
     node_locations: Optional[Any] = None,
     node_visibility: list = None,
@@ -138,16 +153,33 @@ def mock_SkeletonInstance(
             edges=np.array([[0, 1]], dtype="uint8"),
         )
     if node_locations is None:
-        node_locations = np.arange(num_nodes * 2, dtype=np.float64).reshape((num_nodes, 2))
+        node_locations = np.arange(num_nodes * 2, dtype=np.float64).reshape(
+            (num_nodes, 2)
+        )
+
+    if name is None:
+        name = skeleton.name + "_instance_" + str(id)
     if node_visibility is None:
         node_visibility = np.ones(num_nodes, dtype="bool")
     skeleton_instance = SkeletonInstance(
+        name=name,
         id=id,
         node_locations=node_locations,
         node_visibility=node_visibility,
         skeleton=skeleton,
     )
+
     return skeleton_instance
+
+
+def mock_SkeletonInstances(skeleton_instances=None):
+    if skeleton_instances is None:
+        skeleton_instances = [mock_SkeletonInstance()]
+    if not isinstance(skeleton_instances, list):
+        skeleton_instances = [skeleton_instances]
+    return SkeletonInstances(
+        skeleton_instances=skeleton_instances,
+    )
 
 
 def mock_source_video(
@@ -172,11 +204,18 @@ def mock_source_frame(
 ):
     return RGBImage(name=name, data=np.random.rand(640, 480, 3).astype("uint8"))
 
+def mock_source_frame(
+    *,
+    name: Optional[str] = None,
+):
+    return RGBImage(name=name, data=np.random.rand(640, 480, 3).astype("uint8"))
+
+
 def mock_TrainingFrame(
     *,
     name: Optional[str] = None,
     annotator: Optional[str] = "Awesome Possum",
-    skeleton_instance: SkeletonInstance = None,
+    skeleton_instances: SkeletonInstances = None,
     source_video: ImageSeries = None,
     source_frame: Image = None,
     source_video_frame_index: np.uint = np.uint(10),
@@ -184,8 +223,9 @@ def mock_TrainingFrame(
     training_frame = TrainingFrame(
         name=name or name_generator("TrainingFrame"),
         annotator=annotator,
-        skeleton_instance=skeleton_instance or mock_SkeletonInstance(),
-        source_video=source_video or (mock_source_video() if source_frame is None else None),
+        skeleton_instances=skeleton_instances or mock_SkeletonInstances(),
+        source_video=source_video
+        or (mock_source_video() if source_frame is None else None),
         source_frame=source_frame,
         source_video_frame_index=source_video_frame_index,
     )

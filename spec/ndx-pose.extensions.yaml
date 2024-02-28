@@ -142,9 +142,9 @@ groups:
       then `source_video` is required.
     required: false
   groups:
-  - name: skeleton_instance
-    neurodata_type_inc: SkeletonInstance
-    doc: Position data for a single instance of a skeleton in a single training frame.
+  - name: skeleton_instances
+    neurodata_type_inc: SkeletonInstances
+    doc: Position data for all instances of a skeleton in a single training frame.
   links:
   - name: source_video
     target_type: ImageSeries
@@ -159,8 +159,8 @@ groups:
 - neurodata_type_def: SkeletonInstance
   neurodata_type_inc: NWBDataInterface
   default_name: skeleton_instance
-  doc: Group that holds ground-truth pose data for a single instance of a skeleton
-    in a single frame. This is meant to be used within a TrainingFrame.
+  doc: 'Group that holds ground-truth pose data for a single instance of a skeleton
+    in a single frame. '
   attributes:
   - name: id
     dtype: uint8
@@ -199,6 +199,16 @@ groups:
   groups:
   - neurodata_type_inc: TrainingFrame
     doc: Ground-truth position data for all instances of a skeleton in a single frame.
+    quantity: '*'
+- neurodata_type_def: SkeletonInstances
+  neurodata_type_inc: NWBDataInterface
+  default_name: skeleton_instances
+  doc: Organizational group to hold skeleton instances.This is meant to be used within
+    a TrainingFrame.
+  groups:
+  - neurodata_type_inc: SkeletonInstance
+    doc: Ground-truth position data for a single instance of a skeleton in a single
+      training frame.
     quantity: '*'
 - neurodata_type_def: SourceVideos
   neurodata_type_inc: NWBDataInterface
