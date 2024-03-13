@@ -3,8 +3,13 @@
 ## ndx-pose 0.2.0 (Upcoming)
 
 ### Breaking changes
-- Removed "nodes" and "edges" fields from `PoseEstimation` neurodata type. Create a `Skeleton` object and pass
-  it to the `skeleton` keyword argument of `PoseEstimation.__init__` instead. @rly (#7)
+- Removed the `nodes` and `edges` fields from `PoseEstimation` neurodata type. To specify these,
+  create a `Skeleton` object with those values, create a `Skeletons` object and pass the `Skeleton`
+  object to that, and add the `Skeletons` object to your "behavior" processing module. @rly (#7, #24)
+
+### Major changes
+- Added support for storing training data in the new `PoseTraining` neurodata type and other new types.
+  @roomrys, @CBroz1, @rly, @talmo, @eberrigan (#7, #21, #24)
 
 ### Minor changes
 - Made `PoseEstimation.confidence` optional. @h-mayorquin (#11)

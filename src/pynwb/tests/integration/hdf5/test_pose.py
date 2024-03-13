@@ -167,6 +167,8 @@ class TestPoseEstimationRoundtrip(TestCase):
         Add a PoseEstimation to an NWBFile, write it, read it, and test that the read object matches the original.
         """
         skeleton = mock_Skeleton()
+        skeletons = Skeletons(skeletons=[skeleton])
+
         pose_estimation_series = [
             mock_PoseEstimationSeries(name=name) for name in skeleton.nodes
         ]
@@ -183,14 +185,11 @@ class TestPoseEstimationRoundtrip(TestCase):
             skeleton=skeleton,
         )
 
-        skeletons = Skeletons(skeletons=[skeleton])
-        pose_training = PoseTraining(skeletons=skeletons)
-
         behavior_pm = self.nwbfile.create_processing_module(
             name="behavior", description="processed behavioral data"
         )
         behavior_pm.add(pe)
-        behavior_pm.add(pose_training)
+        behavior_pm.add(skeletons)
 
         with NWBHDF5IO(self.path, mode="w") as io:
             io.write(self.nwbfile)
@@ -240,6 +239,8 @@ class TestPoseTrainingRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
         """Add the test PoseTraining to the given NWBFile"""
         skeleton1 = mock_Skeleton(name="subject1")
         skeleton2 = mock_Skeleton(name="subject2")
+        skeletons = Skeletons(skeletons=[skeleton1, skeleton2])
+
         source_video = mock_source_video(name="source_video")
         sk1_instance10 = mock_SkeletonInstance(id=np.uint(10), skeleton=skeleton1)
         sk1_instance11 = mock_SkeletonInstance(id=np.uint(11), skeleton=skeleton1)
@@ -265,14 +266,12 @@ class TestPoseTrainingRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
             source_video_frame_index=np.uint(10),
         )
 
-        skeletons = Skeletons(skeletons=[skeleton1, skeleton2])
         training_frames = TrainingFrames(
             training_frames=[sk1_training_frame, sk2_training_frame]
         )
         source_videos = SourceVideos(image_series=[source_video])
 
         pose_training = PoseTraining(
-            skeletons=skeletons,
             training_frames=training_frames,
             source_videos=source_videos,
         )
@@ -281,6 +280,7 @@ class TestPoseTrainingRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
             name="behavior",
             description="processed behavioral data",
         )
+        behavior_pm.add(skeletons)
         behavior_pm.add(pose_training)
 
     def getContainer(self, nwbfile: NWBFile):

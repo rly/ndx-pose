@@ -14,7 +14,6 @@ from ...pose import (
     SkeletonInstances,
     TrainingFrame,
     Skeletons,
-    PoseTraining,
 )
 
 
@@ -118,7 +117,6 @@ def mock_PoseEstimation(
 
     if nwbfile is not None:
         skeletons = Skeletons(skeletons=[skeleton])
-        pose_training = PoseTraining(skeletons=skeletons)
 
         if "behavior" not in nwbfile.processing:
             behavior_pm = nwbfile.create_processing_module(
@@ -127,7 +125,7 @@ def mock_PoseEstimation(
         else:
             behavior_pm = nwbfile.processing["behavior"]
         behavior_pm.add(pe)
-        behavior_pm.add(pose_training)
+        behavior_pm.add(skeletons)
 
     return pe
 

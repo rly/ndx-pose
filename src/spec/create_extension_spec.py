@@ -72,14 +72,20 @@ def main():
                 quantity="?",
             ),
         ],
+        links=[
+            NWBLinkSpec(
+                doc="The Subject object in the NWB file, if this Skeleton corresponds to the Subject.",
+                target_type="Subject",
+                quantity="?",
+            ),
+        ],
     )
 
     skeletons = NWBGroupSpec(
         neurodata_type_def="Skeletons",
         neurodata_type_inc="NWBDataInterface",
         doc="Organizational group to hold skeletons.",
-        # this is meant to be used in a PoseTraining object which will enforce this name
-        default_name="skeletons",
+        default_name="Skeletons",
         groups=[
             NWBGroupSpec(
                 neurodata_type_inc="Skeleton",
@@ -365,14 +371,9 @@ def main():
     pose_training = NWBGroupSpec(
         neurodata_type_def="PoseTraining",
         neurodata_type_inc="NWBDataInterface",
-        doc="Group that holds images, ground-truth annotations, and metadata for training a pose estimator.",
+        doc="Group that holds source videos and ground-truth annotations for training a pose estimator.",
         default_name="PoseTraining",
         groups=[
-            NWBGroupSpec(
-                name="skeletons",
-                neurodata_type_inc="Skeletons",
-                doc="Organizational group to hold skeletons.",
-            ),
             NWBGroupSpec(
                 name="training_frames",
                 neurodata_type_inc="TrainingFrames",
