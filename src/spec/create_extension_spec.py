@@ -23,6 +23,9 @@ def main():
             "Alexander Mathis",
             "Liezl Maree",
             "Chris Brozdowski",
+            "Heberto Mayorquin",
+            "Talmo Pereira",
+            "Elizabeth Berrigan",
         ],
         contact=[
             "rly@lbl.gov",
@@ -30,6 +33,9 @@ def main():
             "alexander.mathis@epfl.ch",
             "lmaree@salk.edu",
             "cbroz@datajoint.com",
+            "h.mayorquin@gmail.com",
+            "talmo@salk.edu",
+            "eberrigan@salk.edu",
         ],
     )
 

@@ -317,5 +317,7 @@ also use ndx-pose.
 - @roomrys
 - @CBroz1
 - @h-mayorquin
+- @talmo
+- @eberrigan
 
 This extension was created using [ndx-template](https://github.com/nwb-extensions/ndx-template).
