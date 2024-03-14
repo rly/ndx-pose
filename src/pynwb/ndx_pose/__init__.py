@@ -2,7 +2,9 @@ import os
 from pynwb import load_namespaces, get_class
 
 # Set path of the namespace.yaml file to the expected install location
-ndx_pose_specpath = os.path.join(os.path.dirname(__file__), "spec", "ndx-pose.namespace.yaml")
+ndx_pose_specpath = os.path.join(
+    os.path.dirname(__file__), "spec", "ndx-pose.namespace.yaml"
+)
 
 # If the extension has not been installed yet but we are running directly from
 # the git repo
@@ -30,6 +32,7 @@ from .pose import (
     TrainingFrame,
     TrainingFrames,
     SkeletonInstance,
+    SkeletonInstances,
     SourceVideos,
     PoseTraining,
 )  # noqa: E402, F401

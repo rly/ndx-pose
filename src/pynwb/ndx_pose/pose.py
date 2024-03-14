@@ -10,6 +10,7 @@ from pynwb.core import MultiContainerInterface
 Skeleton = get_class("Skeleton", "ndx-pose")
 Skeletons = get_class("Skeletons", "ndx-pose")
 SkeletonInstance = get_class("SkeletonInstance", "ndx-pose")
+SkeletonInstances = get_class("SkeletonInstances", "ndx-pose")
 TrainingFrame = get_class("TrainingFrame", "ndx-pose")
 TrainingFrames = get_class("TrainingFrames", "ndx-pose")
 SourceVideos = get_class("SourceVideos", "ndx-pose")
@@ -30,7 +31,9 @@ class PoseEstimationSeries(SpatialSeries):
         {
             "name": "name",
             "type": str,
-            "doc": ("Name of this PoseEstimationSeries, usually the name of a body part."),
+            "doc": (
+                "Name of this PoseEstimationSeries, usually the name of a body part."
+            ),
         },
         {
             "name": "data",
@@ -47,7 +50,9 @@ class PoseEstimationSeries(SpatialSeries):
             "name": "confidence",
             "type": ("array_data", "data"),
             "shape": (None,),
-            "doc": ("Confidence or likelihood of the estimated positions, scaled to be between 0 and 1."),
+            "doc": (
+                "Confidence or likelihood of the estimated positions, scaled to be between 0 and 1."
+            ),
             "default": None,
         },
         {
@@ -64,7 +69,8 @@ class PoseEstimationSeries(SpatialSeries):
             "name": "confidence_definition",
             "type": str,
             "doc": (
-                "Description of how the confidence was computed, e.g., " "'Softmax output of the deep neural network'."
+                "Description of how the confidence was computed, e.g., "
+                "'Softmax output of the deep neural network'."
             ),
             "default": None,
         },
@@ -85,7 +91,9 @@ class PoseEstimationSeries(SpatialSeries):
     )
     def __init__(self, **kwargs):
         """Construct a new PoseEstimationSeries representing pose estimates for a particular body part."""
-        confidence, confidence_definition = popargs("confidence", "confidence_definition", kwargs)
+        confidence, confidence_definition = popargs(
+            "confidence", "confidence_definition", kwargs
+        )
         super().__init__(**kwargs)
         self.confidence = confidence
         self.confidence_definition = confidence_definition
@@ -160,7 +168,9 @@ class PoseEstimation(MultiContainerInterface):
             "name": "labeled_videos",
             "type": ("array_data", "data"),
             "shape": (None,),
-            "doc": ("Paths to the labeled video files. The number of files should equal the number of camera devices."),
+            "doc": (
+                "Paths to the labeled video files. The number of files should equal the number of camera devices."
+            ),
             "default": None,
         },
         {
@@ -185,7 +195,9 @@ class PoseEstimation(MultiContainerInterface):
         {
             "name": "source_software",
             "type": str,
-            "doc": ("Name of the software tool used. Specifying the version attribute is strongly encouraged."),
+            "doc": (
+                "Name of the software tool used. Specifying the version attribute is strongly encouraged."
+            ),
             "default": None,
         },
         {
@@ -226,11 +238,14 @@ class PoseEstimation(MultiContainerInterface):
         nodes, edges, skeleton = popargs("nodes", "edges", "skeleton", kwargs)
         if nodes is not None or edges is not None:
             if skeleton is not None:
-                raise ValueError("Cannot specify both 'nodes' and 'edges' and 'skeleton'.")
+                raise ValueError(
+                    "Cannot specify both 'nodes' and 'edges' and 'skeleton'."
+                )
             skeleton = Skeleton(name="subject", nodes=nodes, edges=edges)
             warnings.warn(
                 "The 'nodes' and 'edges' arguments are deprecated. Please use the 'skeleton' argument instead.",
-                DeprecationWarning, stacklevel=2
+                DeprecationWarning,
+                stacklevel=2,
             )
 
         # devices must be added to the NWBFile before being linked to from a PoseEstimation object.
@@ -243,10 +258,16 @@ class PoseEstimation(MultiContainerInterface):
                         "All devices linked to from a PoseEstimation object must be added to the NWBFile first."
                     )
 
-        pose_estimation_series, description = popargs("pose_estimation_series", "description", kwargs)
-        original_videos, labeled_videos = popargs("original_videos", "labeled_videos", kwargs)
+        pose_estimation_series, description = popargs(
+            "pose_estimation_series", "description", kwargs
+        )
+        original_videos, labeled_videos = popargs(
+            "original_videos", "labeled_videos", kwargs
+        )
         dimensions, scorer = popargs("dimensions", "scorer", kwargs)
-        source_software, source_software_version = popargs("source_software", "source_software_version", kwargs)
+        source_software, source_software_version = popargs(
+            "source_software", "source_software_version", kwargs
+        )
         super().__init__(**kwargs)
         self.pose_estimation_series = pose_estimation_series
         self.description = description
@@ -266,12 +287,24 @@ class PoseEstimation(MultiContainerInterface):
         # TODO validate that the nodes correspond to the names of the pose estimation series objects
 
         # validate that len(original_videos) == len(labeled_videos) == len(dimensions) == len(cameras)
-        if original_videos is not None and (devices is None or len(original_videos) != len(devices)):
-            raise ValueError("The number of original videos should equal the number of camera devices.")
-        if labeled_videos is not None and (devices is None or len(labeled_videos) != len(devices)):
-            raise ValueError("The number of labeled videos should equal the number of camera devices.")
-        if dimensions is not None and (devices is None or len(dimensions) != len(devices)):
-            raise ValueError("The number of dimensions should equal the number of camera devices.")
+        if original_videos is not None and (
+            devices is None or len(original_videos) != len(devices)
+        ):
+            raise ValueError(
+                "The number of original videos should equal the number of camera devices."
+            )
+        if labeled_videos is not None and (
+            devices is None or len(labeled_videos) != len(devices)
+        ):
+            raise ValueError(
+                "The number of labeled videos should equal the number of camera devices."
+            )
+        if dimensions is not None and (
+            devices is None or len(dimensions) != len(devices)
+        ):
+            raise ValueError(
+                "The number of dimensions should equal the number of camera devices."
+            )
 
     @property
     def nodes(self):
@@ -279,7 +312,9 @@ class PoseEstimation(MultiContainerInterface):
 
     @nodes.setter
     def nodes(self, value):
-        raise ValueError("'nodes' is deprecated. Please use the 'skeleton' field instead.")
+        raise ValueError(
+            "'nodes' is deprecated. Please use the 'skeleton' field instead."
+        )
 
     @property
     def edges(self):
@@ -287,4 +322,6 @@ class PoseEstimation(MultiContainerInterface):
 
     @edges.setter
     def edges(self, value):
-        raise ValueError("'edges' is deprecated. Please use the 'skeleton' field instead.")
+        raise ValueError(
+            "'edges' is deprecated. Please use the 'skeleton' field instead."
+        )

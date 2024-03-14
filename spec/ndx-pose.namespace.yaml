@@ -5,12 +5,18 @@ namespaces:
   - Alexander Mathis
   - Liezl Maree
   - Chris Brozdowski
+  - Heberto Mayorquin
+  - Talmo Pereira
+  - Elizabeth Berrigan
   contact:
   - rly@lbl.gov
   - bdichter@lbl.gov
   - alexander.mathis@epfl.ch
   - lmaree@salk.edu
   - cbroz@datajoint.com
+  - h.mayorquin@gmail.com
+  - talmo@salk.edu
+  - eberrigan@salk.edu
   doc: NWB extension to store pose estimation data
   name: ndx-pose
   schema:

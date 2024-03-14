@@ -4,8 +4,25 @@ import numpy as np
 from pynwb import NWBHDF5IO, NWBFile
 from pynwb.testing import TestCase, remove_test_file, NWBH5IOFlexMixin
 
-from ndx_pose import PoseEstimationSeries, PoseEstimation, PoseTraining, Skeletons, SourceVideos, TrainingFrames
-from ndx_pose.testing.mock.pose import mock_PoseEstimationSeries, mock_Skeleton, mock_PoseEstimation, mock_SkeletonInstance, mock_TrainingFrame, mock_source_video
+from ndx_pose import (
+    PoseEstimationSeries,
+    PoseEstimation,
+    PoseTraining,
+    Skeletons,
+    SourceVideos,
+    TrainingFrames,
+    SkeletonInstance,
+    SkeletonInstances,
+)
+from ndx_pose.testing.mock.pose import (
+    mock_PoseEstimationSeries,
+    mock_Skeleton,
+    mock_PoseEstimation,
+    mock_SkeletonInstance,
+    mock_SkeletonInstances,
+    mock_TrainingFrame,
+    mock_source_video,
+)
 
 
 class TestPoseEstimationSeriesRoundtrip(TestCase):
@@ -41,7 +58,9 @@ class TestPoseEstimationSeriesRoundtrip(TestCase):
         )
 
         # ideally the PoseEstimationSeries is added to a PoseEstimation object but here, test just the series
-        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm = self.nwbfile.create_processing_module(
+            name="behavior", description="processed behavioral data"
+        )
         behavior_pm.add(pes)
 
         with NWBHDF5IO(self.path, mode="w") as io:
@@ -49,7 +68,9 @@ class TestPoseEstimationSeriesRoundtrip(TestCase):
 
         with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
             read_nwbfile = io.read()
-            self.assertContainerEqual(pes, read_nwbfile.processing["behavior"]["front_left_paw"])
+            self.assertContainerEqual(
+                pes, read_nwbfile.processing["behavior"]["front_left_paw"]
+            )
 
     def test_roundtrip_link_timestamps(self):
         """
@@ -83,7 +104,9 @@ class TestPoseEstimationSeriesRoundtrip(TestCase):
         )
 
         # ideally the PoseEstimationSeries is added to a PoseEstiamtion object but here, test just the series
-        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm = self.nwbfile.create_processing_module(
+            name="behavior", description="processed behavioral data"
+        )
         behavior_pm.add(front_left_paw)
         behavior_pm.add(front_right_paw)
 
@@ -92,8 +115,12 @@ class TestPoseEstimationSeriesRoundtrip(TestCase):
 
         with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
             read_nwbfile = io.read()
-            self.assertContainerEqual(front_left_paw, read_nwbfile.processing["behavior"]["front_left_paw"])
-            self.assertContainerEqual(front_right_paw, read_nwbfile.processing["behavior"]["front_right_paw"])
+            self.assertContainerEqual(
+                front_left_paw, read_nwbfile.processing["behavior"]["front_left_paw"]
+            )
+            self.assertContainerEqual(
+                front_right_paw, read_nwbfile.processing["behavior"]["front_right_paw"]
+            )
             self.assertIs(
                 read_nwbfile.processing["behavior"]["front_left_paw"].timestamps,
                 read_nwbfile.processing["behavior"]["front_right_paw"].timestamps,
@@ -107,10 +134,12 @@ class TestPoseEstimationSeriesRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
         return "PoseEstimationSeries"
 
     def addContainer(self):
-        """Add the test PoseEstimationSeries to the given NWBFile """
+        """Add the test PoseEstimationSeries to the given NWBFile"""
         pes = mock_PoseEstimationSeries(name="test_PES")
 
-        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm = self.nwbfile.create_processing_module(
+            name="behavior", description="processed behavioral data"
+        )
         behavior_pm.add(pes)
 
     def getContainer(self, nwbfile: NWBFile):
@@ -138,7 +167,11 @@ class TestPoseEstimationRoundtrip(TestCase):
         Add a PoseEstimation to an NWBFile, write it, read it, and test that the read object matches the original.
         """
         skeleton = mock_Skeleton()
-        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+        skeletons = Skeletons(skeletons=[skeleton])
+
+        pose_estimation_series = [
+            mock_PoseEstimationSeries(name=name) for name in skeleton.nodes
+        ]
         pe = PoseEstimation(
             pose_estimation_series=pose_estimation_series,
             description="Estimated positions of front paws using DeepLabCut.",
@@ -152,12 +185,11 @@ class TestPoseEstimationRoundtrip(TestCase):
             skeleton=skeleton,
         )
 
-        skeletons = Skeletons(skeletons=[skeleton])
-        pose_training = PoseTraining(skeletons=skeletons)
-
-        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm = self.nwbfile.create_processing_module(
+            name="behavior", description="processed behavioral data"
+        )
         behavior_pm.add(pe)
-        behavior_pm.add(pose_training)
+        behavior_pm.add(skeletons)
 
         with NWBHDF5IO(self.path, mode="w") as io:
             io.write(self.nwbfile)
@@ -167,12 +199,20 @@ class TestPoseEstimationRoundtrip(TestCase):
             read_pe = read_nwbfile.processing["behavior"]["PoseEstimation"]
             self.assertContainerEqual(read_pe, pe)
             self.assertEqual(len(read_pe.pose_estimation_series), 3)
-            self.assertContainerEqual(read_pe.pose_estimation_series["node1"], pose_estimation_series[0])
-            self.assertContainerEqual(read_pe.pose_estimation_series["node2"], pose_estimation_series[1])
-            self.assertContainerEqual(read_pe.pose_estimation_series["node3"], pose_estimation_series[2])
+            self.assertContainerEqual(
+                read_pe.pose_estimation_series["node1"], pose_estimation_series[0]
+            )
+            self.assertContainerEqual(
+                read_pe.pose_estimation_series["node2"], pose_estimation_series[1]
+            )
+            self.assertContainerEqual(
+                read_pe.pose_estimation_series["node3"], pose_estimation_series[2]
+            )
             self.assertContainerEqual(read_pe.skeleton, skeleton)
             self.assertEqual(len(read_pe.devices), 1)
-            self.assertContainerEqual(read_pe.devices[0], self.nwbfile.devices["camera1"])
+            self.assertContainerEqual(
+                read_pe.devices[0], self.nwbfile.devices["camera1"]
+            )
 
 
 class TestPoseEstimationRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
@@ -182,7 +222,7 @@ class TestPoseEstimationRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
         return "PoseEstimation"
 
     def addContainer(self):
-        """Add the test PoseEstimation to the given NWBFile """
+        """Add the test PoseEstimation to the given NWBFile"""
         mock_PoseEstimation(nwbfile=self.nwbfile)
 
     def getContainer(self, nwbfile: NWBFile):
@@ -196,31 +236,42 @@ class TestPoseTrainingRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
         return "PoseTraining"
 
     def addContainer(self):
-        """Add the test PoseTraining to the given NWBFile """
+        """Add the test PoseTraining to the given NWBFile"""
         skeleton1 = mock_Skeleton(name="subject1")
         skeleton2 = mock_Skeleton(name="subject2")
+        skeletons = Skeletons(skeletons=[skeleton1, skeleton2])
+
         source_video = mock_source_video(name="source_video")
         sk1_instance10 = mock_SkeletonInstance(id=np.uint(10), skeleton=skeleton1)
+        sk1_instance11 = mock_SkeletonInstance(id=np.uint(11), skeleton=skeleton1)
+        sk1_instances = mock_SkeletonInstances(
+            skeleton_instances=[sk1_instance10, sk1_instance11]
+        )
         sk1_training_frame = mock_TrainingFrame(
             name="skeleton1_frame10",
-            skeleton_instance=sk1_instance10,
+            skeleton_instances=sk1_instances,
             source_video=source_video,
             source_video_frame_index=np.uint(10),
         )
         sk2_instance10 = mock_SkeletonInstance(id=np.uint(10), skeleton=skeleton2)
+        sk2_instance11 = mock_SkeletonInstance(id=np.uint(11), skeleton=skeleton2)
+        sk2_instance12 = mock_SkeletonInstance(id=np.uint(12), skeleton=skeleton2)
+        sk2_instances = mock_SkeletonInstances(
+            skeleton_instances=[sk2_instance10, sk2_instance11, sk2_instance12]
+        )
         sk2_training_frame = mock_TrainingFrame(
             name="skeleton2_frame10",
-            skeleton_instance=sk2_instance10,
+            skeleton_instances=sk2_instances,
             source_video=source_video,
             source_video_frame_index=np.uint(10),
         )
 
-        skeletons = Skeletons(skeletons=[skeleton1, skeleton2])
-        training_frames = TrainingFrames(training_frames=[sk1_training_frame, sk2_training_frame])
+        training_frames = TrainingFrames(
+            training_frames=[sk1_training_frame, sk2_training_frame]
+        )
         source_videos = SourceVideos(image_series=[source_video])
 
         pose_training = PoseTraining(
-            skeletons=skeletons,
             training_frames=training_frames,
             source_videos=source_videos,
         )
@@ -229,6 +280,7 @@ class TestPoseTrainingRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
             name="behavior",
             description="processed behavioral data",
         )
+        behavior_pm.add(skeletons)
         behavior_pm.add(pose_training)
 
     def getContainer(self, nwbfile: NWBFile):
