@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, Union
 
 import numpy as np
 from pynwb import NWBFile
@@ -135,8 +135,8 @@ def mock_SkeletonInstance(
     name: Optional[str] = None,
     id: Optional[np.uint] = np.uint(10),
     node_locations: Optional[Any] = None,
-    node_visibility: list = None,
-    skeleton: Skeleton = None,
+    node_visibility: Optional[list] = None,
+    skeleton: Optional[Skeleton] = None,
 ):
     if node_locations is None and node_visibility is None:
         num_nodes = 3
@@ -159,6 +159,7 @@ def mock_SkeletonInstance(
         name = skeleton.name + "_instance_" + str(id)
     if node_visibility is None:
         node_visibility = np.ones(num_nodes, dtype="bool")
+
     skeleton_instance = SkeletonInstance(
         name=name,
         id=id,
@@ -170,7 +171,9 @@ def mock_SkeletonInstance(
     return skeleton_instance
 
 
-def mock_SkeletonInstances(skeleton_instances=None):
+def mock_SkeletonInstances(
+    skeleton_instances: Union[SkeletonInstance, list[SkeletonInstance]] = None
+):
     if skeleton_instances is None:
         skeleton_instances = [mock_SkeletonInstance()]
     if not isinstance(skeleton_instances, list):
@@ -202,21 +205,14 @@ def mock_source_frame(
 ):
     return RGBImage(name=name, data=np.random.rand(640, 480, 3).astype("uint8"))
 
-def mock_source_frame(
-    *,
-    name: Optional[str] = None,
-):
-    return RGBImage(name=name, data=np.random.rand(640, 480, 3).astype("uint8"))
-
-
 def mock_TrainingFrame(
     *,
     name: Optional[str] = None,
     annotator: Optional[str] = "Awesome Possum",
-    skeleton_instances: SkeletonInstances = None,
-    source_video: ImageSeries = None,
-    source_frame: Image = None,
-    source_video_frame_index: np.uint = np.uint(10),
+    skeleton_instances: Optional[SkeletonInstances] = None,
+    source_video: Optional[ImageSeries] = None,
+    source_frame: Optional[Image] = None,
+    source_video_frame_index: Optional[np.uint] = np.uint(10),
 ):
     training_frame = TrainingFrame(
         name=name or name_generator("TrainingFrame"),

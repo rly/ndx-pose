@@ -226,7 +226,7 @@ def main():
         neurodata_type_def="SkeletonInstance",
         neurodata_type_inc="NWBDataInterface",
         doc=(
-            "Group that holds ground-truth pose data for a single instance of a skeleton in a single frame. "
+            "Group that holds ground-truth pose data for a single instance of a skeleton in a single frame."
         ),
         default_name="skeleton_instance",
         links=[
@@ -272,8 +272,7 @@ def main():
         neurodata_type_def="SkeletonInstances",
         neurodata_type_inc="NWBDataInterface",
         doc=(
-            "Organizational group to hold skeleton instances."
-            "This is meant to be used within a TrainingFrame."
+            "Organizational group to hold skeleton instances. This is meant to be used within a TrainingFrame."
         ),
         default_name="skeleton_instances",
         groups=[
