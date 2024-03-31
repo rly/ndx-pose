@@ -1,0 +1,123 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ndx-pose"
+version = "0.2.0"
+authors = [
+    { name="Ryan Ly", email="rly@lbl.gov" },
+    { name="Ben Dichter", email="bdichter@lbl.gov" },
+    { name="Alexander Mathis", email="alexander.mathis@epfl.ch" },
+    { name="Liezl Maree", email="lmaree@salk.edu" },
+    { name="Chris Brozdowski", email="Chris.Broz@ucsf.edu" },
+    { name="Heberto Mayorquin", email="h.mayorquin@gmail.com" },
+    { name="Talmo Pereira", email="talmo@salk.edu" },
+    { name="Elizabeth Berrigan", email="eberrigan@salk.edu" },
+]
+description = "NWB extension to store pose estimation data"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "BSD-3"}
+classifiers = [
+    # TODO: add classifiers before release
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    # "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+]
+keywords = [
+    'NeurodataWithoutBorders',
+    'NWB',
+    'nwb-extension',
+    'ndx-extension',
+]
+dependencies = [
+    "pynwb>=2.6.0",
+    "hdmf>=3.13.0",
+]
+
+# TODO: add URLs before release
+[project.urls]
+"Homepage" = "https://github.com/rly/ndx-pose"
+# "Documentation" = "https://package.readthedocs.io/"
+"Bug Tracker" = "https://github.com/rly/ndx-pose/issues"
+# "Discussions" = "https://github.com/organization/package/discussions"
+"Changelog" = "https://github.com/rly/ndx-pose/blob/main/CHANGELOG.md"
+
+[tool.hatch.build]
+include = [
+    "src/pynwb",
+    "spec/ndx-pose.extensions.yaml",
+    "spec/ndx-pose.namespace.yaml",
+]
+exclude = [
+    "src/pynwb/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/pynwb/ndx_pose",
+    "spec"
+]
+
+[tool.hatch.build.targets.wheel.sources]
+"spec" = "ndx_pose/spec"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/pynwb",
+    "spec/ndx-pose.extensions.yaml",
+    "spec/ndx-pose.namespace.yaml",
+    "docs",
+]
+exclude = []
+
+[tool.pytest.ini_options]
+# uncomment below to run pytest with code coverage reporting. NOTE: breakpoints may not work
+# addopts = "--cov --cov-report html"
+
+[tool.codespell]
+skip = "htmlcov,.git,.mypy_cache,.pytest_cache,.coverage,*.pdf,*.svg,venvs,.tox,hdmf-common-schema,./docs/_build/*,*.ipynb"
+
+[tool.coverage.run]
+branch = true
+source = ["src/pynwb"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "@abstract"
+]
+
+[tool.black]
+line-length = 120
+preview = true
+exclude = ".git|.mypy_cache|.tox|.venv|venv|.ipynb_checkpoints|_build/|dist/|__pypackages__|.ipynb|docs/"
+
+[tool.ruff]
+select = ["E", "F", "T100", "T201", "T203"]
+exclude = [
+  ".git",
+  ".tox",
+  "__pycache__",
+  "build/",
+  "dist/",
+  "docs/source/conf.py",
+]
+line-length = 120
+
+[tool.ruff.per-file-ignores]
+"src/pynwb/ndx_pose/__init__.py" = ["E402", "F401"]
+"src/pynwb/ndx_pose/io/__init__.py" = ["F401"]
+"src/spec/create_extension_spec.py" = ["T201"]
+"src/pynwb/tests/test_example_usage.py" = ["T201"]
+
+[tool.ruff.mccabe]
+max-complexity = 17

@@ -4,7 +4,6 @@ import numpy as np
 from pynwb import NWBFile
 from pynwb.device import Device
 from pynwb.testing import TestCase
-from pynwb.image import RGBImage
 from pynwb.file import Subject
 
 from ndx_pose import (
@@ -13,9 +12,7 @@ from ndx_pose import (
     PoseEstimation,
     TrainingFrame,
     SkeletonInstance,
-    SkeletonInstances,
     PoseTraining,
-    Skeletons,
     TrainingFrames,
     SourceVideos,
 )

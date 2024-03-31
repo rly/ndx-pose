@@ -1,4 +1,4 @@
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, List
 
 import numpy as np
 from pynwb import NWBFile
@@ -172,7 +172,7 @@ def mock_SkeletonInstance(
 
 
 def mock_SkeletonInstances(
-    skeleton_instances: Union[SkeletonInstance, list[SkeletonInstance]] = None
+    skeleton_instances: Union[SkeletonInstance, List[SkeletonInstance]] = None
 ):
     if skeleton_instances is None:
         skeleton_instances = [mock_SkeletonInstance()]

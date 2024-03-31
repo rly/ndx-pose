@@ -1,4 +1,4 @@
-# ndx-pose Changelog
+# Changelog for ndx-pose
 
 ## ndx-pose 0.2.0 (Upcoming)
 

@@ -461,7 +461,7 @@ Utilities to convert DLC output to/from NWB: https://github.com/DeepLabCut/DLC2N
   body part, and general metadata about the pose estimation process, skeleton, and videos. The
   `PoseEstimationSeries` objects contain the estimated positions for that body part for a particular animal.
 
-Utilties to convert SLEAP pose tracking data to/from NWB: https://github.com/talmolab/sleap-io
+Utilities to convert SLEAP pose tracking data to/from NWB: https://github.com/talmolab/sleap-io
 - Used by SLEAP (sleap.io.dataset.Labels.export_nwb)
 - See also https://github.com/talmolab/sleap/blob/develop/sleap/io/format/ndx_pose.py
 
