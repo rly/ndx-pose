@@ -10,21 +10,15 @@ jobs:
     name: Check for broken Sphinx external links
     runs-on: ubuntu-latest
     steps:
-      - name: Cancel any previous incomplete runs
-        uses: styfle/cancel-workflow-action@0.12.0
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-          fetch-depth: 0  # tags are required for versioneer to determine the version
+          fetch-depth: 0  # tags are required to determine the version
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.12"
 
       - name: Install Sphinx dependencies and package
         run: |

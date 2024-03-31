@@ -12,6 +12,9 @@ jobs:
     defaults:
       run:
         shell: bash
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.name }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
@@ -38,19 +41,13 @@ jobs:
           - { name: macos-python3.12             , requirements: pinned     , python-ver: "3.12", os: macos-latest }
           - { name: macos-python3.12-upgraded    , requirements: upgraded   , python-ver: "3.12", os: macos-latest }
     steps:
-      - name: Cancel non-latest runs
-        uses: styfle/cancel-workflow-action@0.11.0
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-          fetch-depth: 0  # fetch tags
+          fetch-depth: 0  # tags are required to determine the version
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-ver }}
 
@@ -110,6 +107,9 @@ jobs:
     defaults:
      run:
        shell: bash -l {0}  # needed for conda environment to work
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.name }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
@@ -122,15 +122,10 @@ jobs:
           - { name: conda-linux-python3.12           , requirements: pinned     , python-ver: "3.12", os: ubuntu-latest }
           - { name: conda-linux-python3.12-upgraded  , requirements: upgraded   , python-ver: "3.12", os: ubuntu-latest }
     steps:
-      - name: Cancel any previous incomplete runs
-        uses: styfle/cancel-workflow-action@0.11.0
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-          fetch-depth: 0  # fetch tags
+          fetch-depth: 0  # tags are required to determine the version
 
       - name: Set up Conda
         uses: conda-incubator/setup-miniconda@v2

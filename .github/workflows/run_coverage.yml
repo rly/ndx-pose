@@ -13,23 +13,20 @@ jobs:
     defaults:
       run:
         shell: bash
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.os }}
+      cancel-in-progress: true
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     env:  # used by codecov-action
       OS: ${{ matrix.os }}
-      PYTHON: '3.11'
+      PYTHON: '3.12'
     steps:
-      - name: Cancel any previous incomplete runs
-        uses: styfle/cancel-workflow-action@0.11.0
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-          fetch-depth: 0  # fetch tags
+          fetch-depth: 0  # tags are required to determine the version
 
       - name: Set up Python
         uses: actions/setup-python@v4
