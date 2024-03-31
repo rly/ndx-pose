@@ -6,7 +6,7 @@ import os
 # -- Input options for the specification files to be used -----------------------
 
 # Directory where the YAML files for the namespace to be documented are located
-spec_input_spec_dir = '..\spec'
+spec_input_spec_dir = '../spec'
 
 # Name of the YAML file with the specification of the Namespace to be documented
 spec_input_namespace_filename = 'ndx-pose.namespace.yaml'

@@ -1,5 +1,15 @@
-# pinned dependencies to reproduce an entire development environment to run tests and check code style
-flake8==4.0.1
-pytest==6.2.5
+# pinned dependencies to reproduce an entire development environment to
+# run tests, check code style, and generate documentation
+black==23.9.1
+codespell==2.2.6
+coverage==7.3.2
+hdmf==3.10.0
+hdmf-docutils==0.4.6
+pre-commit==3.4.0
+pynwb==2.5.0
+pytest==7.4.2
+pytest-cov==4.1.0
+python-dateutil==2.8.2
 pytest-subtests==0.6.0
-hdmf-docutils==0.4.5
+ruff==0.0.292
+tox==4.11.3

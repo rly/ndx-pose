@@ -1,5 +1,5 @@
 Specification for the ndx-pose extension
-==================================
+========================================
 
 .. toctree::
     :numbered:

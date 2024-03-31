@@ -1,3 +1,0 @@
-# pinned dependencies to reproduce a working development environment
-hdmf==3.12.2
-pynwb==2.6.0
