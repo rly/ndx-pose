@@ -1,5 +1,5 @@
 import os
-from pynwb import load_namespaces, get_class
+from pynwb import load_namespaces
 
 # Set path of the namespace.yaml file to the expected install location
 ndx_pose_specpath = os.path.join(
@@ -23,7 +23,7 @@ if not os.path.exists(ndx_pose_specpath):
 # Load the namespace
 load_namespaces(ndx_pose_specpath)
 
-from . import io as __io  # noqa: E402, F401
+from . import io as __io
 from .pose import (
     PoseEstimation,
     PoseEstimationSeries,
@@ -35,4 +35,17 @@ from .pose import (
     SkeletonInstances,
     SourceVideos,
     PoseTraining,
-)  # noqa: E402, F401
+)
+
+__all__ = [
+    "PoseEstimation",
+    "PoseEstimationSeries",
+    "Skeleton",
+    "Skeletons",
+    "TrainingFrame",
+    "TrainingFrames",
+    "SkeletonInstance",
+    "SkeletonInstances",
+    "SourceVideos",
+    "PoseTraining",
+]

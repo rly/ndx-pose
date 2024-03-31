@@ -11,8 +11,6 @@ from ndx_pose import (
     Skeletons,
     SourceVideos,
     TrainingFrames,
-    SkeletonInstance,
-    SkeletonInstances,
 )
 from ndx_pose.testing.mock.pose import (
     mock_PoseEstimationSeries,
