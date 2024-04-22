@@ -486,7 +486,7 @@ Several NWB datasets use ndx-pose 0.1.1:
 Several [open-source conversion scripts on GitHub](https://github.com/search?q=ndx-pose&type=code&p=1)
 also use ndx-pose.
 
-## Diagram
+## Diagram of non-training-related types
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', "primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
