@@ -486,6 +486,58 @@ Several NWB datasets use ndx-pose 0.1.1:
 Several [open-source conversion scripts on GitHub](https://github.com/search?q=ndx-pose&type=code&p=1)
 also use ndx-pose.
 
+## Diagram
+
+## Diagram
+
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', "primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
+
+classDiagram
+    direction LR
+    namespace ndx-pose {
+        class PoseEstimationSeries{
+            <<SpatialSeries>>
+            name : str
+            description : str
+            timestamps : array[float; dims [frame]]
+            data : array[float; dims [frame, [x, y]] or [frame, [x, y, z]]]
+            confidence : array[float; dims [frame]]
+            reference_frame: str
+        }
+
+        class PoseEstimation {
+            <<NWBDataInterface>>
+            name : str
+            description : str, optional
+            original_videos : array[str; dims [file]], optional
+            labeled_videos : array[str; dims [file]], optional
+            dimensions : array[uint, dims [file, [width, height]]], optional
+            scorer : str
+            scorer_software : str
+            scorer_software__version : str
+            pose_estimation_series : List[PoseEstimationSeries]
+            skeleton : Skeleton
+            devices : List[Device]
+        }
+
+        class Skeleton {
+            <<NWBDataInterface>>
+            name : str
+            nodes : array[str; dims [body part]]
+            edges : array[uint; dims [edge, [node, node]]]
+        }
+        
+    }
+
+    class Device
+
+    PoseEstimation --o PoseEstimationSeries : contains 0 or more
+    PoseEstimation --> Skeleton : links to
+    PoseEstimation --> Device : links to
+```
+
 ## Contributors
 - @rly
 - @bendichter
