@@ -488,9 +488,6 @@ also use ndx-pose.
 
 ## Diagram
 
-## Diagram
-
-
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', "primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
 
