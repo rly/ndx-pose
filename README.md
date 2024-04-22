@@ -511,9 +511,9 @@ classDiagram
             original_videos : array[str; dims [file]], optional
             labeled_videos : array[str; dims [file]], optional
             dimensions : array[uint, dims [file, [width, height]]], optional
-            scorer : str
-            scorer_software : str
-            scorer_software__version : str
+            scorer : str, optional
+            scorer_software : str, optional
+            scorer_software__version : str, optional
             pose_estimation_series : List[PoseEstimationSeries]
             skeleton : Skeleton
             devices : List[Device]
