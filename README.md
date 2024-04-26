@@ -486,6 +486,166 @@ Several NWB datasets use ndx-pose 0.1.1:
 Several [open-source conversion scripts on GitHub](https://github.com/search?q=ndx-pose&type=code&p=1)
 also use ndx-pose.
 
+## Diagram of non-training-related types
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', "primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
+
+classDiagram
+    direction LR
+    namespace ndx-pose {
+        class PoseEstimationSeries{
+            <<SpatialSeries>>
+            name : str
+            description : str
+            timestamps : array[float; dims [frame]]
+            data : array[float; dims [frame, [x, y]] or [frame, [x, y, z]]]
+            confidence : array[float; dims [frame]]
+            reference_frame: str
+        }
+
+        class PoseEstimation {
+            <<NWBDataInterface>>
+            name : str
+            description : str, optional
+            original_videos : array[str; dims [file]], optional
+            labeled_videos : array[str; dims [file]], optional
+            dimensions : array[uint, dims [file, [width, height]]], optional
+            scorer : str, optional
+            scorer_software : str, optional
+            scorer_software__version : str, optional
+            PoseEstimationSeries
+            Skeleton, link
+            Device, link
+        }
+
+        class Skeleton {
+            <<NWBDataInterface>>
+            name : str
+            nodes : array[str; dims [body part]]
+            edges : array[uint; dims [edge, [node, node]]]
+        }
+        
+    }
+
+    class Device
+
+    PoseEstimation --o PoseEstimationSeries : contains 0 or more
+    PoseEstimation --> Skeleton : links to
+    PoseEstimation --> Device : links to
+```
+
+## Diagram of all types
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', "primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
+
+classDiagram
+    direction LR
+    namespace ndx-pose {
+        class PoseEstimationSeries{
+            <<SpatialSeries>>
+            name : str
+            description : str
+            timestamps : array[float; dims [frame]]
+            data : array[float; dims [frame, [x, y]] or [frame, [x, y, z]]]
+            confidence : array[float; dims [frame]]
+            reference_frame: str
+        }
+
+        class PoseEstimation {
+            <<NWBDataInterface>>
+            name : str
+            description : str, optional
+            original_videos : array[str; dims [file]], optional
+            labeled_videos : array[str; dims [file]], optional
+            dimensions : array[uint, dims [file, [width, height]]], optional
+            scorer : str, optional
+            scorer_software : str, optional
+            scorer_software__version : str, optional
+            PoseEstimationSeries
+            Skeleton, link
+            Device, link
+        }
+
+        class Skeleton {
+            <<NWBDataInterface>>
+            name : str
+            nodes : array[str; dims [body part]]
+            edges : array[uint; dims [edge, [node, node]]]
+        }
+
+        class TrainingFrame {
+            <<NWBDataInterface>>
+            name : str
+            annotator : str, optional
+            source_video_frame_index : uint, optional
+            skeleton_instances : SkeletonInstances
+            source_video : ImageSeries, link, optional
+            source_frame : Image, link, optional
+        }
+
+        class SkeletonInstance {
+            <<NWBDataInterface>>
+            id: uint, optional
+            node_locations : array[float; dims [body part, [x, y]] or [body part, [x, y, z]]]
+            node_visibility : array[bool; dims [body part]], optional
+            Skeleton, link
+        }
+
+        class TrainingFrames {
+            <<NWBDataInterface>>
+            TrainingFrame
+        }
+
+        class SkeletonInstances {
+            <<NWBDataInterface>>
+            SkeletonInstance
+        }
+
+        class SourceVideos {
+            <<NWBDataInterface>>
+            ImageSeries
+        }
+
+        class Skeletons {
+            <<NWBDataInterface>>
+            Skeleton
+        }
+
+        class PoseTraining {
+            <<NWBDataInterface>>>
+            training_frames : TrainingFrames, optional
+            source_videos : SourceVideos, optional
+        }
+        
+    }
+
+    class Device
+    class ImageSeries
+    class Image
+
+    PoseEstimation --o PoseEstimationSeries : contains 0 or more
+    PoseEstimation --> Skeleton : links to
+    PoseEstimation --> Device : links to 
+
+    PoseTraining --o TrainingFrames : contains
+    PoseTraining --o SourceVideos : contains
+
+    TrainingFrames --o TrainingFrame : contains 0 or more
+
+    TrainingFrame --o SkeletonInstances : contains
+    TrainingFrame --> ImageSeries : links to
+    TrainingFrame --> Image : links to
+
+    SkeletonInstances --o SkeletonInstance : contains 0 or more
+    SkeletonInstance --o Skeleton : links to
+
+    SourceVideos --o ImageSeries : contains 0 or more
+
+    Skeletons --o Skeleton : contains 0 or more
+```
+
 ## Contributors
 - @rly
 - @bendichter
