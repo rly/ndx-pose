@@ -102,9 +102,7 @@ def test_example_usage_estimates_only():
         description="Estimated positions of front paws of subject1 using DeepLabCut.",
         original_videos=["path/to/camera1.mp4"],
         labeled_videos=["path/to/camera1_labeled.mp4"],
-        dimensions=np.array(
-            [[640, 480]], dtype="uint16"
-        ),  # pixel dimensions of the video
+        dimensions=np.array([[640, 480]], dtype="uint16"),  # pixel dimensions of the video
         devices=[camera1],
         scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
         source_software="DeepLabCut",
@@ -250,9 +248,7 @@ def test_example_usage_training():
         description="Estimated positions of front paws of subject1 using DeepLabCut.",
         original_videos=["path/to/camera1.mp4"],
         labeled_videos=["path/to/camera1_labeled.mp4"],
-        dimensions=np.array(
-            [[640, 480]], dtype="uint16"
-        ),  # pixel dimensions of the video
+        dimensions=np.array([[640, 480]], dtype="uint16"),  # pixel dimensions of the video
         devices=[camera1],
         scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
         source_software="DeepLabCut",
@@ -331,9 +327,7 @@ def test_example_usage_training():
         skeleton_instances_list.append(instance_sk2)
 
         # store the skeleton instances in a SkeletonInstances object
-        skeleton_instances = SkeletonInstances(
-            skeleton_instances=skeleton_instances_list
-        )
+        skeleton_instances = SkeletonInstances(skeleton_instances=skeleton_instances_list)
 
         # TrainingFrame names must be unique because the TrainingFrame objects will be added to a
         # TrainingFrames container object which requires unique names.

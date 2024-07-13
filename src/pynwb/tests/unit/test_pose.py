@@ -46,17 +46,13 @@ class TestPoseEstimationSeriesConstructor(TestCase):
         )
 
         self.assertEqual(pes.name, "front_left_paw")
-        self.assertEqual(
-            pes.description, "Marker placed around fingers of front left paw."
-        )
+        self.assertEqual(pes.description, "Marker placed around fingers of front left paw.")
         np.testing.assert_array_equal(pes.data, data)
         self.assertEqual(pes.unit, "pixels")
         self.assertEqual(pes.reference_frame, "(0,0,0) corresponds to ...")
         np.testing.assert_array_equal(pes.timestamps, timestamps)
         np.testing.assert_array_equal(pes.confidence, confidence)
-        self.assertEqual(
-            pes.confidence_definition, "Softmax output of the deep neural network."
-        )
+        self.assertEqual(pes.confidence_definition, "Softmax output of the deep neural network.")
 
 
 class TestSkeleton(TestCase):
@@ -69,13 +65,10 @@ class TestSkeleton(TestCase):
             # the values are the indices of the nodes in the nodes list.
             edges=np.array([[0, 1], [1, 2]], dtype="uint8"),
             subject=subject,
-
         )
         self.assertEqual(skeleton.name, "subject1")
         self.assertEqual(skeleton.nodes, ["front_left_paw", "body", "front_right_paw"])
-        np.testing.assert_array_equal(
-            skeleton.edges, np.array([[0, 1], [1, 2]], dtype="uint8")
-        )
+        np.testing.assert_array_equal(skeleton.edges, np.array([[0, 1], [1, 2]], dtype="uint8"))
         self.assertIs(skeleton.subject, subject)
 
     def test_init_no_subject(self):
@@ -135,23 +128,13 @@ class TestPoseEstimationConstructor(TestCase):
 
         self.assertEqual(pe.name, "PoseEstimation")
         self.assertEqual(len(pe.pose_estimation_series), 3)
-        self.assertIs(
-            pe.pose_estimation_series["front_left_paw"], pose_estimation_series[0]
-        )
+        self.assertIs(pe.pose_estimation_series["front_left_paw"], pose_estimation_series[0])
         self.assertIs(pe.pose_estimation_series["body"], pose_estimation_series[1])
-        self.assertIs(
-            pe.pose_estimation_series["front_right_paw"], pose_estimation_series[2]
-        )
-        self.assertEqual(
-            pe.description, "Estimated positions of front paws using DeepLabCut."
-        )
+        self.assertIs(pe.pose_estimation_series["front_right_paw"], pose_estimation_series[2])
+        self.assertEqual(pe.description, "Estimated positions of front paws using DeepLabCut.")
         self.assertEqual(pe.original_videos, ["camera1.mp4", "camera2.mp4"])
-        self.assertEqual(
-            pe.labeled_videos, ["camera1_labeled.mp4", "camera2_labeled.mp4"]
-        )
-        np.testing.assert_array_equal(
-            pe.dimensions, np.array([[640, 480], [1024, 768]], dtype="uint16")
-        )
+        self.assertEqual(pe.labeled_videos, ["camera1_labeled.mp4", "camera2_labeled.mp4"])
+        np.testing.assert_array_equal(pe.dimensions, np.array([[640, 480], [1024, 768]], dtype="uint16"))
         self.assertEqual(len(pe.devices), 2)
         self.assertIs(pe.devices[0], self.nwbfile.devices["camera1"])
         self.assertIs(pe.devices[1], self.nwbfile.devices["camera2"])
@@ -231,9 +214,7 @@ class TestPoseEstimationConstructor(TestCase):
                 edges=np.array([[0, 1], [1, 2]], dtype="uint8"),
             )
         self.assertEqual(pe.nodes, ["front_left_paw", "body", "front_right_paw"])
-        np.testing.assert_array_equal(
-            pe.edges, np.array([[0, 1], [1, 2]], dtype="uint8")
-        )
+        np.testing.assert_array_equal(pe.edges, np.array([[0, 1], [1, 2]], dtype="uint8"))
         skeleton = Skeleton(
             name="subject",
             nodes=["front_left_paw", "body", "front_right_paw"],
@@ -315,9 +296,7 @@ class TestPoseTraining(TestCase):
         source_video = mock_source_video(name="source_video")
         sk1_instance10 = mock_SkeletonInstance(id=np.uint(10), skeleton=skeleton1)
         sk1_instance11 = mock_SkeletonInstance(id=np.uint(11), skeleton=skeleton1)
-        sk1_instances = mock_SkeletonInstances(
-            skeleton_instances=[sk1_instance10, sk1_instance11]
-        )
+        sk1_instances = mock_SkeletonInstances(skeleton_instances=[sk1_instance10, sk1_instance11])
         sk1_training_frame = mock_TrainingFrame(
             name="skeleton1_frame10",
             skeleton_instances=sk1_instances,
@@ -327,9 +306,7 @@ class TestPoseTraining(TestCase):
         sk2_instance10 = mock_SkeletonInstance(id=np.uint(10), skeleton=skeleton2)
         sk2_instance11 = mock_SkeletonInstance(id=np.uint(11), skeleton=skeleton2)
         sk2_instance12 = mock_SkeletonInstance(id=np.uint(12), skeleton=skeleton2)
-        sk2_instances = mock_SkeletonInstances(
-            skeleton_instances=[sk2_instance10, sk2_instance11, sk2_instance12]
-        )
+        sk2_instances = mock_SkeletonInstances(skeleton_instances=[sk2_instance10, sk2_instance11, sk2_instance12])
         sk2_training_frame = mock_TrainingFrame(
             name="skeleton2_frame10",
             skeleton_instances=sk2_instances,
@@ -337,9 +314,7 @@ class TestPoseTraining(TestCase):
             source_video_frame_index=np.uint(10),
         )
 
-        training_frames = TrainingFrames(
-            training_frames=[sk1_training_frame, sk2_training_frame]
-        )
+        training_frames = TrainingFrames(training_frames=[sk1_training_frame, sk2_training_frame])
         source_videos = SourceVideos(image_series=[source_video])
 
         pose_training = PoseTraining(
@@ -356,9 +331,7 @@ class TestPoseTraining(TestCase):
             sk2_training_frame,
         )
         self.assertEqual(len(pose_training.source_videos.image_series), 1)
-        self.assertIs(
-            pose_training.source_videos.image_series["source_video"], source_video
-        )
+        self.assertIs(pose_training.source_videos.image_series["source_video"], source_video)
 
 
 class TestPoseTrainingImages(TestCase):
@@ -369,9 +342,7 @@ class TestPoseTrainingImages(TestCase):
         source_frame_10 = mock_source_frame(name="source_frame_10")
         sk1_instance10 = mock_SkeletonInstance(id=np.uint(10), skeleton=skeleton1)
         sk1_instance11 = mock_SkeletonInstance(id=np.uint(11), skeleton=skeleton1)
-        sk1_instances = mock_SkeletonInstances(
-            skeleton_instances=[sk1_instance10, sk1_instance11]
-        )
+        sk1_instances = mock_SkeletonInstances(skeleton_instances=[sk1_instance10, sk1_instance11])
         sk1_training_frame = mock_TrainingFrame(
             name="frame10",
             skeleton_instances=sk1_instances,
@@ -384,9 +355,7 @@ class TestPoseTrainingImages(TestCase):
         sk2_instance10 = mock_SkeletonInstance(id=np.uint(10), skeleton=skeleton2)
         sk2_instance11 = mock_SkeletonInstance(id=np.uint(11), skeleton=skeleton2)
         sk2_instance12 = mock_SkeletonInstance(id=np.uint(12), skeleton=skeleton2)
-        sk2_instances = mock_SkeletonInstances(
-            skeleton_instances=[sk2_instance10, sk2_instance11, sk2_instance12]
-        )
+        sk2_instances = mock_SkeletonInstances(skeleton_instances=[sk2_instance10, sk2_instance11, sk2_instance12])
         sk2_training_frame = mock_TrainingFrame(
             name="frame11",
             skeleton_instances=sk2_instances,
@@ -394,18 +363,12 @@ class TestPoseTrainingImages(TestCase):
             source_video_frame_index=np.uint(11),
         )
 
-        training_frames = TrainingFrames(
-            training_frames=[sk1_training_frame, sk2_training_frame]
-        )
+        training_frames = TrainingFrames(training_frames=[sk1_training_frame, sk2_training_frame])
 
         pose_training = PoseTraining(
             training_frames=training_frames,
         )
         self.assertEqual(len(pose_training.training_frames.training_frames), 2)
-        self.assertIs(
-            pose_training.training_frames.training_frames["frame10"], sk1_training_frame
-        )
-        self.assertIs(
-            pose_training.training_frames.training_frames["frame11"], sk2_training_frame
-        )
+        self.assertIs(pose_training.training_frames.training_frames["frame10"], sk1_training_frame)
+        self.assertIs(pose_training.training_frames.training_frames["frame11"], sk2_training_frame)
         self.assertIsNone(pose_training.source_videos)
