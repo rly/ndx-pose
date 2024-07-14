@@ -40,9 +40,7 @@ def mock_PoseEstimationSeries(
     if timestamps is None and rate is None:
         timestamps = np.linspace(0, 10, num=len(data))  # a timestamp for every frame
     if confidence is None:
-        confidence = np.linspace(
-            0, 1, num=len(data)
-        )  # confidence value for every frame
+        confidence = np.linspace(0, 1, num=len(data))  # confidence value for every frame
     pes = PoseEstimationSeries(
         name=name or name_generator("PoseEstimationSeries"),
         data=data,
@@ -99,9 +97,7 @@ def mock_PoseEstimation(
     NWBFile should be provided so that the skeleton can be added to the NWBFile in a PoseTraining object.
     """
     skeleton = skeleton or mock_Skeleton()
-    pose_estimation_series = pose_estimation_series or [
-        mock_PoseEstimationSeries(name=name) for name in skeleton.nodes
-    ]
+    pose_estimation_series = pose_estimation_series or [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
     pe = PoseEstimation(
         pose_estimation_series=pose_estimation_series,
         description=description,
@@ -119,9 +115,7 @@ def mock_PoseEstimation(
         skeletons = Skeletons(skeletons=[skeleton])
 
         if "behavior" not in nwbfile.processing:
-            behavior_pm = nwbfile.create_processing_module(
-                name="behavior", description="processed behavioral data"
-            )
+            behavior_pm = nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
         else:
             behavior_pm = nwbfile.processing["behavior"]
         behavior_pm.add(pe)
@@ -151,9 +145,7 @@ def mock_SkeletonInstance(
             edges=np.array([[0, 1]], dtype="uint8"),
         )
     if node_locations is None:
-        node_locations = np.arange(num_nodes * 2, dtype=np.float64).reshape(
-            (num_nodes, 2)
-        )
+        node_locations = np.arange(num_nodes * 2, dtype=np.float64).reshape((num_nodes, 2))
 
     if name is None:
         name = skeleton.name + "_instance_" + str(id)
@@ -171,9 +163,7 @@ def mock_SkeletonInstance(
     return skeleton_instance
 
 
-def mock_SkeletonInstances(
-    skeleton_instances: Union[SkeletonInstance, List[SkeletonInstance]] = None
-):
+def mock_SkeletonInstances(skeleton_instances: Union[SkeletonInstance, List[SkeletonInstance]] = None):
     if skeleton_instances is None:
         skeleton_instances = [mock_SkeletonInstance()]
     if not isinstance(skeleton_instances, list):
@@ -199,11 +189,13 @@ def mock_source_video(
     )
     return source_video
 
+
 def mock_source_frame(
     *,
     name: Optional[str] = None,
 ):
     return RGBImage(name=name, data=np.random.rand(640, 480, 3).astype("uint8"))
+
 
 def mock_TrainingFrame(
     *,
@@ -218,8 +210,7 @@ def mock_TrainingFrame(
         name=name or name_generator("TrainingFrame"),
         annotator=annotator,
         skeleton_instances=skeleton_instances or mock_SkeletonInstances(),
-        source_video=source_video
-        or (mock_source_video() if source_frame is None else None),
+        source_video=source_video or (mock_source_video() if source_frame is None else None),
         source_frame=source_frame,
         source_video_frame_index=source_video_frame_index,
     )

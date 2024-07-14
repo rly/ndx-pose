@@ -20,14 +20,13 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "BSD-3"}
 classifiers = [
-    # TODO: add classifiers before release
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    # "Development Status :: 4 - Beta",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
@@ -102,7 +101,7 @@ preview = true
 exclude = ".git|.mypy_cache|.tox|.venv|venv|.ipynb_checkpoints|_build/|dist/|__pypackages__|.ipynb|docs/"
 
 [tool.ruff]
-select = ["E", "F", "T100", "T201", "T203"]
+lint.select = ["E", "F", "T100", "T201", "T203"]
 exclude = [
   ".git",
   ".tox",
@@ -113,11 +112,11 @@ exclude = [
 ]
 line-length = 120
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "src/pynwb/ndx_pose/__init__.py" = ["E402", "F401"]
 "src/pynwb/ndx_pose/io/__init__.py" = ["F401"]
 "src/spec/create_extension_spec.py" = ["T201"]
 "src/pynwb/tests/test_example_usage.py" = ["T201"]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 17
