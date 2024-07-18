@@ -119,7 +119,7 @@ class PoseEstimation(MultiContainerInterface):
         "source_software_version",
         "nodes",
         "edges",
-        "skeleton",
+        "skeleton",  # <-- this is a link to a Skeleton object
     )
 
     # custom mapper in ndx_pose.io.pose maps:
@@ -196,7 +196,11 @@ class PoseEstimation(MultiContainerInterface):
         {
             "name": "skeleton",
             "type": Skeleton,
-            "doc": "Layout of body part locations and connections.",
+            "doc": (
+                "Layout of body part locations and connections. The Skeleton object should be placed in a "
+                "Skeletons object which resides in the NWBFile at the same level as the PoseEstimation object. "
+                "The Skeleton object should be linked here."
+            ),
             "default": None,
         },
         {
@@ -226,12 +230,16 @@ class PoseEstimation(MultiContainerInterface):
         if nodes is not None or edges is not None:
             if skeleton is not None:
                 raise ValueError("Cannot specify 'skeleton' with 'nodes' or 'edges'.")
+            # TODO: this Skeleton is normally a link to a Skeleton elsewhere in the file (e.g., in a Skeletons object)
+            # Here, the Skeleton is constructed from the nodes and edges and exists only in this PoseEstimation object
+            # and not as a child; this can have unintended consequences if the file is rewritten with the latest
+            # schema. This is a limitation of the current implementation, and will be addressed in a future release.
             skeleton = Skeleton(name="subject", nodes=nodes, edges=edges)
             # warn on new, no warning on construction from existing file
             if not self._in_construct_mode:
                 msg = (
                     "The 'nodes' and 'edges' constructor arguments are deprecated. Please use the 'skeleton' "
-                    "argument instead."
+                    "argument instead. These will be removed in a future release."
                 )
                 warnings.warn(msg, DeprecationWarning)
 

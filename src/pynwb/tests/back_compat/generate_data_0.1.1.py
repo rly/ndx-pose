@@ -1,8 +1,8 @@
 # Run this with ndx-pose 0.1.*
 # In ndx-pose 0.2.0, the "nodes" and "edges" constructor arguments of PoseEstimation were deprecated.
-# An error should be raised if they are used. A warning should be raised if old data is read.
-# In ndx-pose 0.2.0, PoseEstimation was changed to raise an error if the number of original videos, labeled videos,
-# or dimensions does not equal the number of camera devices. An error should be raised if they are used.
+# A warning should be raised if they are used when not reading them from a file.
+# In ndx-pose 0.2.0, PoseEstimation was changed to raise a DeprecationWarning if the number of original videos,
+# labeled videos, or dimensions does not equal the number of camera devices when creating the object not from a file.
 
 import datetime
 from ndx_pose import PoseEstimationSeries, PoseEstimation

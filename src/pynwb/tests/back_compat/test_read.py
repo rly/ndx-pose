@@ -1,4 +1,5 @@
 """Test reading and validating NWB files generated with previous versions of this package."""
+
 import numpy as np
 import numpy.testing as npt
 from pathlib import Path
