@@ -195,7 +195,10 @@ class TestPoseEstimationConstructor(TestCase):
         )
         pose_estimation_series = [front_left_paw, body, front_right_paw]
 
-        msg = "The 'nodes' and 'edges' arguments are deprecated. Please use the 'skeleton' argument instead."
+        msg = (
+            "The 'nodes' and 'edges' constructor arguments are deprecated. Please use the 'skeleton' argument instead. "
+            "These will be removed in a future release."
+        )
         with self.assertWarnsWith(DeprecationWarning, msg):
             pe = PoseEstimation(
                 pose_estimation_series=pose_estimation_series,

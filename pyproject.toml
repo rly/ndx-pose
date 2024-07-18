@@ -98,6 +98,7 @@ exclude_lines = [
 [tool.black]
 line-length = 120
 preview = true
+enable-unstable-feature = ["string_processing"]
 exclude = ".git|.mypy_cache|.tox|.venv|venv|.ipynb_checkpoints|_build/|dist/|__pypackages__|.ipynb|docs/"
 
 [tool.ruff]
