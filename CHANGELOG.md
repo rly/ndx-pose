@@ -1,5 +1,10 @@
 # Changelog for ndx-pose
 
+## ndx-pose 0.2.1 (September 26, 2024)
+
+### Bug fixes
+- Fixed missing files in source distribution (`.tar.gz`). @rly (#35)
+
 ## ndx-pose 0.2.0 (September 26, 2024)
 
 ### Major changes

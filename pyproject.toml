@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ndx-pose"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
     { name="Ryan Ly", email="rly@lbl.gov" },
     { name="Ben Dichter", email="bdichter@lbl.gov" },
@@ -67,13 +67,19 @@ packages = [
 [tool.hatch.build.targets.wheel.sources]
 "spec" = "ndx_pose/spec"
 
-# The source distribution includes everything in the package except for the `src/matnwb` directory and
-# git and github-related files.
+# The source distribution includes everything in the package, 
+# except for the `src/matnwb` directory, git and github-related files,
+# auto-generated docs, and build artifacts.
 [tool.hatch.build.targets.sdist]
+ignore-vcs = true
 exclude = [
     ".git*",
     "src/matnwb",
+    "docs/source/_format_auto_docs",
+    "build",
+    "*.egg-info/",
 ]
+
 
 [tool.pytest.ini_options]
 # uncomment below to run pytest with code coverage reporting. NOTE: breakpoints may not work
