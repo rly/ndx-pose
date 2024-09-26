@@ -50,33 +50,30 @@ dependencies = [
 # "Discussions" = "https://github.com/organization/package/discussions"
 "Changelog" = "https://github.com/rly/ndx-pose/blob/main/CHANGELOG.md"
 
-[tool.hatch.build]
-include = [
-    "src/pynwb",
-    "spec/ndx-pose.extensions.yaml",
-    "spec/ndx-pose.namespace.yaml",
-]
-exclude = [
-    "src/pynwb/tests",
-]
-
+# Include only the source code under `src/pynwb/ndx_pose` and the spec files under `spec`
+# in the wheel.
 [tool.hatch.build.targets.wheel]
 packages = [
     "src/pynwb/ndx_pose",
     "spec"
 ]
 
+# Rewrite the path to the `spec` directory to `ndx_pose/spec`.
+# `ndx_pose/__init__.py` will look there first for the spec files.
+# The resulting directory structure within the wheel will be:
+# ndx_pose/
+# ├── __init__.py
+# ├── spec
 [tool.hatch.build.targets.wheel.sources]
 "spec" = "ndx_pose/spec"
 
+# The source distribution includes everything in the package except for the `src/matnwb` directory and
+# git and github-related files.
 [tool.hatch.build.targets.sdist]
-include = [
-    "src/pynwb",
-    "spec/ndx-pose.extensions.yaml",
-    "spec/ndx-pose.namespace.yaml",
-    "docs",
+exclude = [
+    ".git*",
+    "src/matnwb",
 ]
-exclude = []
 
 [tool.pytest.ini_options]
 # uncomment below to run pytest with code coverage reporting. NOTE: breakpoints may not work
