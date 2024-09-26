@@ -114,7 +114,7 @@ line-length = 120
 "src/pynwb/ndx_pose/__init__.py" = ["E402", "F401"]
 "src/pynwb/ndx_pose/io/__init__.py" = ["F401"]
 "src/spec/create_extension_spec.py" = ["T201"]
-"src/pynwb/tests/test_example_usage.py" = ["T201"]
+"examples/*" = ["T201"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 17
