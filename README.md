@@ -111,6 +111,11 @@ classDiagram
             Device, link
         }
 
+        class Skeletons {
+            <<NWBDataInterface>>
+            Skeleton
+        }
+
         class Skeleton {
             <<NWBDataInterface>>
             name : str
@@ -125,6 +130,7 @@ classDiagram
     PoseEstimation --o PoseEstimationSeries : contains 0 or more
     PoseEstimation --> Skeleton : links to
     PoseEstimation --> Device : links to
+    Skeletons --o Skeleton : contains 0 or more
 ```
 
 ## Diagram of all types
