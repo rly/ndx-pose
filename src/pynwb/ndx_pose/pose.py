@@ -265,21 +265,21 @@ class PoseEstimation(MultiContainerInterface):
                     "The number of original videos must equal the number of camera devices. This will become an error "
                     "in a future release."
                 )
-                raise DeprecationWarning(msg)
+                warnings.warn(msg, DeprecationWarning)
         if labeled_videos is not None and (devices is None or len(labeled_videos) != len(devices)):
             if not self._in_construct_mode:
                 msg = (
                     "The number of labeled videos must equal the number of camera devices. This will become an error "
                     "in a future release."
                 )
-                raise DeprecationWarning(msg)
+                warnings.warn(msg, DeprecationWarning)
         if dimensions is not None and (devices is None or len(dimensions) != len(devices)):
             if not self._in_construct_mode:
                 msg = (
                     "The number of dimensions must equal the number of camera devices. This will become an error in a "
                     "future release."
                 )
-                raise DeprecationWarning(msg)
+                warnings.warn(msg, DeprecationWarning)
 
         pose_estimation_series, description = popargs("pose_estimation_series", "description", kwargs)
         scorer = popargs("scorer", kwargs)
