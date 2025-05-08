@@ -56,7 +56,7 @@ def test_read(file_path, expected_warnings, expected_errors):
     with warnings.catch_warnings(record=True) as warnings_on_read:
         warnings.simplefilter("always")
         with get_io(file_path) as io:
-            errors = validate(io)
+            errors = validate(io=io)
             io.read()
             # NOTE: this does not error if the expected warnings are not present
             for w in warnings_on_read:
