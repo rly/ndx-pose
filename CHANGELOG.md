@@ -1,6 +1,6 @@
 # Changelog for ndx-pose
 
-## ndx-pose 0.2.2 (May 7, 2025)
+## ndx-pose 0.2.2 (Upcoming)
 
 ### Bug fixes
 - Treat deprecation warnings as warnings instead of errors. @pauladkisson (#41)
