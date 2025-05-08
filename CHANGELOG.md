@@ -2,9 +2,14 @@
 
 ## ndx-pose 0.2.2 (Upcoming)
 
+The schema has not changed, but the surrounding infrastructure and Python API has changes:
+
 ### Bug fixes
 - Treat deprecation warnings as warnings instead of errors. @pauladkisson (#41)
-
+- Replaced `pip install -r requirements-dev.txt` with `pip install ".[dev]"` and added `pip install ".[test]"` and `pip install ".[docs]"`. @rly ()
+- Replaced `pip install -r requirements-min.txt` with `pip install ".[min-reqs]"`. @rly ()
+- Updated GitHub Actions workflows. @rly
+ 
 ## ndx-pose 0.2.1 (September 26, 2024)
 
 ### Bug fixes

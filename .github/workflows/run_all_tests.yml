@@ -1,6 +1,7 @@
 name: Run all tests
 on:
   push:
+  pull_request:
   schedule:
     - cron: '0 5 * * 0'  # once every Sunday at midnight ET
   workflow_dispatch:
@@ -20,26 +21,26 @@ jobs:
       matrix:
         include:
           - { name: linux-python3.8-minimum      , requirements: minimum    , python-ver: "3.8" , os: ubuntu-latest }
-          - { name: linux-python3.8              , requirements: pinned     , python-ver: "3.8" , os: ubuntu-latest }
-          - { name: linux-python3.9              , requirements: pinned     , python-ver: "3.9" , os: ubuntu-latest }
-          - { name: linux-python3.10             , requirements: pinned     , python-ver: "3.10", os: ubuntu-latest }
-          - { name: linux-python3.11             , requirements: pinned     , python-ver: "3.11", os: ubuntu-latest }
-          - { name: linux-python3.12             , requirements: pinned     , python-ver: "3.12", os: ubuntu-latest }
-          - { name: linux-python3.12-upgraded    , requirements: upgraded   , python-ver: "3.12", os: ubuntu-latest }
+          - { name: linux-python3.8              , requirements: upgraded   , python-ver: "3.8" , os: ubuntu-latest }
+          - { name: linux-python3.9              , requirements: upgraded   , python-ver: "3.9" , os: ubuntu-latest }
+          - { name: linux-python3.10             , requirements: upgraded   , python-ver: "3.10", os: ubuntu-latest }
+          - { name: linux-python3.11             , requirements: upgraded   , python-ver: "3.11", os: ubuntu-latest }
+          - { name: linux-python3.12             , requirements: upgraded   , python-ver: "3.12", os: ubuntu-latest }
+          - { name: linux-python3.13             , requirements: upgraded   , python-ver: "3.13", os: ubuntu-latest }
           - { name: windows-python3.8-minimum    , requirements: minimum    , python-ver: "3.8" , os: windows-latest }
-          - { name: windows-python3.8            , requirements: pinned     , python-ver: "3.8" , os: windows-latest }
-          - { name: windows-python3.9            , requirements: pinned     , python-ver: "3.9" , os: windows-latest }
-          - { name: windows-python3.10           , requirements: pinned     , python-ver: "3.10", os: windows-latest }
-          - { name: windows-python3.11           , requirements: pinned     , python-ver: "3.11", os: windows-latest }
-          - { name: windows-python3.12           , requirements: pinned     , python-ver: "3.12", os: windows-latest }
-          - { name: windows-python3.12-upgraded  , requirements: upgraded   , python-ver: "3.12", os: windows-latest }
+          - { name: windows-python3.8            , requirements: upgraded   , python-ver: "3.8" , os: windows-latest }
+          - { name: windows-python3.9            , requirements: upgraded   , python-ver: "3.9" , os: windows-latest }
+          - { name: windows-python3.10           , requirements: upgraded   , python-ver: "3.10", os: windows-latest }
+          - { name: windows-python3.11           , requirements: upgraded   , python-ver: "3.11", os: windows-latest }
+          - { name: windows-python3.12           , requirements: upgraded   , python-ver: "3.12", os: windows-latest }
+          - { name: windows-python3.13           , requirements: upgraded   , python-ver: "3.13", os: windows-latest }
           - { name: macos-python3.8-minimum      , requirements: minimum    , python-ver: "3.8" , os: macos-latest }
-          - { name: macos-python3.8              , requirements: pinned     , python-ver: "3.8" , os: macos-latest }
-          - { name: macos-python3.9              , requirements: pinned     , python-ver: "3.9" , os: macos-latest }
-          - { name: macos-python3.10             , requirements: pinned     , python-ver: "3.10", os: macos-latest }
-          - { name: macos-python3.11             , requirements: pinned     , python-ver: "3.11", os: macos-latest }
-          - { name: macos-python3.12             , requirements: pinned     , python-ver: "3.12", os: macos-latest }
-          - { name: macos-python3.12-upgraded    , requirements: upgraded   , python-ver: "3.12", os: macos-latest }
+          - { name: macos-python3.8              , requirements: upgraded   , python-ver: "3.8" , os: macos-latest }
+          - { name: macos-python3.9              , requirements: upgraded   , python-ver: "3.9" , os: macos-latest }
+          - { name: macos-python3.10             , requirements: upgraded   , python-ver: "3.10", os: macos-latest }
+          - { name: macos-python3.11             , requirements: upgraded   , python-ver: "3.11", os: macos-latest }
+          - { name: macos-python3.12             , requirements: upgraded   , python-ver: "3.12", os: macos-latest }
+          - { name: macos-python3.13             , requirements: upgraded   , python-ver: "3.13", os: macos-latest }
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -51,30 +52,22 @@ jobs:
         with:
           python-version: ${{ matrix.python-ver }}
 
-      - name: Install build dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip list
-          python -m pip check
-
       - name: Install run requirements (minimum)
         if: ${{ matrix.requirements == 'minimum' }}
         run: |
-          python -m pip install -r requirements-min.txt -r requirements-dev.txt
-          python -m pip install -e .
-
-      - name: Install run requirements (pinned)
-        if: ${{ matrix.requirements == 'pinned' }}
-        run: |
-          python -m pip install -r requirements-dev.txt
-          python -m pip install -e .
+          python -m pip install --upgrade pip
+          python -m pip install ".[min-reqs,test]"
+          python -m pip list
+          python -m pip check
 
       - name: Install run requirements (upgraded)
         if: ${{ matrix.requirements == 'upgraded' }}
         run: |
-          python -m pip install -r requirements-dev.txt
-          python -m pip install -U -e .
-
+          python -m pip install --upgrade pip
+          # force upgrade of all dependencies to latest versions within allowed range
+          python -m pip install -U ".[test]"
+          python -m pip list
+          python -m pip check
       - name: Run tests
         run: |
           pytest -v
@@ -98,81 +91,5 @@ jobs:
         run: |
           python -m venv test-wheel-env
           test-wheel-env/Scripts/activate.bat
-          python -m pip install dist/*-none-any.whl
-          python -c "import ndx_pose"
-
-  run-all-tests-on-conda:
-    name: ${{ matrix.name }}
-    runs-on: ubuntu-latest
-    defaults:
-     run:
-       shell: bash -l {0}  # needed for conda environment to work
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.name }}
-      cancel-in-progress: true
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { name: conda-linux-python3.8-minimum    , requirements: minimum    , python-ver: "3.8" , os: ubuntu-latest }
-          - { name: conda-linux-python3.8            , requirements: pinned     , python-ver: "3.8" , os: ubuntu-latest }
-          - { name: conda-linux-python3.9            , requirements: pinned     , python-ver: "3.9" , os: ubuntu-latest }
-          - { name: conda-linux-python3.10           , requirements: pinned     , python-ver: "3.10", os: ubuntu-latest }
-          - { name: conda-linux-python3.11           , requirements: pinned     , python-ver: "3.11", os: ubuntu-latest }
-          - { name: conda-linux-python3.12           , requirements: pinned     , python-ver: "3.12", os: ubuntu-latest }
-          - { name: conda-linux-python3.12-upgraded  , requirements: upgraded   , python-ver: "3.12", os: ubuntu-latest }
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # tags are required to determine the version
-
-      - name: Set up Conda
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          auto-update-conda: true
-          auto-activate-base: true
-          activate-environment: true
-          python-version: ${{ matrix.python-ver }}
-
-      - name: Install build dependencies
-        run: |
-          conda config --set always_yes yes --set changeps1 no
-          conda info
-          conda config --show-sources
-          conda list --show-channel-urls
-
-      - name: Install run requirements (minimum)
-        if: ${{ matrix.requirements == 'minimum' }}
-        run: |
-          python -m pip install -r requirements-min.txt -r requirements-dev.txt
-          python -m pip install -e .
-
-      - name: Install run requirements (pinned)
-        if: ${{ matrix.requirements == 'pinned' }}
-        run: |
-          python -m pip install -r requirements-dev.txt
-          python -m pip install -e .
-
-      - name: Install run requirements (upgraded)
-        if: ${{ matrix.requirements == 'upgraded' }}
-        run: |
-          python -m pip install -r requirements-dev.txt
-          python -m pip install -U -e .
-
-      - name: Run tests
-        run: |
-          pytest -v
-
-      - name: Build wheel and source distribution
-        run: |
-          python -m pip install --upgrade build
-          python -m build
-          ls -1 dist
-
-      - name: Test installation from a wheel (POSIX)
-        run: |
-          python -m venv test-wheel-env
-          source test-wheel-env/bin/activate
           python -m pip install dist/*-none-any.whl
           python -c "import ndx_pose"

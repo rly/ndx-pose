@@ -1,0 +1,30 @@
+name: Validate schema
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate schema
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install HDMF
+        run: |
+          pip install hdmf
+
+      - name: Download latest nwb schema language specification
+        run: |
+          curl -L https://raw.githubusercontent.com/NeurodataWithoutBorders/nwb-schema/dev/nwb.schema.json -o nwb.schema.json
+
+      - name: Validate schema specification
+        run: |
+          validate_hdmf_spec spec -m nwb.schema.json

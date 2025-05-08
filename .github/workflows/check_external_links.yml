@@ -1,6 +1,7 @@
 name: Check Sphinx external links
 on:
   push:
+  pull_request:
   schedule:
     - cron: '0 5 * * 0'  # once every Sunday at midnight ET
   workflow_dispatch:
@@ -18,12 +19,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Install Sphinx dependencies and package
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements-dev.txt
+          python -m pip install -U ".[docs]"
           python -m pip install .
 
       - name: Check Sphinx external links
