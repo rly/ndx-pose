@@ -14,6 +14,7 @@ authors = [
     { name="Heberto Mayorquin", email="h.mayorquin@gmail.com" },
     { name="Talmo Pereira", email="talmo@salk.edu" },
     { name="Elizabeth Berrigan", email="eberrigan@salk.edu" },
+    { name="Paul Adkisson", email="paul.adkisson@catalystneuro.com" },
 ]
 description = "NWB extension to store pose estimation data"
 readme = "README.md"
