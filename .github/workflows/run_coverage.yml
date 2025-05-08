@@ -1,6 +1,8 @@
 name: Run code coverage
 on:
   push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
 

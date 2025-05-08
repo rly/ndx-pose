@@ -1,6 +1,8 @@
 name: Check Sphinx external links
 on:
   push:
+    branches:
+      - main
   pull_request:
   schedule:
     - cron: '0 5 * * 0'  # once every Sunday at midnight ET
