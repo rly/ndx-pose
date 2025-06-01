@@ -19,6 +19,11 @@ def get_io(path):
             message=r"Ignoring cached namespace .*",
             category=UserWarning,
         )
+        warnings.filterwarnings(
+            "ignore",
+            message=r"Ignoring the following cached namespace.*",
+            category=UserWarning,
+        )
         return NWBHDF5IO(str(path), "r")
 
 
