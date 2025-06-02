@@ -6,20 +6,27 @@ ndx-pose is a standardized format for storing pose estimation data in NWB, such 
 [DeepLabCut](http://www.mackenziemathislab.org/deeplabcut) and [SLEAP](https://sleap.ai/).
 Please post an issue or PR to suggest or add support for another pose estimation tool.
 
-This extension consists of several new neurodata types:
+## Data types overview
+This extension consists of several new neurodata types. They are divided into two main categories:
+1. **Pose estimation data**: This includes the estimated positions of body parts (keypoints) over time, along with
+   metadata about the pose estimation process.
+2. **Training data**: This includes ground truth data for training pose estimation models, such as labeled images and
+
+## Pose estimation data types:
 - `Skeleton` which stores the relationship between the body parts (nodes and edges).
 - `Skeletons` which is a container that stores multiple `Skeleton` objects.
 - `PoseEstimationSeries` which stores the estimated positions (x, y) or (x, y, z) of a body part over time as well as
 the confidence/likelihood of the estimated positions.
 - `PoseEstimation` which stores the estimated position data (`PoseEstimationSeries`) for multiple body parts,
 computed from the same video(s) with the same tool/algorithm.
+## Training data types:
 - `SkeletonInstance` which stores the estimated positions and visibility of the body parts for a single frame.
 - `TrainingFrame` which stores the ground truth data for a single frame. It contains `SkeletonInstance` objects and
 references a frame of a source video (`ImageSeries`). The source videos can be stored internally as data arrays or
 externally as files referenced by relative file path.
 - `TrainingFrames` which is a container that stores multiple `TrainingFrame` objects.
 - `SourceVideos` which is a container that stores multiple `ImageSeries` objects representing source videos used in training.
-- `PoseTraining` which is a container thatstores the ground truth data (`TrainingFrames`) and source videos (`SourceVideos`)
+- `PoseTraining` which is a container that stores the ground truth data (`TrainingFrames`) and source videos (`SourceVideos`)
 used to train the pose estimation model.
 
 It is recommended to place the `Skeletons`, `PoseEstimation`, and `PoseTraining` objects in an NWB processing module
@@ -27,8 +34,9 @@ named "behavior", as shown below.
 
 ## Installation
 
-`pip install ndx-pose`
-
+```bash
+pip install "ndx-pose"
+```
 ## Usage examples
 
 1. [Example writing pose estimates (keypoints) to an NWB file](examples/write_pose_estimates_only.py).
@@ -42,8 +50,7 @@ As a result, ndx-pose was designed to store pose estimates from a single subject
 Pose estimates data from different subjects should be stored in separate NWB files.
 
 Training images can involve multiple skeletons, however. These training images may be the same across subjects,
-and therefore the same across NWB files. These training images should be duplicated between files, until
-multi-subject support is added to NWB and ndx-pose. See https://github.com/rly/ndx-pose/pull/3
+and therefore the same across NWB files. These training images should be duplicated between files.
 
 ## Resources
 
@@ -61,8 +68,7 @@ Keypoint MoSeq: https://github.com/dattalab/keypoint-moseq
 - Supports read of `PoseEstimation` objects from NWB files.
 
 NeuroConv: https://neuroconv.readthedocs.io/en/main/conversion_examples_gallery/conversion_example_gallery.html#behavior
-- NeuroConv supports converting data from DeepLabCut (using `dlc2nwb` described above),
-  SLEAP (using `sleap_io` described above), FicTrac, and LightningPose to NWB. It supports appending pose estimation data to an existing NWB file.
+- NeuroConv supports converting data from DeepLabCut, SLEAP (using `sleap_io` described above),  and LightningPose to NWB. It also supports appending pose estimation data to an existing NWB file.
 
 Ethome: Tools for machine learning of animal behavior: https://github.com/benlansdell/ethome
 - Supports read of `PoseEstimation` objects from NWB files.
@@ -78,7 +84,7 @@ Several NWB datasets use ndx-pose 0.1.1:
 Several [open-source conversion scripts on GitHub](https://github.com/search?q=ndx-pose&type=code&p=1)
 also use ndx-pose.
 
-## Diagram of non-training-related types
+## Diagram of pose estimation types
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', "primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
@@ -121,6 +127,7 @@ classDiagram
             name : str
             nodes : array[str; dims [body part]]
             edges : array[uint; dims [edge, [node, node]]]
+            subject: link (to pynwb.Subject), optional
         }
 
     }
