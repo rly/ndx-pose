@@ -6,6 +6,7 @@ ndx-pose is a standardized format for storing pose estimation data in NWB, such 
 [DeepLabCut](http://www.mackenziemathislab.org/deeplabcut) and [SLEAP](https://sleap.ai/).
 Please post an issue or PR to suggest or add support for another pose estimation tool.
 
+## Data types overview
 This extension consists of several new neurodata types. They are divided into two main categories:
 1. **Pose estimation data**: This includes the estimated positions of body parts (keypoints) over time, along with
    metadata about the pose estimation process.
@@ -25,7 +26,7 @@ references a frame of a source video (`ImageSeries`). The source videos can be s
 externally as files referenced by relative file path.
 - `TrainingFrames` which is a container that stores multiple `TrainingFrame` objects.
 - `SourceVideos` which is a container that stores multiple `ImageSeries` objects representing source videos used in training.
-- `PoseTraining` which is a container thatstores the ground truth data (`TrainingFrames`) and source videos (`SourceVideos`)
+- `PoseTraining` which is a container that stores the ground truth data (`TrainingFrames`) and source videos (`SourceVideos`)
 used to train the pose estimation model.
 
 It is recommended to place the `Skeletons`, `PoseEstimation`, and `PoseTraining` objects in an NWB processing module
@@ -83,7 +84,7 @@ Several NWB datasets use ndx-pose 0.1.1:
 Several [open-source conversion scripts on GitHub](https://github.com/search?q=ndx-pose&type=code&p=1)
 also use ndx-pose.
 
-## Diagram of non-training-related types
+## Diagram of pose estimation types
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', "primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
