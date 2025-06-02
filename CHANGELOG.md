@@ -6,6 +6,7 @@ The 0.2.0 schema has not changed, but the surrounding infrastructure and Python 
 
 ### Bug fixes
 - Tests were updated to account for a change in the format of warnings from HDMF 4.1.0. @rly (#49)
+- Improved documentation. @h-mayorquin (#50)
 
 
 ## ndx-pose 0.2.2 (May 7, 2025)
