@@ -22,23 +22,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: linux-python3.8-minimum      , requirements: minimum    , python-ver: "3.8" , os: ubuntu-latest }
-          - { name: linux-python3.8              , requirements: upgraded   , python-ver: "3.8" , os: ubuntu-latest }
-          - { name: linux-python3.9              , requirements: upgraded   , python-ver: "3.9" , os: ubuntu-latest }
+          - { name: linux-python3.10-minimum     , requirements: minimum    , python-ver: "3.10", os: ubuntu-latest }
           - { name: linux-python3.10             , requirements: upgraded   , python-ver: "3.10", os: ubuntu-latest }
           - { name: linux-python3.11             , requirements: upgraded   , python-ver: "3.11", os: ubuntu-latest }
           - { name: linux-python3.12             , requirements: upgraded   , python-ver: "3.12", os: ubuntu-latest }
           - { name: linux-python3.13             , requirements: upgraded   , python-ver: "3.13", os: ubuntu-latest }
-          - { name: windows-python3.8-minimum    , requirements: minimum    , python-ver: "3.8" , os: windows-latest }
-          - { name: windows-python3.8            , requirements: upgraded   , python-ver: "3.8" , os: windows-latest }
-          - { name: windows-python3.9            , requirements: upgraded   , python-ver: "3.9" , os: windows-latest }
+          - { name: windows-python3.10-minimum   , requirements: minimum    , python-ver: "3.10", os: windows-latest }
           - { name: windows-python3.10           , requirements: upgraded   , python-ver: "3.10", os: windows-latest }
           - { name: windows-python3.11           , requirements: upgraded   , python-ver: "3.11", os: windows-latest }
           - { name: windows-python3.12           , requirements: upgraded   , python-ver: "3.12", os: windows-latest }
           - { name: windows-python3.13           , requirements: upgraded   , python-ver: "3.13", os: windows-latest }
-          - { name: macos-python3.8-minimum      , requirements: minimum    , python-ver: "3.8" , os: macos-latest }
-          - { name: macos-python3.8              , requirements: upgraded   , python-ver: "3.8" , os: macos-latest }
-          - { name: macos-python3.9              , requirements: upgraded   , python-ver: "3.9" , os: macos-latest }
+          - { name: macos-python3.10-minimum     , requirements: minimum    , python-ver: "3.10", os: macos-latest }
           - { name: macos-python3.10             , requirements: upgraded   , python-ver: "3.10", os: macos-latest }
           - { name: macos-python3.11             , requirements: upgraded   , python-ver: "3.11", os: macos-latest }
           - { name: macos-python3.12             , requirements: upgraded   , python-ver: "3.12", os: macos-latest }
@@ -58,7 +52,7 @@ jobs:
         if: ${{ matrix.requirements == 'minimum' }}
         run: |
           python -m pip install --upgrade pip
-          python -m pip install ".[min-reqs,test]"
+          python -m pip install . --group min-reqs --group test
           python -m pip list
           python -m pip check
 
@@ -67,7 +61,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # force upgrade of all dependencies to latest versions within allowed range
-          python -m pip install -U ".[test]"
+          python -m pip install -U . --group test
           python -m pip list
           python -m pip check
       - name: Run tests
