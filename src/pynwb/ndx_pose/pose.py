@@ -3,6 +3,7 @@ from hdmf.utils import docval, popargs, get_docval, AllowPositional
 from pynwb import register_class, TimeSeries, get_class
 from pynwb.behavior import SpatialSeries
 from pynwb.core import MultiContainerInterface
+from pynwb.image import ImageSeries
 
 # TODO validate Skeleton nodes and edges correspondence, convert edges to uint
 # TODO validate that all Skeleton nodes are used in edges
@@ -120,6 +121,7 @@ class PoseEstimation(MultiContainerInterface):
         "nodes",
         "edges",
         "skeleton",  # <-- this is a link to a Skeleton object
+        "source_video",  # <-- this is a link to an ImageSeries object
     )
 
     # custom mapper in ndx_pose.io.pose maps:
@@ -149,7 +151,11 @@ class PoseEstimation(MultiContainerInterface):
             "name": "original_videos",
             "type": ("array_data", "data"),
             "shape": (None,),
-            "doc": "Paths to the original video files. The number of files should equal the number of camera devices.",
+            "doc": (
+                "Paths to the original video files. The number of files should equal the number of camera devices. "
+                "Note: these string paths might be fragile unless relative paths are used and care is taken to "
+                "keep them consistent. Consider using 'source_video' instead for a formal link to an ImageSeries."
+            ),
             "default": None,
         },
         {
@@ -204,6 +210,17 @@ class PoseEstimation(MultiContainerInterface):
             "default": None,
         },
         {
+            "name": "source_video",
+            "type": ImageSeries,
+            "doc": (
+                "Link to an ImageSeries containing the source video used for pose estimation. "
+                "The ImageSeries should be stored in the NWBFile (e.g., in acquisition) and linked here. "
+                "When available, this field should be preferred over 'original_videos' as it provides "
+                "a formal reference rather than a file path string."
+            ),
+            "default": None,
+        },
+        {
             "name": "nodes",
             "type": ("array_data", "data"),
             "doc": (
@@ -226,7 +243,7 @@ class PoseEstimation(MultiContainerInterface):
         allow_positional=AllowPositional.ERROR,
     )
     def __init__(self, **kwargs):
-        nodes, edges, skeleton = popargs("nodes", "edges", "skeleton", kwargs)
+        nodes, edges, skeleton, source_video = popargs("nodes", "edges", "skeleton", "source_video", kwargs)
         if nodes is not None or edges is not None:
             if skeleton is not None:
                 raise ValueError("Cannot specify 'skeleton' with 'nodes' or 'edges'.")
@@ -296,6 +313,7 @@ class PoseEstimation(MultiContainerInterface):
         self.source_software = source_software
         self.source_software_version = source_software_version
         self.skeleton = skeleton
+        self.source_video = source_video
 
         # TODO include calibration images for 3D estimates?
         # TODO validate that the nodes correspond to the names of the pose estimation series objects

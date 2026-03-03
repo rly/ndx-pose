@@ -84,7 +84,9 @@ groups:
     shape:
     - null
     doc: Paths to the original video files. The number of files should equal the number
-      of camera devices.
+      of camera devices. Note that these string paths might be fragile unless relative
+      paths are used and care is taken to keep them consistent. Consider using the
+      'source_video' link instead for a formal reference.
     quantity: '?'
   - name: labeled_videos
     dtype: text
@@ -130,6 +132,13 @@ groups:
   - target_type: Device
     doc: Cameras used to record the videos.
     quantity: '*'
+  - name: source_video
+    target_type: ImageSeries
+    doc: Link to an ImageSeries containing the source video used for pose estimation.
+      The ImageSeries should be stored in the NWBFile (e.g., in acquisition).
+      When available, this field should be preferred over 'original_videos' as it
+      provides a formal reference rather than a file path string.
+    quantity: '?'
 - neurodata_type_def: TrainingFrame
   neurodata_type_inc: NWBDataInterface
   default_name: TrainingFrame
