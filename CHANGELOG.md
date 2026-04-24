@@ -2,7 +2,10 @@
 
 ## Upcoming
 
-The 0.2.0 schema has not changed, but the surrounding infrastructure and Python API has changes:
+### Schema changes
+- Added optional `source_video` and `labeled_video` links on `PoseEstimation` that reference an `ImageSeries`
+  in the NWBFile, providing a formal alternative to the fragile string paths in `original_videos` and
+  `labeled_videos`. @h-mayorquin (#56)
 
 ### Bug fixes
 - Tests were updated to account for a change in the format of warnings from HDMF 4.1.0. @rly (#49)
