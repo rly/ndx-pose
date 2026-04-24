@@ -250,6 +250,66 @@ class TestPoseEstimationRoundtripSourceVideo(TestCase):
             self.assertEqual(read_pe.source_video.external_file[0], "camera1.mp4")
 
 
+class TestPoseEstimationRoundtripLabeledVideo(TestCase):
+    """Roundtrip test for PoseEstimation with labeled_video link."""
+
+    def setUp(self):
+        self.nwbfile = NWBFile(
+            session_description="session_description",
+            identifier="identifier",
+            session_start_time=datetime.datetime.now(datetime.timezone.utc),
+        )
+        self.nwbfile.create_device(name="camera1")
+        self.path = "test_pose.nwb"
+
+    def tearDown(self):
+        remove_test_file(self.path)
+
+    def test_roundtrip(self):
+        """Test that labeled_video link survives write/read roundtrip."""
+        labeled_video = ImageSeries(
+            name="labeled_video",
+            description="Labeled video produced from pose estimation.",
+            unit="NA",
+            format="external",
+            external_file=["camera1_labeled.mp4"],
+            dimension=[640, 480],
+            starting_frame=[0],
+            rate=30.0,
+        )
+        self.nwbfile.add_acquisition(labeled_video)
+
+        skeleton = mock_Skeleton()
+        skeletons = Skeletons(skeletons=[skeleton])
+
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+        pe = PoseEstimation(
+            pose_estimation_series=pose_estimation_series,
+            description="Estimated positions of front paws using DeepLabCut.",
+            labeled_videos=["camera1_labeled.mp4"],
+            dimensions=np.array([[640, 480]], dtype="uint16"),
+            devices=[self.nwbfile.devices["camera1"]],
+            scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
+            source_software="DeepLabCut",
+            source_software_version="2.2b8",
+            skeleton=skeleton,
+            labeled_video=labeled_video,
+        )
+
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm.add(pe)
+        behavior_pm.add(skeletons)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            read_nwbfile = io.read()
+            read_pe = read_nwbfile.processing["behavior"]["PoseEstimation"]
+            self.assertContainerEqual(read_pe.labeled_video, labeled_video)
+            self.assertEqual(read_pe.labeled_video.external_file[0], "camera1_labeled.mp4")
+
+
 class TestPoseEstimationRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
     """Complex, more complete roundtrip test for PoseEstimation using pynwb.testing infrastructure."""
 

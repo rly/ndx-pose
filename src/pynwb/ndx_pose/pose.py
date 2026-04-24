@@ -122,6 +122,7 @@ class PoseEstimation(MultiContainerInterface):
         "edges",
         "skeleton",  # <-- this is a link to a Skeleton object
         "source_video",  # <-- this is a link to an ImageSeries object
+        "labeled_video",  # <-- this is a link to an ImageSeries object
     )
 
     # custom mapper in ndx_pose.io.pose maps:
@@ -162,7 +163,11 @@ class PoseEstimation(MultiContainerInterface):
             "name": "labeled_videos",
             "type": ("array_data", "data"),
             "shape": (None,),
-            "doc": "Paths to the labeled video files. The number of files should equal the number of camera devices.",
+            "doc": (
+                "Paths to the labeled video files. The number of files should equal the number of camera devices. "
+                "Note: these string paths might be fragile unless relative paths are used and care is taken to "
+                "keep them consistent. Consider using 'labeled_video' instead for a formal link to an ImageSeries."
+            ),
             "default": None,
         },
         {
@@ -221,6 +226,17 @@ class PoseEstimation(MultiContainerInterface):
             "default": None,
         },
         {
+            "name": "labeled_video",
+            "type": ImageSeries,
+            "doc": (
+                "Link to an ImageSeries containing the labeled video (with pose estimation overlays) "
+                "produced from the source video. The ImageSeries should be stored in the NWBFile "
+                "(e.g., in acquisition) and linked here. When available, this field should be preferred "
+                "over 'labeled_videos' as it provides a formal reference rather than a file path string."
+            ),
+            "default": None,
+        },
+        {
             "name": "nodes",
             "type": ("array_data", "data"),
             "doc": (
@@ -243,7 +259,9 @@ class PoseEstimation(MultiContainerInterface):
         allow_positional=AllowPositional.ERROR,
     )
     def __init__(self, **kwargs):
-        nodes, edges, skeleton, source_video = popargs("nodes", "edges", "skeleton", "source_video", kwargs)
+        nodes, edges, skeleton, source_video, labeled_video = popargs(
+            "nodes", "edges", "skeleton", "source_video", "labeled_video", kwargs
+        )
         if nodes is not None or edges is not None:
             if skeleton is not None:
                 raise ValueError("Cannot specify 'skeleton' with 'nodes' or 'edges'.")
@@ -314,6 +332,7 @@ class PoseEstimation(MultiContainerInterface):
         self.source_software_version = source_software_version
         self.skeleton = skeleton
         self.source_video = source_video
+        self.labeled_video = labeled_video
 
         # TODO include calibration images for 3D estimates?
         # TODO validate that the nodes correspond to the names of the pose estimation series objects

@@ -92,6 +92,7 @@ def mock_PoseEstimation(
     source_software: Optional[str] = "DeepLabCut",
     source_software_version: Optional[str] = "2.2b8",
     source_video: Optional[ImageSeries] = None,
+    labeled_video: Optional[ImageSeries] = None,
 ):
     """Create a mock PoseEstimation object.
 
@@ -111,6 +112,7 @@ def mock_PoseEstimation(
         source_software_version=source_software_version,
         skeleton=skeleton,
         source_video=source_video,
+        labeled_video=labeled_video,
     )
 
     if nwbfile is not None:
