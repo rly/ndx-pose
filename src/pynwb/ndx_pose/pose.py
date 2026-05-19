@@ -2,7 +2,9 @@ import warnings
 from hdmf.utils import docval, popargs, get_docval, AllowPositional
 from pynwb import register_class, TimeSeries, get_class
 from pynwb.behavior import SpatialSeries
-from pynwb.core import MultiContainerInterface
+from pynwb.core import MultiContainerInterface, NWBDataInterface
+from pynwb.device import Device
+from pynwb.image import ImageSeries
 
 # TODO validate Skeleton nodes and edges correspondence, convert edges to uint
 # TODO validate that all Skeleton nodes are used in edges
@@ -120,6 +122,8 @@ class PoseEstimation(MultiContainerInterface):
         "nodes",
         "edges",
         "skeleton",  # <-- this is a link to a Skeleton object
+        "source_video",  # <-- this is a link to an ImageSeries object
+        "labeled_video",  # <-- this is a link to an ImageSeries object
     )
 
     # custom mapper in ndx_pose.io.pose maps:
@@ -149,14 +153,22 @@ class PoseEstimation(MultiContainerInterface):
             "name": "original_videos",
             "type": ("array_data", "data"),
             "shape": (None,),
-            "doc": "Paths to the original video files. The number of files should equal the number of camera devices.",
+            "doc": (
+                "Paths to the original video files. The number of files should equal the number of camera devices. "
+                "Note: these string paths might be fragile unless relative paths are used and care is taken to "
+                "keep them consistent. Consider using 'source_video' instead for a formal link to an ImageSeries."
+            ),
             "default": None,
         },
         {
             "name": "labeled_videos",
             "type": ("array_data", "data"),
             "shape": (None,),
-            "doc": "Paths to the labeled video files. The number of files should equal the number of camera devices.",
+            "doc": (
+                "Paths to the labeled video files. The number of files should equal the number of camera devices. "
+                "Note: these string paths might be fragile unless relative paths are used and care is taken to "
+                "keep them consistent. Consider using 'labeled_video' instead for a formal link to an ImageSeries."
+            ),
             "default": None,
         },
         {
@@ -204,6 +216,28 @@ class PoseEstimation(MultiContainerInterface):
             "default": None,
         },
         {
+            "name": "source_video",
+            "type": ImageSeries,
+            "doc": (
+                "Link to an ImageSeries containing the source video used for pose estimation. "
+                "The ImageSeries should be stored in the NWBFile (e.g., in acquisition) and linked here. "
+                "When available, this field should be preferred over 'original_videos' as it provides "
+                "a formal reference rather than a file path string."
+            ),
+            "default": None,
+        },
+        {
+            "name": "labeled_video",
+            "type": ImageSeries,
+            "doc": (
+                "Link to an ImageSeries containing the labeled video (with pose estimation overlays) "
+                "produced from the source video. The ImageSeries should be stored in the NWBFile "
+                "(e.g., in acquisition) and linked here. When available, this field should be preferred "
+                "over 'labeled_videos' as it provides a formal reference rather than a file path string."
+            ),
+            "default": None,
+        },
+        {
             "name": "nodes",
             "type": ("array_data", "data"),
             "doc": (
@@ -226,7 +260,9 @@ class PoseEstimation(MultiContainerInterface):
         allow_positional=AllowPositional.ERROR,
     )
     def __init__(self, **kwargs):
-        nodes, edges, skeleton = popargs("nodes", "edges", "skeleton", kwargs)
+        nodes, edges, skeleton, source_video, labeled_video = popargs(
+            "nodes", "edges", "skeleton", "source_video", "labeled_video", kwargs
+        )
         if nodes is not None or edges is not None:
             if skeleton is not None:
                 raise ValueError("Cannot specify 'skeleton' with 'nodes' or 'edges'.")
@@ -296,6 +332,8 @@ class PoseEstimation(MultiContainerInterface):
         self.source_software = source_software
         self.source_software_version = source_software_version
         self.skeleton = skeleton
+        self.source_video = source_video
+        self.labeled_video = labeled_video
 
         # TODO include calibration images for 3D estimates?
         # TODO validate that the nodes correspond to the names of the pose estimation series objects
@@ -319,3 +357,264 @@ class PoseEstimation(MultiContainerInterface):
         raise ValueError(
             "Setting PoseEstimation.edges is deprecated. Please use PoseEstimation.skeleton.edges instead."
         )
+
+
+@register_class("CameraCalibration", "ndx-pose")
+class CameraCalibration(NWBDataInterface):
+    """Intrinsic and extrinsic calibration parameters for a set of cameras.
+
+    Each row of every dataset corresponds to one camera device.
+    The row order must match the order of linked Device objects.
+    """
+
+    __nwbfields__ = (
+        "intrinsic_matrix",
+        "rotation_matrix",
+        "translation_vector",
+        "distortion_coefficients",
+        "devices",
+    )
+
+    @docval(
+        {
+            "name": "intrinsic_matrix",
+            "type": ("array_data", "data"),
+            "doc": "Intrinsic camera matrix K for each camera. Shape (n_cameras, 3, 3).",
+        },
+        {
+            "name": "devices",
+            "type": ("array_data", "data"),
+            "doc": (
+                "Camera devices in the same row order as the calibration datasets. "
+                "Each device must be added to the NWBFile before being linked here."
+            ),
+            "default": None,
+        },
+        {
+            "name": "rotation_matrix",
+            "type": ("array_data", "data"),
+            "doc": "Rotation matrix R (world → camera) for each camera. Shape (n_cameras, 3, 3).",
+            "default": None,
+        },
+        {
+            "name": "translation_vector",
+            "type": ("array_data", "data"),
+            "doc": "Translation vector t (world → camera) for each camera. Shape (n_cameras, 3).",
+            "default": None,
+        },
+        {
+            "name": "distortion_coefficients",
+            "type": ("array_data", "data"),
+            "doc": "Lens distortion coefficients for each camera. Shape (n_cameras, N).",
+            "default": None,
+        },
+        {
+            "name": "name",
+            "type": str,
+            "doc": "Name of this CameraCalibration container.",
+            "default": "calibration",
+        },
+        allow_positional=AllowPositional.ERROR,
+    )
+    def __init__(self, **kwargs):
+        devices = popargs("devices", kwargs)
+
+        if devices is not None:
+            for device in devices:
+                if device.parent is None:
+                    raise ValueError(
+                        "All devices linked from a CameraCalibration object must be added to the NWBFile first."
+                    )
+
+        intrinsic_matrix, rotation_matrix, translation_vector, distortion_coefficients = popargs(
+            "intrinsic_matrix", "rotation_matrix", "translation_vector", "distortion_coefficients", kwargs
+        )
+        super().__init__(**kwargs)
+
+        self.intrinsic_matrix = intrinsic_matrix
+        self.rotation_matrix = rotation_matrix
+        self.translation_vector = translation_vector
+        self.distortion_coefficients = distortion_coefficients
+        self.devices = devices
+
+
+@register_class("CameraView", "ndx-pose")
+class CameraView(MultiContainerInterface):
+    """Data associated with a single camera in a multi-camera pose estimation setup.
+
+    Links to the camera device and optionally to its source video stored elsewhere
+    in the NWBFile. May also hold per-camera 2D pose estimates in pixel space.
+    """
+
+    __clsconf__ = [
+        {
+            "add": "add_pose_estimation_series",
+            "get": "get_pose_estimation_series",
+            "create": "create_pose_estimation_series",
+            "type": PoseEstimationSeries,
+            "attr": "pose_estimation_series",
+        },
+    ]
+
+    __nwbfields__ = (
+        "device",
+        "source_video",
+    )
+
+    @docval(
+        {
+            "name": "name",
+            "type": str,
+            "doc": "Name of this CameraView, typically the camera identifier (e.g. 'camera1').",
+        },
+        {
+            "name": "device",
+            "type": Device,
+            "doc": (
+                "The camera device used to record this view. "
+                "Must be added to the NWBFile before being linked here."
+            ),
+        },
+        {
+            "name": "source_video",
+            "type": ImageSeries,
+            "doc": (
+                "Link to the ImageSeries (e.g. stored in acquisition) containing the source "
+                "video from this camera."
+            ),
+            "default": None,
+        },
+        {
+            "name": "pose_estimation_series",
+            "type": ("array_data", "data"),
+            "doc": "Optional 2D pose estimates (x, y) for each body part in this camera's pixel frame.",
+            "default": None,
+        },
+        allow_positional=AllowPositional.ERROR,
+    )
+    def __init__(self, **kwargs):
+        device, source_video = popargs("device", "source_video", kwargs)
+
+        if device.parent is None:
+            raise ValueError(
+                "The device linked from a CameraView must be added to the NWBFile first."
+            )
+
+        pose_estimation_series = popargs("pose_estimation_series", kwargs)
+        super().__init__(**kwargs)
+
+        self.device = device
+        self.source_video = source_video
+        self.pose_estimation_series = pose_estimation_series
+
+
+@register_class("MultiCameraPoseEstimation", "ndx-pose")
+class MultiCameraPoseEstimation(MultiContainerInterface):
+    """3D pose estimation from multiple synchronized cameras.
+
+    Unlike PoseEstimation (single-camera, pixel-space), this type stores keypoints
+    in a shared 3D world-space reference frame. Per-camera data (device link,
+    source video, optional 2D estimates) is organised through CameraView children.
+    """
+
+    __clsconf__ = [
+        {
+            "add": "add_pose_estimation_series",
+            "get": "get_pose_estimation_series",
+            "create": "create_pose_estimation_series",
+            "type": PoseEstimationSeries,
+            "attr": "pose_estimation_series",
+        },
+        {
+            "add": "add_camera_view",
+            "get": "get_camera_view",
+            "create": "create_camera_view",
+            "type": CameraView,
+            "attr": "camera_views",
+        },
+    ]
+
+    __nwbfields__ = (
+        "description",
+        "scorer",
+        "source_software",
+        "source_software_version",
+        "calibration",
+        "skeleton",
+    )
+
+    @docval(
+        {
+            "name": "name",
+            "type": str,
+            "doc": "Name of this MultiCameraPoseEstimation container.",
+            "default": "MultiCameraPoseEstimation",
+        },
+        {
+            "name": "pose_estimation_series",
+            "type": ("array_data", "data"),
+            "doc": "3D pose estimates (x, y, z) for each body part in world-space coordinates.",
+            "default": None,
+        },
+        {
+            "name": "camera_views",
+            "type": ("array_data", "data"),
+            "doc": "CameraView objects, one per camera.",
+            "default": None,
+        },
+        {
+            "name": "description",
+            "type": str,
+            "doc": "Description of the pose estimation procedure and output.",
+            "default": None,
+        },
+        {
+            "name": "scorer",
+            "type": str,
+            "doc": "Name of the scorer / algorithm used.",
+            "default": None,
+        },
+        {
+            "name": "source_software",
+            "type": str,
+            "doc": "Name of the software tool used. Specifying the version is strongly encouraged.",
+            "default": None,
+        },
+        {
+            "name": "source_software_version",
+            "type": str,
+            "doc": "Version string of the software tool used.",
+            "default": None,
+        },
+        {
+            "name": "skeleton",
+            "type": Skeleton,
+            "doc": (
+                "Layout of body part locations and connections. The Skeleton object should be placed in a "
+                "Skeletons object which resides in the NWBFile at the same level as this container."
+            ),
+            "default": None,
+        },
+        {
+            "name": "calibration",
+            "type": CameraCalibration,
+            "doc": "Intrinsic and extrinsic calibration parameters for all cameras.",
+            "default": None,
+        },
+        allow_positional=AllowPositional.ERROR,
+    )
+    def __init__(self, **kwargs):
+        skeleton, calibration = popargs("skeleton", "calibration", kwargs)
+        pose_estimation_series, camera_views = popargs("pose_estimation_series", "camera_views", kwargs)
+        description, scorer = popargs("description", "scorer", kwargs)
+        source_software, source_software_version = popargs("source_software", "source_software_version", kwargs)
+        super().__init__(**kwargs)
+
+        self.pose_estimation_series = pose_estimation_series
+        self.camera_views = camera_views
+        self.description = description
+        self.scorer = scorer
+        self.source_software = source_software
+        self.source_software_version = source_software_version
+        self.skeleton = skeleton
+        self.calibration = calibration

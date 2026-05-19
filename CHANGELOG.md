@@ -2,7 +2,21 @@
 
 ## Upcoming
 
-The 0.2.0 schema has not changed, but the surrounding infrastructure and Python API has changes:
+### New neurodata types
+
+- Added `CameraCalibration` neurodata type to store intrinsic and extrinsic calibration parameters
+  (intrinsic matrix, rotation matrix, translation vector, distortion coefficients) for a set of cameras,
+  with links to the corresponding `Device` objects. @ATrapani
+- Added `CameraView` neurodata type to group, per camera, the camera device link, an optional link to
+  the source `ImageSeries` in acquisition, and optional 2D `PoseEstimationSeries` in pixel space. @ATrapani
+- Added `MultiCameraPoseEstimation` neurodata type for storing 3D world-space pose estimates from
+  multi-camera setups (e.g. DANNCE, Anipose). It contains `PoseEstimationSeries` in world coordinates,
+  one `CameraView` per camera, an optional `CameraCalibration`, and an optional link to a `Skeleton`. @ATrapani
+
+### Schema changes
+- Added optional `source_video` and `labeled_video` links on `PoseEstimation` that reference an `ImageSeries`
+  in the NWBFile, providing a formal alternative to the fragile string paths in `original_videos` and
+  `labeled_videos`. @h-mayorquin (#56)
 
 ### Bug fixes
 - Tests were updated to account for a change in the format of warnings from HDMF 4.1.0. @rly (#49)
