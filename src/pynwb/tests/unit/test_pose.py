@@ -6,6 +6,8 @@ from pynwb.device import Device
 from pynwb.testing import TestCase
 from pynwb.file import Subject
 
+from pynwb.image import ImageSeries
+
 from ndx_pose import (
     PoseEstimationSeries,
     Skeleton,
@@ -226,6 +228,84 @@ class TestPoseEstimationConstructor(TestCase):
         self.assertEqual(pe.skeleton.name, skeleton.name)
         self.assertEqual(pe.skeleton.nodes, skeleton.nodes)
         np.testing.assert_array_equal(pe.skeleton.edges, skeleton.edges)
+
+    def test_constructor_source_video(self):
+        """Test that source_video link is set correctly."""
+        source_video = ImageSeries(
+            name="source_video",
+            description="Source video for pose estimation.",
+            unit="NA",
+            format="external",
+            external_file=["camera1.mp4"],
+            dimension=[640, 480],
+            starting_frame=[0],
+            rate=30.0,
+        )
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        pe = PoseEstimation(
+            pose_estimation_series=pose_estimation_series,
+            description="Estimated positions of front paws using DeepLabCut.",
+            original_videos=["camera1.mp4"],
+            devices=[self.nwbfile.devices["camera1"]],
+            scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
+            source_software="DeepLabCut",
+            source_software_version="2.2b8",
+            skeleton=skeleton,
+            source_video=source_video,
+        )
+        self.assertIs(pe.source_video, source_video)
+
+    def test_constructor_source_video_default_none(self):
+        """Test that source_video defaults to None."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        pe = PoseEstimation(
+            pose_estimation_series=pose_estimation_series,
+            skeleton=skeleton,
+        )
+        self.assertIsNone(pe.source_video)
+
+    def test_constructor_labeled_video(self):
+        """Test that labeled_video link is set correctly."""
+        labeled_video = ImageSeries(
+            name="labeled_video",
+            description="Labeled video produced from pose estimation.",
+            unit="NA",
+            format="external",
+            external_file=["camera1_labeled.mp4"],
+            dimension=[640, 480],
+            starting_frame=[0],
+            rate=30.0,
+        )
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        pe = PoseEstimation(
+            pose_estimation_series=pose_estimation_series,
+            description="Estimated positions of front paws using DeepLabCut.",
+            labeled_videos=["camera1_labeled.mp4"],
+            devices=[self.nwbfile.devices["camera1"]],
+            scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
+            source_software="DeepLabCut",
+            source_software_version="2.2b8",
+            skeleton=skeleton,
+            labeled_video=labeled_video,
+        )
+        self.assertIs(pe.labeled_video, labeled_video)
+
+    def test_constructor_labeled_video_default_none(self):
+        """Test that labeled_video defaults to None."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        pe = PoseEstimation(
+            pose_estimation_series=pose_estimation_series,
+            skeleton=skeleton,
+        )
+        self.assertIsNone(pe.labeled_video)
 
 
 class TestSkeletonInstance(TestCase):

@@ -22,4 +22,4 @@ namespaces:
   schema:
   - namespace: core
   - source: ndx-pose.extensions.yaml
-  version: 0.2.0
+  version: 0.2.1
