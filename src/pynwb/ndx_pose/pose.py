@@ -139,7 +139,7 @@ class PoseEstimation(MultiContainerInterface):
         {
             "name": "name",
             "type": str,
-            "doc": "Description of the pose estimation procedure and output.",
+            "doc": "Name of this PoseEstimation object.",
             "default": "PoseEstimation",
         },
         {
@@ -339,6 +339,11 @@ class PoseEstimation(MultiContainerInterface):
 
     @property
     def nodes(self):
+        if self.skeleton is None:
+            raise ValueError(
+                "This PoseEstimation object has no Skeleton, so it has no nodes. Provide a 'skeleton' argument "
+                "to access nodes via PoseEstimation.skeleton.nodes."
+            )
         return self.skeleton.nodes
 
     @nodes.setter
@@ -349,6 +354,11 @@ class PoseEstimation(MultiContainerInterface):
 
     @property
     def edges(self):
+        if self.skeleton is None:
+            raise ValueError(
+                "This PoseEstimation object has no Skeleton, so it has no edges. Provide a 'skeleton' argument "
+                "to access edges via PoseEstimation.skeleton.edges."
+            )
         return self.skeleton.edges
 
     @edges.setter

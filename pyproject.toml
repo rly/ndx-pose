@@ -26,6 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
@@ -69,12 +70,9 @@ min-reqs = [
     "numpy<2; python_version == '3.10'",
 ]
 
-# TODO: add URLs before release
 [project.urls]
 "Homepage" = "https://github.com/rly/ndx-pose"
-# "Documentation" = "https://package.readthedocs.io/"
 "Bug Tracker" = "https://github.com/rly/ndx-pose/issues"
-# "Discussions" = "https://github.com/organization/package/discussions"
 "Changelog" = "https://github.com/rly/ndx-pose/blob/main/CHANGELOG.md"
 
 # Include only the source code under `src/pynwb/ndx_pose` and the spec files under `spec`

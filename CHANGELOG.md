@@ -10,6 +10,19 @@
 ### Bug fixes
 - Tests were updated to account for a change in the format of warnings from HDMF 4.1.0. @rly (#49)
 - Improved documentation. @h-mayorquin (#50)
+- Fixed the docstring of the `PoseEstimation` `name` constructor argument, which duplicated the `description`
+  docstring. @rly (#58)
+- `PoseEstimation.nodes` and `PoseEstimation.edges` now raise an informative error instead of an `AttributeError`
+  when the object has no `Skeleton`. @rly (#58)
+- Fixed `mock_source_frame` to generate a name when none is provided, instead of passing `None` to `RGBImage`. @rly (#58)
+
+### Minor updates
+- Added testing on Python 3.14 and the corresponding PyPI classifier. @rly (#58)
+- Updated copyright dates to 2026 and aligned the author lists in `LICENSE.txt` and the docs with `pyproject.toml`.
+  @rly (#58)
+- Removed the obsolete `importlib_resources` import fallback and added the missing `ndx_pose.testing` package init.
+  @rly (#58)
+- Removed placeholder project URLs from `pyproject.toml`. @rly (#58)
 
 
 ## ndx-pose 0.2.2 (May 7, 2025)
