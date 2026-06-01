@@ -110,11 +110,13 @@ classDiagram
             labeled_videos : array[str; dims [file]], optional
             dimensions : array[uint, dims [file, [width, height]]], optional
             scorer : str, optional
-            scorer_software : str, optional
-            scorer_software__version : str, optional
+            source_software : str, optional
+            source_software__version : str, optional
             PoseEstimationSeries
             Skeleton, link
             Device, link
+            source_video : ImageSeries, link, optional
+            labeled_video : ImageSeries, link, optional
         }
 
         class Skeletons {
@@ -133,10 +135,12 @@ classDiagram
     }
 
     class Device
+    class ImageSeries
 
     PoseEstimation --o PoseEstimationSeries : contains 0 or more
     PoseEstimation --> Skeleton : links to
     PoseEstimation --> Device : links to
+    PoseEstimation --> ImageSeries : links to
     Skeletons --o Skeleton : contains 0 or more
 ```
 
@@ -166,11 +170,13 @@ classDiagram
             labeled_videos : array[str; dims [file]], optional
             dimensions : array[uint, dims [file, [width, height]]], optional
             scorer : str, optional
-            scorer_software : str, optional
-            scorer_software__version : str, optional
+            source_software : str, optional
+            source_software__version : str, optional
             PoseEstimationSeries
             Skeleton, link
             Device, link
+            source_video : ImageSeries, link, optional
+            labeled_video : ImageSeries, link, optional
         }
 
         class Skeleton {
@@ -233,6 +239,7 @@ classDiagram
     PoseEstimation --o PoseEstimationSeries : contains 0 or more
     PoseEstimation --> Skeleton : links to
     PoseEstimation --> Device : links to
+    PoseEstimation --> ImageSeries : links to
 
     PoseTraining --o TrainingFrames : contains
     PoseTraining --o SourceVideos : contains
