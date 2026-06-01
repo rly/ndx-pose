@@ -15,6 +15,9 @@
 - `PoseEstimation.nodes` and `PoseEstimation.edges` now raise an informative error instead of an `AttributeError`
   when the object has no `Skeleton`. @rly (#58)
 - Fixed `mock_source_frame` to generate a name when none is provided, instead of passing `None` to `RGBImage`. @rly (#58)
+- Documented the `source_video` and `labeled_video` links on `PoseEstimation` in the README diagrams and the
+  pose-estimation example, and corrected the `source_software` field name (previously shown as `scorer_software`).
+  @rly (#59)
 
 ### Minor updates
 - Added testing on Python 3.14 and the corresponding PyPI classifier. @rly (#58)
@@ -23,6 +26,10 @@
 - Removed the obsolete `importlib_resources` import fallback and added the missing `ndx_pose.testing` package init.
   @rly (#58)
 - Removed placeholder project URLs from `pyproject.toml`. @rly (#58)
+- Updated GitHub Actions to current major versions (`checkout` v6, `setup-python` v6, `ruff-action` v4,
+  `codecov-action` v6) and switched the single-version workflows to Python 3.14. @rly (#59)
+- Removed the deprecated `sphinx_rtd_theme.get_html_theme_path()` call from the docs config and registered the
+  theme via `extensions`. @rly (#59)
 
 
 ## ndx-pose 0.2.2 (May 7, 2025)

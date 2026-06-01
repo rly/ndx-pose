@@ -42,12 +42,12 @@ jobs:
           - { name: macos-python3.14             , requirements: upgraded   , python-ver: "3.14", os: macos-latest }
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0  # tags are required to determine the version
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-ver }}
 
