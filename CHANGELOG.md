@@ -15,8 +15,9 @@
 - `PoseEstimation.nodes` and `PoseEstimation.edges` now raise an informative error instead of an `AttributeError`
   when the object has no `Skeleton`. @rly (#58)
 - Fixed `mock_source_frame` to generate a name when none is provided, instead of passing `None` to `RGBImage`. @rly (#58)
-- Documented the `source_video` and `labeled_video` links on `PoseEstimation` in the README diagrams and corrected
-  the `source_software` field name (previously shown as `scorer_software`). @rly (#59)
+- Documented the `source_video` and `labeled_video` links on `PoseEstimation` in the README diagrams and the
+  pose-estimation example, and corrected the `source_software` field name (previously shown as `scorer_software`).
+  @rly (#59)
 
 ### Minor updates
 - Added testing on Python 3.14 and the corresponding PyPI classifier. @rly (#58)
