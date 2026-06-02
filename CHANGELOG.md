@@ -30,6 +30,8 @@
   `codecov-action` v6) and switched the single-version workflows to Python 3.14. @rly (#59)
 - Removed the deprecated `sphinx_rtd_theme.get_html_theme_path()` call from the docs config and registered the
   theme via `extensions`. @rly (#59)
+- Regenerated the spec YAML files with the latest `ruamel.yaml`, which changed the line wrapping of the docstrings.
+  The schema content is unchanged. @rly (#60)
 
 
 ## ndx-pose 0.2.2 (May 7, 2025)
