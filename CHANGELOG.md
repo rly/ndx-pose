@@ -32,6 +32,7 @@
   theme via `extensions`. @rly (#59)
 - Regenerated the spec YAML files with the latest `ruamel.yaml`, which changed the line wrapping of the docstrings.
   The schema content is unchanged. @rly (#60)
+- Documented the development installation (`pip install -e . --group dev`) in the README. @rly (#60)
 
 
 ## ndx-pose 0.2.2 (May 7, 2025)
