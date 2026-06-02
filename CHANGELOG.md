@@ -1,6 +1,6 @@
 # Changelog for ndx-pose
 
-## Upcoming
+## ndx-pose 0.3.0 (June 2, 2026)
 
 ### Schema changes
 - Added optional `source_video` and `labeled_video` links on `PoseEstimation` that reference an `ImageSeries`

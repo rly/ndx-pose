@@ -16,7 +16,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc="NWB extension to store pose estimation data",
         name="ndx-pose",
-        version="0.2.1",
+        version="0.3.0",
         author=[
             "Ryan Ly",
             "Ben Dichter",
