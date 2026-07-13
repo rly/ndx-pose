@@ -16,7 +16,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc="NWB extension to store pose estimation data",
         name="ndx-pose",
-        version="0.2.0",
+        version="0.3.0",
         author=[
             "Ryan Ly",
             "Ben Dichter",
@@ -167,6 +167,28 @@ def main():
                 doc="Cameras used to record the videos.",
                 quantity="*",
             ),
+            NWBLinkSpec(
+                name="source_video",
+                target_type="ImageSeries",
+                doc=(
+                    "Link to an ImageSeries containing the source video used for pose estimation. The "
+                    "ImageSeries should be stored in the NWBFile (e.g., in acquisition). When available, this "
+                    "field should be preferred over 'original_videos' as it provides a formal reference rather "
+                    "than a file path string."
+                ),
+                quantity="?",
+            ),
+            NWBLinkSpec(
+                name="labeled_video",
+                target_type="ImageSeries",
+                doc=(
+                    "Link to an ImageSeries containing the labeled video (with pose estimation overlays) "
+                    "produced from the source video. The ImageSeries should be stored in the NWBFile (e.g., in "
+                    "acquisition). When available, this field should be preferred over 'labeled_videos' as it "
+                    "provides a formal reference rather than a file path string."
+                ),
+                quantity="?",
+            ),
         ],
         datasets=[
             NWBDatasetSpec(
@@ -177,7 +199,12 @@ def main():
             ),
             NWBDatasetSpec(
                 name="original_videos",
-                doc="Paths to the original video files. The number of files should equal the number of camera devices.",
+                doc=(
+                    "Paths to the original video files. The number of files should equal the number of camera "
+                    "devices. Note that these string paths might be fragile unless relative paths are used and "
+                    "care is taken to keep them consistent. Consider using the 'source_video' link instead for "
+                    "a formal reference."
+                ),
                 dtype="text",
                 dims=["num_files"],
                 shape=[None],
@@ -185,7 +212,12 @@ def main():
             ),
             NWBDatasetSpec(
                 name="labeled_videos",
-                doc="Paths to the labeled video files. The number of files should equal the number of camera devices.",
+                doc=(
+                    "Paths to the labeled video files. The number of files should equal the number of camera "
+                    "devices. Note that these string paths might be fragile unless relative paths are used and "
+                    "care is taken to keep them consistent. Consider using the 'labeled_video' link instead for "
+                    "a formal reference."
+                ),
                 dtype="text",
                 dims=["num_files"],
                 shape=[None],

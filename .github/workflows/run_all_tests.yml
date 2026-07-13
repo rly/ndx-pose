@@ -27,24 +27,27 @@ jobs:
           - { name: linux-python3.11             , requirements: upgraded   , python-ver: "3.11", os: ubuntu-latest }
           - { name: linux-python3.12             , requirements: upgraded   , python-ver: "3.12", os: ubuntu-latest }
           - { name: linux-python3.13             , requirements: upgraded   , python-ver: "3.13", os: ubuntu-latest }
+          - { name: linux-python3.14             , requirements: upgraded   , python-ver: "3.14", os: ubuntu-latest }
           - { name: windows-python3.10-minimum   , requirements: minimum    , python-ver: "3.10", os: windows-latest }
           - { name: windows-python3.10           , requirements: upgraded   , python-ver: "3.10", os: windows-latest }
           - { name: windows-python3.11           , requirements: upgraded   , python-ver: "3.11", os: windows-latest }
           - { name: windows-python3.12           , requirements: upgraded   , python-ver: "3.12", os: windows-latest }
           - { name: windows-python3.13           , requirements: upgraded   , python-ver: "3.13", os: windows-latest }
+          - { name: windows-python3.14           , requirements: upgraded   , python-ver: "3.14", os: windows-latest }
           - { name: macos-python3.10-minimum     , requirements: minimum    , python-ver: "3.10", os: macos-latest }
           - { name: macos-python3.10             , requirements: upgraded   , python-ver: "3.10", os: macos-latest }
           - { name: macos-python3.11             , requirements: upgraded   , python-ver: "3.11", os: macos-latest }
           - { name: macos-python3.12             , requirements: upgraded   , python-ver: "3.12", os: macos-latest }
           - { name: macos-python3.13             , requirements: upgraded   , python-ver: "3.13", os: macos-latest }
+          - { name: macos-python3.14             , requirements: upgraded   , python-ver: "3.14", os: macos-latest }
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0  # tags are required to determine the version
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-ver }}
 

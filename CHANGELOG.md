@@ -1,7 +1,12 @@
 # Changelog for ndx-pose
 
-## Upcoming
+## ndx-pose 0.3.0 (June 2, 2026)
 
+### Schema changes
+- Added optional `source_video` and `labeled_video` links on `PoseEstimation` that reference an `ImageSeries`
+  in the NWBFile, providing a formal alternative to the fragile string paths in `original_videos` and
+  `labeled_videos`. @h-mayorquin (#56)
+  
 ### New neurodata types
 
 - Added `CameraCalibration` neurodata type to store intrinsic and extrinsic calibration parameters
@@ -13,14 +18,32 @@
   multi-camera setups (e.g. DANNCE, Anipose). It contains `PoseEstimationSeries` in world coordinates,
   one `CameraView` per camera, an optional `CameraCalibration`, and an optional link to a `Skeleton`. @ATrapani
 
-### Schema changes
-- Added optional `source_video` and `labeled_video` links on `PoseEstimation` that reference an `ImageSeries`
-  in the NWBFile, providing a formal alternative to the fragile string paths in `original_videos` and
-  `labeled_videos`. @h-mayorquin (#56)
-
 ### Bug fixes
 - Tests were updated to account for a change in the format of warnings from HDMF 4.1.0. @rly (#49)
 - Improved documentation. @h-mayorquin (#50)
+- Fixed the docstring of the `PoseEstimation` `name` constructor argument, which duplicated the `description`
+  docstring. @rly (#58)
+- `PoseEstimation.nodes` and `PoseEstimation.edges` now raise an informative error instead of an `AttributeError`
+  when the object has no `Skeleton`. @rly (#58)
+- Fixed `mock_source_frame` to generate a name when none is provided, instead of passing `None` to `RGBImage`. @rly (#58)
+- Documented the `source_video` and `labeled_video` links on `PoseEstimation` in the README diagrams and the
+  pose-estimation example, and corrected the `source_software` field name (previously shown as `scorer_software`).
+  @rly (#59)
+
+### Minor updates
+- Added testing on Python 3.14 and the corresponding PyPI classifier. @rly (#58)
+- Updated copyright dates to 2026 and aligned the author lists in `LICENSE.txt` and the docs with `pyproject.toml`.
+  @rly (#58)
+- Removed the obsolete `importlib_resources` import fallback and added the missing `ndx_pose.testing` package init.
+  @rly (#58)
+- Removed placeholder project URLs from `pyproject.toml`. @rly (#58)
+- Updated GitHub Actions to current major versions (`checkout` v6, `setup-python` v6, `ruff-action` v4,
+  `codecov-action` v6) and switched the single-version workflows to Python 3.14. @rly (#59)
+- Removed the deprecated `sphinx_rtd_theme.get_html_theme_path()` call from the docs config and registered the
+  theme via `extensions`. @rly (#59)
+- Regenerated the spec YAML files with the latest `ruamel.yaml`, which changed the line wrapping of the docstrings.
+  The schema content is unchanged. @rly (#60)
+- Documented the development installation (`pip install -e . --group dev`) in the README. @rly (#60)
 
 
 ## ndx-pose 0.2.2 (May 7, 2025)

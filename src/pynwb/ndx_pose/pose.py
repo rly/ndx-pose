@@ -140,7 +140,7 @@ class PoseEstimation(MultiContainerInterface):
         {
             "name": "name",
             "type": str,
-            "doc": "Description of the pose estimation procedure and output.",
+            "doc": "Name of this PoseEstimation object.",
             "default": "PoseEstimation",
         },
         {
@@ -174,7 +174,7 @@ class PoseEstimation(MultiContainerInterface):
         {
             "name": "dimensions",
             "type": ("array_data", "data"),
-            "shape": ((None, 2)),
+            "shape": (None, 2),
             "doc": (
                 "Dimensions of each labeled video file. The number of dimension pairs should equal the number of "
                 "camera devices."
@@ -340,6 +340,11 @@ class PoseEstimation(MultiContainerInterface):
 
     @property
     def nodes(self):
+        if self.skeleton is None:
+            raise ValueError(
+                "This PoseEstimation object has no Skeleton, so it has no nodes. Provide a 'skeleton' argument "
+                "to access nodes via PoseEstimation.skeleton.nodes."
+            )
         return self.skeleton.nodes
 
     @nodes.setter
@@ -350,6 +355,11 @@ class PoseEstimation(MultiContainerInterface):
 
     @property
     def edges(self):
+        if self.skeleton is None:
+            raise ValueError(
+                "This PoseEstimation object has no Skeleton, so it has no edges. Provide a 'skeleton' argument "
+                "to access edges via PoseEstimation.skeleton.edges."
+            )
         return self.skeleton.edges
 
     @edges.setter
@@ -470,18 +480,12 @@ class CameraView(MultiContainerInterface):
         {
             "name": "device",
             "type": Device,
-            "doc": (
-                "The camera device used to record this view. "
-                "Must be added to the NWBFile before being linked here."
-            ),
+            "doc": "The camera device used to record this view. Must be added to the NWBFile before being linked here.",
         },
         {
             "name": "source_video",
             "type": ImageSeries,
-            "doc": (
-                "Link to the ImageSeries (e.g. stored in acquisition) containing the source "
-                "video from this camera."
-            ),
+            "doc": "Link to the ImageSeries (e.g. stored in acquisition) containing the source video from this camera.",
             "default": None,
         },
         {
@@ -496,9 +500,7 @@ class CameraView(MultiContainerInterface):
         device, source_video = popargs("device", "source_video", kwargs)
 
         if device.parent is None:
-            raise ValueError(
-                "The device linked from a CameraView must be added to the NWBFile first."
-            )
+            raise ValueError("The device linked from a CameraView must be added to the NWBFile first.")
 
         pose_estimation_series = popargs("pose_estimation_series", kwargs)
         super().__init__(**kwargs)

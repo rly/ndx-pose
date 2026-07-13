@@ -1,11 +1,7 @@
 import os
-from pynwb import load_namespaces
+from importlib.resources import files
 
-try:
-    from importlib.resources import files
-except ImportError:
-    # TODO: Remove when python 3.9 becomes the new minimum
-    from importlib_resources import files
+from pynwb import load_namespaces
 
 # Get path to the namespace.yaml file with the expected location when installed not in editable mode
 __location_of_this_file = files(__name__)

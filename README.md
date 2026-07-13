@@ -56,6 +56,20 @@ in an NWB processing module named "behavior", as shown below.
 pip install "ndx-pose"
 ```
 
+### Development installation
+
+Development dependencies are defined as [PEP 735](https://peps.python.org/pep-0735/) dependency groups in
+`pyproject.toml`. Installing them requires pip 25.1 or later. To set up an editable install with the development
+tools (tests, docs, and linters), run:
+
+```bash
+git clone https://github.com/rly/ndx-pose.git
+cd ndx-pose
+pip install -e . --group dev
+```
+
+The `test`, `docs`, and `min-reqs` groups can be installed individually with `pip install -e . --group <name>`.
+
 ## Usage examples
 
 1. [Example writing pose estimates (keypoints) to an NWB file](examples/write_pose_estimates_only.py).
@@ -139,7 +153,7 @@ classDiagram
             dimensions : array[uint, dims [file, [width, height]]], optional
             scorer : str, optional
             source_software : str, optional
-            source_software_version : str, optional
+            source_software__version : str, optional
             PoseEstimationSeries
             Skeleton, link
             Device, link
@@ -173,6 +187,8 @@ classDiagram
             CameraView
             CameraCalibration, optional
             Skeleton, link, optional
+            source_video : ImageSeries, link, optional
+            labeled_video : ImageSeries, link, optional
         }
 
         class Skeletons {
@@ -209,6 +225,7 @@ classDiagram
 
     CameraCalibration --> Device : links to
 
+    PoseEstimation --> ImageSeries : links to
     Skeletons --o Skeleton : contains 0 or more
 ```
 
@@ -239,7 +256,7 @@ classDiagram
             dimensions : array[uint, dims [file, [width, height]]], optional
             scorer : str, optional
             source_software : str, optional
-            source_software_version : str, optional
+            source_software__version : str, optional
             PoseEstimationSeries
             Skeleton, link
             Device, link
@@ -273,6 +290,8 @@ classDiagram
             CameraView
             CameraCalibration, optional
             Skeleton, link, optional
+            source_video : ImageSeries, link, optional
+            labeled_video : ImageSeries, link, optional
         }
 
         class Skeleton {
@@ -347,6 +366,7 @@ classDiagram
     CameraView --o PoseEstimationSeries : contains 0 or more
 
     CameraCalibration --> Device : links to
+    PoseEstimation --> ImageSeries : links to
 
     PoseTraining --o TrainingFrames : contains
     PoseTraining --o SourceVideos : contains

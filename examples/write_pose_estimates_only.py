@@ -9,6 +9,7 @@ import datetime
 import numpy as np
 from pynwb import NWBFile, NWBHDF5IO
 from pynwb.file import Subject
+from pynwb.image import ImageSeries
 from ndx_pose import (
     PoseEstimationSeries,
     PoseEstimation,
@@ -47,6 +48,32 @@ camera1 = nwbfile.create_device(
     description="camera for recording behavior",
     manufacturer="my manufacturer",
 )
+
+# create ImageSeries that point to the source and labeled video files and add them to the NWBFile.
+# the PoseEstimation object links to these below via 'source_video' and 'labeled_video', providing a formal
+# reference to the videos instead of relying only on the string paths in 'original_videos'/'labeled_videos'.
+source_video = ImageSeries(
+    name="source_video",
+    description="Video recorded by camera1 and used for pose estimation.",
+    unit="NA",
+    format="external",
+    external_file=["path/to/camera1.mp4"],
+    dimension=[640, 480],
+    starting_frame=[0],
+    rate=30.0,
+)
+labeled_video = ImageSeries(
+    name="labeled_video",
+    description="Video with pose estimation overlays produced from the source video.",
+    unit="NA",
+    format="external",
+    external_file=["path/to/camera1_labeled.mp4"],
+    dimension=[640, 480],
+    starting_frame=[0],
+    rate=30.0,
+)
+nwbfile.add_acquisition(source_video)
+nwbfile.add_acquisition(labeled_video)
 
 # a PoseEstimationSeries represents the estimated position of a single marker.
 # in this example, we have three PoseEstimationSeries: one for the body and one for each front paw.
@@ -97,8 +124,7 @@ front_right_paw = PoseEstimationSeries(
 pose_estimation_series = [front_left_paw, body, front_right_paw]
 
 # create a PoseEstimation object that represents the estimated positions of each node, references
-# the original video and labeled video files, and provides metadata on how these estimates were generated.
-# multiple videos and cameras can be referenced.
+# the source and labeled videos, and provides metadata on how these estimates were generated.
 pose_estimation = PoseEstimation(
     name="PoseEstimation",
     pose_estimation_series=pose_estimation_series,
@@ -111,6 +137,8 @@ pose_estimation = PoseEstimation(
     source_software="DeepLabCut",
     source_software_version="2.3.8",
     skeleton=skeleton,  # link to the skeleton object
+    source_video=source_video,  # link to the source video ImageSeries
+    labeled_video=labeled_video,  # link to the labeled video ImageSeries
 )
 
 # create a "behavior" processing module to store the PoseEstimation and Skeletons objects
@@ -130,5 +158,8 @@ with NWBHDF5IO(path, mode="w") as io:
 # as well as the first training frame
 with NWBHDF5IO(path, mode="r") as io:
     read_nwbfile = io.read()
-    print(read_nwbfile.processing["behavior"]["PoseEstimation"])
+    read_pose_estimation = read_nwbfile.processing["behavior"]["PoseEstimation"]
+    print(read_pose_estimation)
     print(read_nwbfile.processing["behavior"]["Skeletons"]["subject1_skeleton"])
+    # the 'source_video' link resolves to the ImageSeries stored in acquisition
+    print(read_pose_estimation.source_video)

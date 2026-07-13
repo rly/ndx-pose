@@ -119,15 +119,14 @@ def mock_PoseEstimation(
         labeled_video=labeled_video,
     )
 
-    if nwbfile is not None:
-        skeletons = Skeletons(skeletons=[skeleton])
+    skeletons = Skeletons(skeletons=[skeleton])
 
-        if "behavior" not in nwbfile.processing:
-            behavior_pm = nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
-        else:
-            behavior_pm = nwbfile.processing["behavior"]
-        behavior_pm.add(pe)
-        behavior_pm.add(skeletons)
+    if "behavior" not in nwbfile.processing:
+        behavior_pm = nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+    else:
+        behavior_pm = nwbfile.processing["behavior"]
+    behavior_pm.add(pe)
+    behavior_pm.add(skeletons)
 
     return pe
 
@@ -326,7 +325,7 @@ def mock_source_frame(
     *,
     name: Optional[str] = None,
 ):
-    return RGBImage(name=name, data=np.random.rand(640, 480, 3).astype("uint8"))
+    return RGBImage(name=name or name_generator("RGBImage"), data=np.random.rand(640, 480, 3).astype("uint8"))
 
 
 def mock_TrainingFrame(
