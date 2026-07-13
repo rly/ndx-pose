@@ -2,7 +2,7 @@ import warnings
 from hdmf.utils import docval, popargs, get_docval, AllowPositional
 from pynwb import register_class, TimeSeries, get_class
 from pynwb.behavior import SpatialSeries
-from pynwb.core import MultiContainerInterface, NWBDataInterface
+from pynwb.core import MultiContainerInterface
 from pynwb.device import Device
 from pynwb.image import ImageSeries
 
@@ -115,7 +115,7 @@ class PoseEstimation(MultiContainerInterface):
         "original_videos",
         "labeled_videos",
         "dimensions",
-        "devices",
+        "device",
         "scorer",
         "source_software",
         "source_software_version",
@@ -182,9 +182,23 @@ class PoseEstimation(MultiContainerInterface):
             "default": None,
         },
         {
+            "name": "device",
+            "type": Device,
+            "doc": (
+                "The camera device used to record the video for this pose estimation. Must be added to the "
+                "NWBFile before being linked here. Use a CalibratedCamera instead of a plain Device when "
+                "intrinsic/extrinsic calibration coordinates are available."
+            ),
+            "default": None,
+        },
+        {
             "name": "devices",
             "type": ("array_data", "data"),
-            "doc": "Cameras used to record the videos.",
+            "doc": (
+                "DEPRECATED. Please use the 'device' argument instead. PoseEstimation now represents pose "
+                "estimates from a single camera view; for multi-camera setups, add one PoseEstimation per "
+                "camera view to a MultiCameraPoseEstimation object."
+            ),
             "default": None,
         },
         {
@@ -279,43 +293,30 @@ class PoseEstimation(MultiContainerInterface):
                 )
                 warnings.warn(msg, DeprecationWarning)
 
-        # devices must be added to the NWBFile before being linked to from a PoseEstimation object.
-        # otherwise, they will be added as children of the PoseEstimation object.
-        devices = popargs("devices", kwargs)
+        # device must be added to the NWBFile before being linked to from a PoseEstimation object.
+        # otherwise, it will be added as a child of the PoseEstimation object.
+        device, devices = popargs("device", "devices", kwargs)
         if devices is not None:
-            for device in devices:
-                if device.parent is None:
-                    raise ValueError(
-                        "All devices linked to from a PoseEstimation object must be added to the NWBFile first."
-                    )
+            if device is not None:
+                raise ValueError("Cannot specify both 'device' and 'devices'. Please use 'device' only.")
+            if len(devices) > 1:
+                raise ValueError(
+                    "PoseEstimation now represents pose estimates from a single camera view and supports only one "
+                    "device. For multi-camera setups, add one PoseEstimation per camera view to a "
+                    "MultiCameraPoseEstimation object instead of passing multiple 'devices' here."
+                )
+            # warn on new, no warning on construction from existing file
+            if not self._in_construct_mode:
+                msg = (
+                    "The 'devices' constructor argument is deprecated. Please use the 'device' argument instead. "
+                    "This will be removed in a future release."
+                )
+                warnings.warn(msg, DeprecationWarning)
+            device = devices[0] if len(devices) == 1 else None
+        if device is not None and device.parent is None:
+            raise ValueError("The device linked from a PoseEstimation object must be added to the NWBFile first.")
 
-        # validate that if original videos, labeled videos, or dimensions are provided, then an equal number of
-        # camera devices must be provided.
-        # specification of cameras was not allowed in ndx-pose 0.1.*.
-        # warn on new, no warning on construction from existing file
-        # TODO in a future release, change DeprecationWarning to a ValueError
         original_videos, labeled_videos, dimensions = popargs("original_videos", "labeled_videos", "dimensions", kwargs)
-        if original_videos is not None and (devices is None or len(original_videos) != len(devices)):
-            if not self._in_construct_mode:
-                msg = (
-                    "The number of original videos must equal the number of camera devices. This will become an error "
-                    "in a future release."
-                )
-                warnings.warn(msg, DeprecationWarning)
-        if labeled_videos is not None and (devices is None or len(labeled_videos) != len(devices)):
-            if not self._in_construct_mode:
-                msg = (
-                    "The number of labeled videos must equal the number of camera devices. This will become an error "
-                    "in a future release."
-                )
-                warnings.warn(msg, DeprecationWarning)
-        if dimensions is not None and (devices is None or len(dimensions) != len(devices)):
-            if not self._in_construct_mode:
-                msg = (
-                    "The number of dimensions must equal the number of camera devices. This will become an error in a "
-                    "future release."
-                )
-                warnings.warn(msg, DeprecationWarning)
 
         pose_estimation_series, description = popargs("pose_estimation_series", "description", kwargs)
         scorer = popargs("scorer", kwargs)
@@ -327,7 +328,7 @@ class PoseEstimation(MultiContainerInterface):
         self.original_videos = original_videos
         self.labeled_videos = labeled_videos
         self.dimensions = dimensions
-        self.devices = devices
+        self.device = device
         self.scorer = scorer
         self.source_software = source_software
         self.source_software_version = source_software_version
@@ -369,12 +370,13 @@ class PoseEstimation(MultiContainerInterface):
         )
 
 
-@register_class("CameraCalibration", "ndx-pose")
-class CameraCalibration(NWBDataInterface):
-    """Intrinsic and extrinsic calibration parameters for a set of cameras.
+@register_class("CalibratedCamera", "ndx-pose")
+class CalibratedCamera(Device):
+    """A Device representing a single camera, extended with its calibration parameters.
 
-    Each row of every dataset corresponds to one camera device.
-    The row order must match the order of linked Device objects.
+    Because it is a Device, a CalibratedCamera is added once to the NWBFile and can be linked to by
+    reference from multiple PoseEstimation and MultiCameraPoseEstimation objects (e.g., one per subject
+    in a multi-subject recording session), so the camera rig and its calibration are never duplicated.
     """
 
     __nwbfields__ = (
@@ -382,60 +384,44 @@ class CameraCalibration(NWBDataInterface):
         "rotation_matrix",
         "translation_vector",
         "distortion_coefficients",
-        "devices",
     )
 
     @docval(
         {
-            "name": "intrinsic_matrix",
-            "type": ("array_data", "data"),
-            "doc": "Intrinsic camera matrix K for each camera. Shape (n_cameras, 3, 3).",
+            "name": "name",
+            "type": str,
+            "doc": "Name of this CalibratedCamera, typically the camera identifier (e.g. 'camera1').",
         },
         {
-            "name": "devices",
+            "name": "intrinsic_matrix",
             "type": ("array_data", "data"),
-            "doc": (
-                "Camera devices in the same row order as the calibration datasets. "
-                "Each device must be added to the NWBFile before being linked here."
-            ),
-            "default": None,
+            "shape": (3, 3),
+            "doc": "Intrinsic camera matrix K, encoding focal length and principal point. Shape (3, 3).",
         },
         {
             "name": "rotation_matrix",
             "type": ("array_data", "data"),
-            "doc": "Rotation matrix R (world → camera) for each camera. Shape (n_cameras, 3, 3).",
+            "shape": (3, 3),
+            "doc": "Rotation matrix R mapping world coordinates to this camera's coordinate frame. Shape (3, 3).",
             "default": None,
         },
         {
             "name": "translation_vector",
             "type": ("array_data", "data"),
-            "doc": "Translation vector t (world → camera) for each camera. Shape (n_cameras, 3).",
+            "shape": (3,),
+            "doc": "Translation vector t mapping world coordinates to this camera's coordinate frame. Shape (3,).",
             "default": None,
         },
         {
             "name": "distortion_coefficients",
             "type": ("array_data", "data"),
-            "doc": "Lens distortion coefficients for each camera. Shape (n_cameras, N).",
+            "doc": "Lens distortion coefficients for this camera.",
             "default": None,
         },
-        {
-            "name": "name",
-            "type": str,
-            "doc": "Name of this CameraCalibration container.",
-            "default": "calibration",
-        },
+        *get_docval(Device.__init__, "description", "manufacturer"),
         allow_positional=AllowPositional.ERROR,
     )
     def __init__(self, **kwargs):
-        devices = popargs("devices", kwargs)
-
-        if devices is not None:
-            for device in devices:
-                if device.parent is None:
-                    raise ValueError(
-                        "All devices linked from a CameraCalibration object must be added to the NWBFile first."
-                    )
-
         intrinsic_matrix, rotation_matrix, translation_vector, distortion_coefficients = popargs(
             "intrinsic_matrix", "rotation_matrix", "translation_vector", "distortion_coefficients", kwargs
         )
@@ -445,78 +431,15 @@ class CameraCalibration(NWBDataInterface):
         self.rotation_matrix = rotation_matrix
         self.translation_vector = translation_vector
         self.distortion_coefficients = distortion_coefficients
-        self.devices = devices
-
-
-@register_class("CameraView", "ndx-pose")
-class CameraView(MultiContainerInterface):
-    """Data associated with a single camera in a multi-camera pose estimation setup.
-
-    Links to the camera device and optionally to its source video stored elsewhere
-    in the NWBFile. May also hold per-camera 2D pose estimates in pixel space.
-    """
-
-    __clsconf__ = [
-        {
-            "add": "add_pose_estimation_series",
-            "get": "get_pose_estimation_series",
-            "create": "create_pose_estimation_series",
-            "type": PoseEstimationSeries,
-            "attr": "pose_estimation_series",
-        },
-    ]
-
-    __nwbfields__ = (
-        "device",
-        "source_video",
-    )
-
-    @docval(
-        {
-            "name": "name",
-            "type": str,
-            "doc": "Name of this CameraView, typically the camera identifier (e.g. 'camera1').",
-        },
-        {
-            "name": "device",
-            "type": Device,
-            "doc": "The camera device used to record this view. Must be added to the NWBFile before being linked here.",
-        },
-        {
-            "name": "source_video",
-            "type": ImageSeries,
-            "doc": "Link to the ImageSeries (e.g. stored in acquisition) containing the source video from this camera.",
-            "default": None,
-        },
-        {
-            "name": "pose_estimation_series",
-            "type": ("array_data", "data"),
-            "doc": "Optional 2D pose estimates (x, y) for each body part in this camera's pixel frame.",
-            "default": None,
-        },
-        allow_positional=AllowPositional.ERROR,
-    )
-    def __init__(self, **kwargs):
-        device, source_video = popargs("device", "source_video", kwargs)
-
-        if device.parent is None:
-            raise ValueError("The device linked from a CameraView must be added to the NWBFile first.")
-
-        pose_estimation_series = popargs("pose_estimation_series", kwargs)
-        super().__init__(**kwargs)
-
-        self.device = device
-        self.source_video = source_video
-        self.pose_estimation_series = pose_estimation_series
 
 
 @register_class("MultiCameraPoseEstimation", "ndx-pose")
 class MultiCameraPoseEstimation(MultiContainerInterface):
     """3D pose estimation from multiple synchronized cameras.
 
-    Unlike PoseEstimation (single-camera, pixel-space), this type stores keypoints
-    in a shared 3D world-space reference frame. Per-camera data (device link,
-    source video, optional 2D estimates) is organised through CameraView children.
+    Unlike PoseEstimation (single-camera, pixel-space), this type stores keypoints in a shared 3D
+    world-space reference frame. Per-camera 2D data (device link, source video, optional 2D estimates)
+    is organised through PoseEstimation children, one per camera view.
     """
 
     __clsconf__ = [
@@ -528,11 +451,11 @@ class MultiCameraPoseEstimation(MultiContainerInterface):
             "attr": "pose_estimation_series",
         },
         {
-            "add": "add_camera_view",
-            "get": "get_camera_view",
-            "create": "create_camera_view",
-            "type": CameraView,
-            "attr": "camera_views",
+            "add": "add_pose_estimation",
+            "get": "get_pose_estimation",
+            "create": "create_pose_estimation",
+            "type": PoseEstimation,
+            "attr": "pose_estimations",
         },
     ]
 
@@ -541,7 +464,6 @@ class MultiCameraPoseEstimation(MultiContainerInterface):
         "scorer",
         "source_software",
         "source_software_version",
-        "calibration",
         "skeleton",
     )
 
@@ -559,9 +481,12 @@ class MultiCameraPoseEstimation(MultiContainerInterface):
             "default": None,
         },
         {
-            "name": "camera_views",
+            "name": "pose_estimations",
             "type": ("array_data", "data"),
-            "doc": "CameraView objects, one per camera.",
+            "doc": (
+                "PoseEstimation objects, one per camera view. Each PoseEstimation links to the camera Device "
+                "(ideally a CalibratedCamera) used to record that view."
+            ),
             "default": None,
         },
         {
@@ -597,26 +522,19 @@ class MultiCameraPoseEstimation(MultiContainerInterface):
             ),
             "default": None,
         },
-        {
-            "name": "calibration",
-            "type": CameraCalibration,
-            "doc": "Intrinsic and extrinsic calibration parameters for all cameras.",
-            "default": None,
-        },
         allow_positional=AllowPositional.ERROR,
     )
     def __init__(self, **kwargs):
-        skeleton, calibration = popargs("skeleton", "calibration", kwargs)
-        pose_estimation_series, camera_views = popargs("pose_estimation_series", "camera_views", kwargs)
+        skeleton = popargs("skeleton", kwargs)
+        pose_estimation_series, pose_estimations = popargs("pose_estimation_series", "pose_estimations", kwargs)
         description, scorer = popargs("description", "scorer", kwargs)
         source_software, source_software_version = popargs("source_software", "source_software_version", kwargs)
         super().__init__(**kwargs)
 
         self.pose_estimation_series = pose_estimation_series
-        self.camera_views = camera_views
+        self.pose_estimations = pose_estimations
         self.description = description
         self.scorer = scorer
         self.source_software = source_software
         self.source_software_version = source_software_version
         self.skeleton = skeleton
-        self.calibration = calibration

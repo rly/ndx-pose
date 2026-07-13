@@ -2,13 +2,13 @@ from typing import Optional, Any, Union, List
 
 import numpy as np
 from pynwb import NWBFile
+from pynwb.device import Device
 from pynwb.image import ImageSeries, Image, RGBImage
 from pynwb.testing.mock.utils import name_generator
 from pynwb.testing.mock.device import mock_Device
 
 from ...pose import (
-    CameraCalibration,
-    CameraView,
+    CalibratedCamera,
     MultiCameraPoseEstimation,
     PoseEstimationSeries,
     Skeleton,
@@ -85,9 +85,10 @@ def mock_Skeleton(
 def mock_PoseEstimation(
     *,
     nwbfile: NWBFile,
+    name: Optional[str] = None,
     pose_estimation_series: Optional[list] = None,
     skeleton: Optional[Skeleton] = None,
-    devices: Optional[list] = None,
+    device: Optional[Device] = None,
     description: Optional[str] = "Estimated positions of front paws using DeepLabCut.",
     original_videos: Optional[list] = None,
     labeled_videos: Optional[list] = None,
@@ -97,20 +98,22 @@ def mock_PoseEstimation(
     source_software_version: Optional[str] = "2.2b8",
     source_video: Optional[ImageSeries] = None,
     labeled_video: Optional[ImageSeries] = None,
+    add_to_nwbfile: bool = True,
 ):
-    """Create a mock PoseEstimation object.
+    """Create a mock PoseEstimation object, representing pose estimates from a single camera view.
 
-    NWBFile should be provided so that the skeleton can be added to the NWBFile in a PoseTraining object.
+    NWBFile should be provided so that the device and skeleton can be added to the NWBFile.
     """
     skeleton = skeleton or mock_Skeleton()
     pose_estimation_series = pose_estimation_series or [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
     pe = PoseEstimation(
+        name=name or "PoseEstimation",
         pose_estimation_series=pose_estimation_series,
         description=description,
-        original_videos=original_videos or ["camera1.mp4"],
-        labeled_videos=labeled_videos or ["camera1_labeled.mp4"],
-        dimensions=dimensions or np.array([[640, 480]], dtype="uint16"),
-        devices=devices or [mock_Device(nwbfile=nwbfile)],
+        original_videos=original_videos,
+        labeled_videos=labeled_videos,
+        dimensions=dimensions,
+        device=device or mock_Device(nwbfile=nwbfile),
         scorer=scorer,
         source_software=source_software,
         source_software_version=source_software_version,
@@ -119,94 +122,47 @@ def mock_PoseEstimation(
         labeled_video=labeled_video,
     )
 
-    skeletons = Skeletons(skeletons=[skeleton])
-
-    if "behavior" not in nwbfile.processing:
-        behavior_pm = nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
-    else:
-        behavior_pm = nwbfile.processing["behavior"]
-    behavior_pm.add(pe)
-    behavior_pm.add(skeletons)
+    if add_to_nwbfile:
+        skeletons = Skeletons(skeletons=[skeleton])
+        if "behavior" not in nwbfile.processing:
+            behavior_pm = nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        else:
+            behavior_pm = nwbfile.processing["behavior"]
+        behavior_pm.add(pe)
+        behavior_pm.add(skeletons)
 
     return pe
 
 
-def mock_CameraCalibration(
-    *,
-    nwbfile: NWBFile,
-    devices: Optional[list] = None,
-    n_cameras: int = 2,
-) -> "CameraCalibration":
-    """Create a mock CameraCalibration with identity-like matrices."""
-    rng = np.random.default_rng(0)
-    if devices is None:
-        devices = [mock_Device(nwbfile=nwbfile, name=f"camera{i + 1}") for i in range(n_cameras)]
-    n = len(devices)
-    intrinsic = np.tile(np.eye(3, dtype="float32"), (n, 1, 1))
-    intrinsic[:, 0, 0] = 800.0  # fx
-    intrinsic[:, 1, 1] = 800.0  # fy
-    intrinsic[:, 0, 2] = 320.0  # cx
-    intrinsic[:, 1, 2] = 240.0  # cy
-    return CameraCalibration(
-        intrinsic_matrix=intrinsic,
-        rotation_matrix=np.tile(np.eye(3, dtype="float32"), (n, 1, 1)),
-        translation_vector=rng.standard_normal((n, 3)).astype("float32"),
-        distortion_coefficients=np.zeros((n, 5), dtype="float32"),
-        devices=devices,
-    )
-
-
-def mock_CameraView(
+def mock_CalibratedCamera(
     *,
     nwbfile: NWBFile,
     name: Optional[str] = None,
-    device=None,
-    source_video: Optional[ImageSeries] = None,
-    with_2d_estimates: bool = False,
-    skeleton: Optional[Skeleton] = None,
-) -> "CameraView":
-    """Create a mock CameraView, optionally adding 2D pixel-space estimates."""
-    if device is None:
-        device = mock_Device(nwbfile=nwbfile, name=name or "camera1")
-    if source_video is None:
-        cam_name = device.name
-        source_video = ImageSeries(
-            name=cam_name,
-            description=f"Source video from {cam_name}.",
-            unit="NA",
-            format="external",
-            external_file=[f"{cam_name}.mp4"],
-            rate=30.0,
-        )
-        nwbfile.add_acquisition(source_video)
-
-    pes_2d = None
-    if with_2d_estimates and skeleton is not None:
-        pes_2d = [
-            mock_PoseEstimationSeries(
-                name=node,
-                data=np.arange(20, dtype=np.float64).reshape((10, 2)),
-                unit="pixels",
-                reference_frame="top-left corner of the frame is (0, 0).",
-            )
-            for node in skeleton.nodes
-        ]
-
-    return CameraView(
-        name=name or device.name,
-        device=device,
-        source_video=source_video,
-        pose_estimation_series=pes_2d,
+) -> "CalibratedCamera":
+    """Create a mock CalibratedCamera with identity-like calibration matrices, added to the NWBFile."""
+    rng = np.random.default_rng(0)
+    intrinsic_matrix = np.eye(3, dtype="float32")
+    intrinsic_matrix[0, 0] = 800.0  # fx
+    intrinsic_matrix[1, 1] = 800.0  # fy
+    intrinsic_matrix[0, 2] = 320.0  # cx
+    intrinsic_matrix[1, 2] = 240.0  # cy
+    camera = CalibratedCamera(
+        name=name or name_generator("CalibratedCamera"),
+        intrinsic_matrix=intrinsic_matrix,
+        rotation_matrix=np.eye(3, dtype="float32"),
+        translation_vector=rng.standard_normal(3).astype("float32"),
+        distortion_coefficients=np.zeros(5, dtype="float32"),
     )
+    nwbfile.add_device(camera)
+    return camera
 
 
 def mock_MultiCameraPoseEstimation(
     *,
     nwbfile: NWBFile,
     pose_estimation_series: Optional[list] = None,
-    camera_views: Optional[list] = None,
+    pose_estimations: Optional[list] = None,
     skeleton: Optional[Skeleton] = None,
-    calibration=None,
     description: Optional[str] = "3D pose estimated from multiple synchronized cameras.",
     scorer: Optional[str] = "DANNCE",
     source_software: Optional[str] = "DANNCE",
@@ -225,23 +181,27 @@ def mock_MultiCameraPoseEstimation(
         for node in skeleton.nodes
     ]
 
-    if camera_views is None:
-        device1 = mock_Device(nwbfile=nwbfile, name="camera1")
-        device2 = mock_Device(nwbfile=nwbfile, name="camera2")
-        camera_views = [
-            mock_CameraView(nwbfile=nwbfile, name="camera1", device=device1),
-            mock_CameraView(nwbfile=nwbfile, name="camera2", device=device2),
+    if pose_estimations is None:
+        pose_estimations = [
+            mock_PoseEstimation(
+                nwbfile=nwbfile,
+                name=f"PoseEstimation_camera{i + 1}",
+                skeleton=skeleton,
+                device=mock_CalibratedCamera(nwbfile=nwbfile, name=f"camera{i + 1}"),
+                description=f"2D pose estimates from camera{i + 1}.",
+                add_to_nwbfile=False,
+            )
+            for i in range(2)
         ]
 
     mcpe = MultiCameraPoseEstimation(
         pose_estimation_series=pose_estimation_series,
-        camera_views=camera_views,
+        pose_estimations=pose_estimations,
         description=description,
         scorer=scorer,
         source_software=source_software,
         source_software_version=source_software_version,
         skeleton=skeleton,
-        calibration=calibration,
     )
 
     skeletons = Skeletons(skeletons=[skeleton])

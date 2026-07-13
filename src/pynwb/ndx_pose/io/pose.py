@@ -2,7 +2,7 @@ from pynwb import register_map
 from pynwb.io.base import TimeSeriesMap
 from pynwb.io.core import NWBContainerMapper
 
-from ..pose import CameraCalibration, CameraView, MultiCameraPoseEstimation, PoseEstimation, PoseEstimationSeries
+from ..pose import MultiCameraPoseEstimation, PoseEstimation, PoseEstimationSeries
 
 
 @register_map(PoseEstimationSeries)

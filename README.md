@@ -23,18 +23,19 @@ This extension consists of several new neurodata types. They are divided into tw
 - `PoseEstimationSeries` which stores the estimated positions (x, y) or (x, y, z) of a body part over time as well as
   the confidence/likelihood of the estimated positions.
 - `PoseEstimation` which stores the estimated position data (`PoseEstimationSeries`) for multiple body parts,
-  computed from the same video(s) with the same tool/algorithm (single-camera or pixel-space workflows).
+  computed from a single camera view with the same tool/algorithm, and links to the `Device` (camera) used.
 
 ### Multi-camera 3D pose estimation types
 
 For multi-camera setups that produce 3D world-space coordinates (e.g. DANNCE, Anipose):
 
-- `CameraCalibration` which stores intrinsic and extrinsic calibration parameters (intrinsic matrix, rotation matrix,
-  translation vector, distortion coefficients) for a set of cameras, with links to the corresponding `Device` objects.
-- `CameraView` which groups, per camera, the device link, an optional link to its source `ImageSeries` stored in
-  acquisition, and optional 2D `PoseEstimationSeries` in pixel space.
-- `MultiCameraPoseEstimation` which stores 3D world-space `PoseEstimationSeries`, one `CameraView` per camera, an
-  optional `CameraCalibration`, and an optional link to a `Skeleton`.
+- `CalibratedCamera` which extends `Device` with intrinsic and extrinsic calibration parameters (intrinsic matrix,
+  rotation matrix, translation vector, distortion coefficients) for that single camera. Because it is a `Device`,
+  it is added once to the NWBFile and can be linked to by reference from multiple `PoseEstimation`/
+  `MultiCameraPoseEstimation` objects (e.g., one per subject in a multi-subject session), so the camera rig and
+  its calibration are never duplicated.
+- `MultiCameraPoseEstimation` which stores 3D world-space `PoseEstimationSeries`, one `PoseEstimation` per camera
+  view (holding that camera's 2D pixel-space estimates and its device link), and an optional link to a `Skeleton`.
 
 ## Training data types
 
@@ -148,33 +149,25 @@ classDiagram
             <<NWBDataInterface>>
             name : str
             description : str, optional
-            original_videos : array[str; dims [file]], optional
-            labeled_videos : array[str; dims [file]], optional
-            dimensions : array[uint, dims [file, [width, height]]], optional
+            original_videos : array[str; dims [file]], optional, deprecated
+            labeled_videos : array[str; dims [file]], optional, deprecated
+            dimensions : array[uint, dims [file, [width, height]]], optional, deprecated
             scorer : str, optional
             source_software : str, optional
             source_software__version : str, optional
             PoseEstimationSeries
-            Skeleton, link
-            Device, link
+            Skeleton, link, optional
+            device : Device, link, optional
             source_video : ImageSeries, link, optional
             labeled_video : ImageSeries, link, optional
         }
 
-        class CameraCalibration {
-            <<NWBDataInterface>>
-            intrinsic_matrix : array[float; dims [camera, 3, 3]]
-            rotation_matrix : array[float; dims [camera, 3, 3]], optional
-            translation_vector : array[float; dims [camera, 3]], optional
-            distortion_coefficients : array[float; dims [camera, N]], optional
-            Device, link
-        }
-
-        class CameraView {
-            <<NWBDataInterface>>
-            device : Device, link
-            source_video : ImageSeries, link, optional
-            PoseEstimationSeries (2D pixel-space), optional
+        class CalibratedCamera {
+            <<Device>>
+            intrinsic_matrix : array[float; dims [3, 3]]
+            rotation_matrix : array[float; dims [3, 3]], optional
+            translation_vector : array[float; dims [3]], optional
+            distortion_coefficients : array[float; dims [N]], optional
         }
 
         class MultiCameraPoseEstimation {
@@ -184,11 +177,8 @@ classDiagram
             source_software : str, optional
             source_software_version : str, optional
             PoseEstimationSeries (3D world-space)
-            CameraView
-            CameraCalibration, optional
+            PoseEstimation (one per camera view)
             Skeleton, link, optional
-            source_video : ImageSeries, link, optional
-            labeled_video : ImageSeries, link, optional
         }
 
         class Skeletons {
@@ -211,21 +201,15 @@ classDiagram
 
     PoseEstimation --o PoseEstimationSeries : contains 0 or more
     PoseEstimation --> Skeleton : links to
-    PoseEstimation --> Device : links to
+    PoseEstimation --> Device : links to (device)
     PoseEstimation --> ImageSeries : links to (source_video)
 
+    CalibratedCamera --|> Device : extends
+
     MultiCameraPoseEstimation --o PoseEstimationSeries : contains 0 or more
-    MultiCameraPoseEstimation --o CameraView : contains 0 or more
-    MultiCameraPoseEstimation --o CameraCalibration : contains optional
+    MultiCameraPoseEstimation --o PoseEstimation : contains 0 or more
     MultiCameraPoseEstimation --> Skeleton : links to
 
-    CameraView --> Device : links to
-    CameraView --> ImageSeries : links to (source_video)
-    CameraView --o PoseEstimationSeries : contains 0 or more
-
-    CameraCalibration --> Device : links to
-
-    PoseEstimation --> ImageSeries : links to
     Skeletons --o Skeleton : contains 0 or more
 ```
 
@@ -251,33 +235,25 @@ classDiagram
             <<NWBDataInterface>>
             name : str
             description : str, optional
-            original_videos : array[str; dims [file]], optional
-            labeled_videos : array[str; dims [file]], optional
-            dimensions : array[uint, dims [file, [width, height]]], optional
+            original_videos : array[str; dims [file]], optional, deprecated
+            labeled_videos : array[str; dims [file]], optional, deprecated
+            dimensions : array[uint, dims [file, [width, height]]], optional, deprecated
             scorer : str, optional
             source_software : str, optional
             source_software__version : str, optional
             PoseEstimationSeries
-            Skeleton, link
-            Device, link
+            Skeleton, link, optional
+            device : Device, link, optional
             source_video : ImageSeries, link, optional
             labeled_video : ImageSeries, link, optional
         }
 
-        class CameraCalibration {
-            <<NWBDataInterface>>
-            intrinsic_matrix : array[float; dims [camera, 3, 3]]
-            rotation_matrix : array[float; dims [camera, 3, 3]], optional
-            translation_vector : array[float; dims [camera, 3]], optional
-            distortion_coefficients : array[float; dims [camera, N]], optional
-            Device, link
-        }
-
-        class CameraView {
-            <<NWBDataInterface>>
-            device : Device, link
-            source_video : ImageSeries, link, optional
-            PoseEstimationSeries (2D pixel-space), optional
+        class CalibratedCamera {
+            <<Device>>
+            intrinsic_matrix : array[float; dims [3, 3]]
+            rotation_matrix : array[float; dims [3, 3]], optional
+            translation_vector : array[float; dims [3]], optional
+            distortion_coefficients : array[float; dims [N]], optional
         }
 
         class MultiCameraPoseEstimation {
@@ -287,11 +263,8 @@ classDiagram
             source_software : str, optional
             source_software_version : str, optional
             PoseEstimationSeries (3D world-space)
-            CameraView
-            CameraCalibration, optional
+            PoseEstimation (one per camera view)
             Skeleton, link, optional
-            source_video : ImageSeries, link, optional
-            labeled_video : ImageSeries, link, optional
         }
 
         class Skeleton {
@@ -353,20 +326,14 @@ classDiagram
 
     PoseEstimation --o PoseEstimationSeries : contains 0 or more
     PoseEstimation --> Skeleton : links to
-    PoseEstimation --> Device : links to
+    PoseEstimation --> Device : links to (device)
     PoseEstimation --> ImageSeries : links to (source_video)
 
+    CalibratedCamera --|> Device : extends
+
     MultiCameraPoseEstimation --o PoseEstimationSeries : contains 0 or more
-    MultiCameraPoseEstimation --o CameraView : contains 0 or more
-    MultiCameraPoseEstimation --o CameraCalibration : contains optional
+    MultiCameraPoseEstimation --o PoseEstimation : contains 0 or more
     MultiCameraPoseEstimation --> Skeleton : links to
-
-    CameraView --> Device : links to
-    CameraView --> ImageSeries : links to (source_video)
-    CameraView --o PoseEstimationSeries : contains 0 or more
-
-    CameraCalibration --> Device : links to
-    PoseEstimation --> ImageSeries : links to
 
     PoseTraining --o TrainingFrames : contains
     PoseTraining --o SourceVideos : contains
