@@ -16,7 +16,6 @@ from ndx_pose import (
     TrainingFrames,
 )
 from ndx_pose.testing.mock.pose import (
-    mock_CalibratedCamera,
     mock_MultiCameraPoseEstimation,
     mock_PoseEstimationSeries,
     mock_Skeleton,
@@ -481,11 +480,11 @@ class TestMultiCameraPoseEstimationRoundtrip(TestCase):
 
         video1 = ImageSeries(
             name="camera1_video", description="cam1", unit="NA",
-            format="external", external_file=["cam1.mp4"], rate=30.0,
+            format="external", external_file=["cam1.mp4"], rate=30.0, num_samples=10,
         )
         video2 = ImageSeries(
             name="camera2_video", description="cam2", unit="NA",
-            format="external", external_file=["cam2.mp4"], rate=30.0,
+            format="external", external_file=["cam2.mp4"], rate=30.0, num_samples=10,
         )
         self.nwbfile.add_acquisition(video1)
         self.nwbfile.add_acquisition(video2)

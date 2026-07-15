@@ -82,6 +82,7 @@ for name, description in zip(camera_names, camera_descriptions):
 #    Each per-camera PoseEstimation will link to one of these.
 # ---------------------------------------------------------------------------
 frame_rate = 30.0  # Hz
+n_frames = 1000
 source_videos = []
 for camera in cameras:
     video = ImageSeries(
@@ -93,6 +94,7 @@ for camera in cameras:
         dimension=[1280, 1024],
         starting_frame=[0],
         rate=frame_rate,
+        num_samples=n_frames,
     )
     nwbfile.add_acquisition(video)
     source_videos.append(video)
@@ -112,7 +114,6 @@ skeletons = Skeletons(skeletons=[skeleton])
 # 5. Build one PoseEstimation per camera, holding that camera's 2D pixel-space estimates
 #    (e.g., produced by DeepLabCut, which Anipose-style pipelines run per camera view).
 # ---------------------------------------------------------------------------
-n_frames = 1000
 timestamps = np.arange(n_frames) / frame_rate  # seconds
 
 pose_estimations = []

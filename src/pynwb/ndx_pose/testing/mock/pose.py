@@ -17,7 +17,6 @@ from ...pose import (
     SkeletonInstances,
     TrainingFrame,
     Skeletons,
-    SourceVideos,
 )
 
 
