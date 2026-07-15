@@ -275,6 +275,7 @@ class TestPoseEstimationConstructor(TestCase):
             dimension=[640, 480],
             starting_frame=[0],
             rate=30.0,
+            num_samples=10,
         )
         skeleton = mock_Skeleton()
         pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
@@ -313,6 +314,7 @@ class TestPoseEstimationConstructor(TestCase):
             dimension=[640, 480],
             starting_frame=[0],
             rate=30.0,
+            num_samples=10,
         )
         skeleton = mock_Skeleton()
         pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]

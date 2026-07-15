@@ -216,6 +216,7 @@ class TestPoseEstimationRoundtripSourceVideo(TestCase):
             dimension=[640, 480],
             starting_frame=[0],
             rate=30.0,
+            num_samples=10,
         )
         self.nwbfile.add_acquisition(source_video)
 
@@ -274,6 +275,7 @@ class TestPoseEstimationRoundtripLabeledVideo(TestCase):
             dimension=[640, 480],
             starting_frame=[0],
             rate=30.0,
+            num_samples=10,
         )
         self.nwbfile.add_acquisition(labeled_video)
 
