@@ -67,7 +67,6 @@ dev = [
 min-reqs = [
     "pynwb==4.0.0; python_version == '3.10'",
     "hdmf==6.1.0; python_version == '3.10'",
-    "numpy==1.24.0; python_version == '3.10'",
 ]
 
 [project.urls]
