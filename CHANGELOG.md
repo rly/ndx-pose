@@ -1,5 +1,23 @@
 # Changelog for ndx-pose
 
+## ndx-pose 0.4.0 (upcoming)
+
+### New neurodata types
+- Added `CalibratedCamera` neurodata type, a `Device` extended with intrinsic and extrinsic calibration
+  parameters (intrinsic matrix, rotation matrix, translation vector, distortion coefficients) for that
+  single camera. Because it is a `Device`, it is added once to the NWBFile and can be linked to by
+  reference from multiple `PoseEstimation`/`MultiCameraPoseEstimation` objects (e.g., one per subject in
+  a multi-subject recording session such as sDANNCE), so the camera rig and its calibration are never
+  duplicated and there is no row-order matching to maintain. @alessandratrapani (#57)
+- Added `MultiCameraPoseEstimation` neurodata type for storing 3D world-space pose estimates from
+  multi-camera setups (e.g. DANNCE, Anipose). It contains `PoseEstimationSeries` in world coordinates,
+  one `PoseEstimation` per camera view, and an optional link to a `Skeleton`. @alessandratrapani (#57)
+- `PoseEstimation` now represents pose estimates from a single camera view (it links to at most one
+  `Device`, ideally a `CalibratedCamera`), so it can be reused directly as the per-camera child of
+  `MultiCameraPoseEstimation` instead of introducing a separate, largely overlapping type for that
+  purpose. The `devices` constructor argument (a list) is deprecated in favor of the singular `device`
+  argument; passing more than one device now raises an error. @alessandratrapani (#57)
+
 ## ndx-pose 0.3.1 (upcoming)
 
 ### Minor updates
@@ -17,23 +35,6 @@
 - Added optional `source_video` and `labeled_video` links on `PoseEstimation` that reference an `ImageSeries`
   in the NWBFile, providing a formal alternative to the fragile string paths in `original_videos` and
   `labeled_videos`. @h-mayorquin (#56)
-  
-### New neurodata types
-
-- Added `CalibratedCamera` neurodata type, a `Device` extended with intrinsic and extrinsic calibration
-  parameters (intrinsic matrix, rotation matrix, translation vector, distortion coefficients) for that
-  single camera. Because it is a `Device`, it is added once to the NWBFile and can be linked to by
-  reference from multiple `PoseEstimation`/`MultiCameraPoseEstimation` objects (e.g., one per subject in
-  a multi-subject recording session such as sDANNCE), so the camera rig and its calibration are never
-  duplicated and there is no row-order matching to maintain. @ATrapani
-- Added `MultiCameraPoseEstimation` neurodata type for storing 3D world-space pose estimates from
-  multi-camera setups (e.g. DANNCE, Anipose). It contains `PoseEstimationSeries` in world coordinates,
-  one `PoseEstimation` per camera view, and an optional link to a `Skeleton`. @ATrapani
-- `PoseEstimation` now represents pose estimates from a single camera view (it links to at most one
-  `Device`, ideally a `CalibratedCamera`), so it can be reused directly as the per-camera child of
-  `MultiCameraPoseEstimation` instead of introducing a separate, largely overlapping type for that
-  purpose. The `devices` constructor argument (a list) is deprecated in favor of the singular `device`
-  argument; passing more than one device now raises an error. @ATrapani
 
 ### Bug fixes
 - Tests were updated to account for a change in the format of warnings from HDMF 4.1.0. @rly (#49)

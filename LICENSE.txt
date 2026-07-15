@@ -1,6 +1,6 @@
 BSD 3-Clause License
 
-Copyright (c) 2021-2026, Ryan Ly, Ben Dichter, Alexander Mathis, Liezl Maree, Chris Brozdowski, Heberto Mayorquin, Talmo Pereira, Elizabeth Berrigan, Paul Adkisson
+Copyright (c) 2021-2026, Ryan Ly, Ben Dichter, Alexander Mathis, Liezl Maree, Chris Brozdowski, Heberto Mayorquin, Talmo Pereira, Elizabeth Berrigan, Paul Adkisson, Alessandra Trapani
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

@@ -8,6 +8,8 @@ namespaces:
       - Heberto Mayorquin
       - Talmo Pereira
       - Elizabeth Berrigan
+      - Paul Adkisson
+      - Alessandra Trapani
     contact:
       - rly@lbl.gov
       - bdichter@lbl.gov
@@ -17,9 +19,11 @@ namespaces:
       - h.mayorquin@gmail.com
       - talmo@salk.edu
       - eberrigan@salk.edu
+      - paul.adkisson@catalystneuro.com
+      - alessandra.trapani@catalystneuro.com
     doc: NWB extension to store pose estimation data
     name: ndx-pose
     schema:
       - namespace: core
       - source: ndx-pose.extensions.yaml
-    version: 0.3.0
+    version: 0.4.0

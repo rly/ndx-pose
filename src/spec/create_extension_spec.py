@@ -16,7 +16,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(
         doc="NWB extension to store pose estimation data",
         name="ndx-pose",
-        version="0.3.0",
+        version="0.4.0",
         author=[
             "Ryan Ly",
             "Ben Dichter",
@@ -26,6 +26,8 @@ def main():
             "Heberto Mayorquin",
             "Talmo Pereira",
             "Elizabeth Berrigan",
+            "Paul Adkisson",
+            "Alessandra Trapani",
         ],
         contact=[
             "rly@lbl.gov",
@@ -36,6 +38,8 @@ def main():
             "h.mayorquin@gmail.com",
             "talmo@salk.edu",
             "eberrigan@salk.edu",
+            "paul.adkisson@catalystneuro.com",
+            "alessandra.trapani@catalystneuro.com",
         ],
     )
 
