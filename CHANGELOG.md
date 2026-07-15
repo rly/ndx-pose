@@ -11,7 +11,7 @@
   requires `num_samples` when `format='external'` and timing is specified with `rate`, because the empty data
   array cannot be used to infer the number of frames. @rly (#62)
 
-
+## ndx-pose 0.3.0 (June 2, 2026)
 
 ### Schema changes
 - Added optional `source_video` and `labeled_video` links on `PoseEstimation` that reference an `ImageSeries`
