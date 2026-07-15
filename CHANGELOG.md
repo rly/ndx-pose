@@ -1,6 +1,13 @@
 # Changelog for ndx-pose
 
-## ndx-pose 0.3.0 (June 2, 2026)
+## ndx-pose 0.3.1 (upcoming)
+
+### Bug fixes
+- Set `num_samples` on the external `ImageSeries` objects used in the mocks, tests, and examples. pynwb 4.0
+  requires `num_samples` when `format='external'` and timing is specified with `rate`, because the empty data
+  array cannot be used to infer the number of frames. @rly
+
+
 
 ### Schema changes
 - Added optional `source_video` and `labeled_video` links on `PoseEstimation` that reference an `ImageSeries`

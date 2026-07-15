@@ -189,6 +189,7 @@ def mock_source_video(
         dimension=[640, 480],
         starting_frame=[0],
         rate=30.0,
+        num_samples=100,
     )
     return source_video
 
