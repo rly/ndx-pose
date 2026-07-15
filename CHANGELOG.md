@@ -4,12 +4,12 @@
 
 ### Minor updates
 - Bumped the minimum supported `pynwb` to 4.0.0 (and `hdmf` to 6.1.0). `num_samples` on `ImageSeries` and the
-  requirement to set it for external, rate-timed videos are only available in pynwb 4.0. @rly
+  requirement to set it for external, rate-timed videos are only available in pynwb 4.0. @rly (#62)
 
 ### Bug fixes
 - Set `num_samples` on the external `ImageSeries` objects used in the mocks, tests, and examples. pynwb 4.0
   requires `num_samples` when `format='external'` and timing is specified with `rate`, because the empty data
-  array cannot be used to infer the number of frames. @rly
+  array cannot be used to infer the number of frames. @rly (#62)
 
 
 
