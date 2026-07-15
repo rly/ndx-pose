@@ -69,6 +69,7 @@ training_video1 = ImageSeries(
     dimension=[640, 480],
     starting_frame=[0],
     rate=30.0,
+    num_samples=500,
 )
 
 # initial locations ((x, y) coordinates) of each node in the skeleton.

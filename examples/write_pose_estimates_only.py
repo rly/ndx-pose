@@ -61,6 +61,7 @@ source_video = ImageSeries(
     dimension=[640, 480],
     starting_frame=[0],
     rate=30.0,
+    num_samples=100,
 )
 labeled_video = ImageSeries(
     name="labeled_video",
@@ -71,6 +72,7 @@ labeled_video = ImageSeries(
     dimension=[640, 480],
     starting_frame=[0],
     rate=30.0,
+    num_samples=100,
 )
 nwbfile.add_acquisition(source_video)
 nwbfile.add_acquisition(labeled_video)

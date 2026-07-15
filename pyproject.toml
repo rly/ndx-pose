@@ -39,8 +39,8 @@ keywords = [
     'ndx-extension',
 ]
 dependencies = [
-    "pynwb>=2.6.0",
-    "hdmf>=3.13.0",
+    "pynwb>=4.0.0",
+    "hdmf>=6.1.0",
 ]
 
 # Dependency groups (PEP 735) - for development, not published to PyPI
@@ -65,9 +65,8 @@ dev = [
 ]
 # minimum requirements of project dependencies for testing on Python 3.10 (see .github/workflows/run_all_tests.yml)
 min-reqs = [
-    "pynwb==2.6.0; python_version == '3.10'",
-    "hdmf==3.13.0; python_version == '3.10'",
-    "numpy<2; python_version == '3.10'",
+    "pynwb==4.0.0; python_version == '3.10'",
+    "hdmf==6.1.0; python_version == '3.10'",
 ]
 
 [project.urls]
