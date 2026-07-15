@@ -18,8 +18,6 @@
   purpose. The `devices` constructor argument (a list) is deprecated in favor of the singular `device`
   argument; passing more than one device now raises an error. @alessandratrapani (#57)
 
-## ndx-pose 0.3.1 (upcoming)
-
 ### Minor updates
 - Bumped the minimum supported `pynwb` to 4.0.0 (and `hdmf` to 6.1.0). `num_samples` on `ImageSeries` and the
   requirement to set it for external, rate-timed videos are only available in pynwb 4.0. @rly (#62)
