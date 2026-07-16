@@ -415,6 +415,7 @@ class CalibratedCamera(Device):
         {
             "name": "distortion_coefficients",
             "type": ("array_data", "data"),
+            "shape": (None,),
             "doc": "Lens distortion coefficients for this camera.",
             "default": None,
         },
