@@ -143,7 +143,8 @@ groups:
         quantity: "?"
       - name: device
         target_type: Device
-        doc: The camera device used to record the video for this pose estimation. Must be added to the
+        doc:
+          The camera device used to record the video for this pose estimation. Must be added to the
           NWBFile before being linked here. Use a CalibratedCamera instead of a plain Device when
           intrinsic/extrinsic calibration coordinates are available, e.g., for multi-camera 3D pose
           estimation, where a PoseEstimation object represents a single camera view within a
@@ -307,9 +308,6 @@ groups:
     datasets:
       - name: intrinsic_matrix
         dtype: float32
-        dims:
-          - - 3
-            - 3
         shape:
           - - 3
             - 3
@@ -318,9 +316,6 @@ groups:
           Shape (3, 3).
       - name: rotation_matrix
         dtype: float32
-        dims:
-          - - 3
-            - 3
         shape:
           - - 3
             - 3
@@ -331,7 +326,7 @@ groups:
       - name: translation_vector
         dtype: float32
         dims:
-          - 3
+          - x, y, z
         shape:
           - 3
         doc:
@@ -344,8 +339,7 @@ groups:
           - num_distortion_params
         shape:
           - null
-        doc:
-          Lens distortion coefficients for this camera. Length depends on the
+        doc: Lens distortion coefficients for this camera. Length depends on the
           distortion model (typically 4 or 5 for radial-tangential).
         quantity: "?"
   - neurodata_type_def: MultiCameraPoseEstimation
