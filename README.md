@@ -4,7 +4,7 @@
 
 ndx-pose is a standardized format for storing pose estimation data in NWB, such as from
 [DeepLabCut](http://www.mackenziemathislab.org/deeplabcut), [SLEAP](https://sleap.ai/), and
-[DANNCE](https://github.com/delphos-quant/dannce).
+[DANNCE](https://github.com/spoonsso/dannce).
 Please post an issue or PR to suggest or add support for another pose estimation tool.
 
 ## Data types overview
