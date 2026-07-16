@@ -1,15 +1,23 @@
 """
 Example: write 3D multi-camera pose estimates to NWB using MultiCameraPoseEstimation.
 
-This demonstrates a DANNCE-style workflow:
+This demonstrates a (s)DANNCE-style workflow where only the triangulated 3D pose is
+available, with no per-camera 2D estimates:
   - Multiple synchronized cameras record the same animal. Each camera is a CalibratedCamera
     (a Device extended with intrinsic/extrinsic calibration parameters), added once to the
-    NWBFile so it can be shared by reference (e.g., across subjects) without duplicating the rig.
-  - Each camera's 2D pixel-space pose estimates (e.g., from DeepLabCut) are stored in their own
-    PoseEstimation object, which links to that camera.
+    NWBFile so it can be shared by reference (e.g., across subjects in a multi-subject
+    sDANNCE session) without duplicating the rig.
+  - Each camera is still represented by its own PoseEstimation object, which links to that
+    camera device and its source video. Since DANNCE/sDANNCE does not output per-camera 2D
+    keypoints, these PoseEstimation objects hold no PoseEstimationSeries children (this is
+    valid: PoseEstimationSeries is optional, zero-or-more, in PoseEstimation) - they exist to
+    record device/video provenance for each camera view.
   - A 3D triangulation algorithm produces world-space (x, y, z) coordinates for each body-part
-    landmark, stored as PoseEstimationSeries directly inside MultiCameraPoseEstimation, alongside
-    the per-camera PoseEstimation objects.
+    landmark, stored as PoseEstimationSeries directly inside MultiCameraPoseEstimation.
+
+For a workflow where 2D per-camera estimates ARE available (e.g., Anipose running
+DeepLabCut per camera before triangulating), simply pass `pose_estimation_series` to each
+per-camera PoseEstimation as well.
 
 Run with:
     python write_multicamera_pose_estimates.py
@@ -94,7 +102,6 @@ for camera in cameras:
         dimension=[1280, 1024],
         starting_frame=[0],
         rate=frame_rate,
-        num_samples=n_frames,
     )
     nwbfile.add_acquisition(video)
     source_videos.append(video)
@@ -111,48 +118,31 @@ skeleton = Skeleton(
 skeletons = Skeletons(skeletons=[skeleton])
 
 # ---------------------------------------------------------------------------
-# 5. Build one PoseEstimation per camera, holding that camera's 2D pixel-space estimates
-#    (e.g., produced by DeepLabCut, which Anipose-style pipelines run per camera view).
+# 5. Build one PoseEstimation per camera to record that camera's device/video provenance.
+#    sDANNCE does not produce per-camera 2D keypoints, so these have no PoseEstimationSeries
+#    children - only the device and source_video links are set. This is valid because
+#    PoseEstimationSeries is optional (zero or more) in PoseEstimation.
 # ---------------------------------------------------------------------------
 timestamps = np.arange(n_frames) / frame_rate  # seconds
 
-pose_estimations = []
-for camera, video in zip(cameras, source_videos):
-    pose_estimation_series_2d = []
-    for node in skeleton.nodes:
-        data = rng.random((n_frames, 2)).astype("float32") * np.array([1280, 1024], dtype="float32")
-        confidence = rng.random(n_frames).astype("float32")
-        pes = PoseEstimationSeries(
-            name=node,
-            description=f"2D position of {node} in {camera.name}'s pixel coordinates.",
-            data=data,
-            unit="pixels",
-            reference_frame="(0, 0) is the top-left corner of the frame.",
-            timestamps=timestamps if node == skeleton.nodes[0] else pose_estimation_series_2d[0],
-            confidence=confidence,
-            confidence_definition="Softmax output of the deep neural network.",
-        )
-        pose_estimation_series_2d.append(pes)
-
-    pose_estimations.append(
-        PoseEstimation(
-            name=f"PoseEstimation_{camera.name}",
-            pose_estimation_series=pose_estimation_series_2d,
-            description=f"2D pose estimates from {camera.name} using DeepLabCut.",
-            scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
-            source_software="DeepLabCut",
-            source_software_version="2.2b8",
-            device=camera,
-            source_video=video,
-        )
+pose_estimations = [
+    PoseEstimation(
+        name=f"PoseEstimation_{camera.name}",
+        description=f"Camera view {camera.name}; no 2D keypoints, only used for 3D triangulation.",
+        source_software="sDANNCE",
+        source_software_version="1.0.0",
+        device=camera,
+        source_video=video,
     )
+    for camera, video in zip(cameras, source_videos)
+]
 
 # ---------------------------------------------------------------------------
 # 6. Simulate 3D pose estimation output.
-#    DANNCE triangulates the per-camera 2D estimates into (n_frames, 3) arrays in
-#    millimetres (world space).
+#    sDANNCE triangulates directly from the raw multi-camera video (no intermediate
+#    per-camera 2D keypoints) into (n_frames, 3) arrays in millimetres (world space).
 # ---------------------------------------------------------------------------
-reference_frame = "(0, 0, 0) is the geometric centre of the DANNCE camera rig."
+reference_frame = "(0, 0, 0) is the geometric centre of the sDANNCE camera rig."
 confidence_definition = "Maximum probability from the 3D volumetric heatmap."
 
 pose_estimation_series_3d = []
@@ -179,10 +169,10 @@ mcpe = MultiCameraPoseEstimation(
     name="MultiCameraPoseEstimation",
     pose_estimation_series=pose_estimation_series_3d,
     pose_estimations=pose_estimations,
-    description="3D keypoint coordinates of mouse001 estimated by DANNCE.",
-    scorer="DANNCE",
-    source_software="DANNCE",
-    source_software_version="2.0.0",
+    description="3D keypoint coordinates of mouse001 estimated by sDANNCE.",
+    scorer="sDANNCE",
+    source_software="sDANNCE",
+    source_software_version="1.0.0",
     skeleton=skeleton,
 )
 
@@ -218,6 +208,7 @@ with NWBHDF5IO(path, mode="r", load_namespaces=True) as io:
 
     pe1 = read_mcpe.pose_estimations["PoseEstimation_camera1"]
     camera1 = pe1.device
-    print(f"  camera1 device   : {camera1.name}")
-    print(f"  camera1 intrinsic: {camera1.intrinsic_matrix[:]}")
-    print(f"  camera1 video    : {pe1.source_video.external_file[0]}")
+    print(f"  camera1 device        : {camera1.name}")
+    print(f"  camera1 intrinsic     : {camera1.intrinsic_matrix[:]}")
+    print(f"  camera1 video         : {pe1.source_video.external_file[0]}")
+    print(f"  camera1 2D keypoints  : {len(pe1.pose_estimation_series)} (none for sDANNCE)")
