@@ -182,6 +182,27 @@ class TestPoseEstimationConstructor(TestCase):
                 skeleton=skeleton,
             )
 
+    def test_source_software_version_without_source_software_raises(self):
+        """Test that setting source_software_version without source_software raises.
+
+        source_software_version is stored as the 'version' attribute on the 'source_software'
+        dataset, so it cannot be written without source_software and would otherwise be silently
+        dropped on roundtrip.
+        """
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = (
+            "'source_software_version' was specified without 'source_software'. The version is stored as an "
+            "attribute on the 'source_software' dataset, so 'source_software' must be provided as well."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                source_software_version="2.2b8",
+            )
+
     def test_constructor_nodes_edges(self):
         """Test the old constructor for PoseEstimation with nodes and edges."""
         front_left_paw = mock_PoseEstimationSeries(
