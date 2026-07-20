@@ -220,8 +220,11 @@ class TestPoseEstimationConstructor(TestCase):
 
         msg = (
             "PoseEstimation now represents pose estimates from a single camera view and supports only one "
-            "device. For multi-camera setups, add one PoseEstimation per camera view to a "
-            "MultiCameraPoseEstimation object instead of passing multiple 'devices' here."
+            "device, but multiple Device objects are linked from this PoseEstimation. This is likely "
+            "because the file was written with ndx-pose < 0.4.0, when a PoseEstimation object could link "
+            "to multiple cameras. Reading files with more than one camera linked to a single "
+            "PoseEstimation object is not supported; each camera view now needs its own PoseEstimation "
+            "object inside a MultiCameraPoseEstimation object."
         )
         with self.assertRaisesWith(ValueError, msg):
             PoseEstimation(
@@ -243,6 +246,70 @@ class TestPoseEstimationConstructor(TestCase):
                 device=self.nwbfile.devices["camera1"],
                 devices=[self.nwbfile.devices["camera2"]],
             )
+
+    def test_device_list_single_treated_like_deprecated_devices(self):
+        """Test that a list passed via 'device' (as HDMF does when resolving links by type from a file
+        written with ndx-pose < 0.4.0) is handled the same way as the deprecated 'devices' argument.
+        """
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = (
+            "The 'devices' constructor argument is deprecated. Please use the 'device' argument instead. "
+            "This will be removed in a future release."
+        )
+        with self.assertWarnsWith(DeprecationWarning, msg):
+            pe = PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                device=[self.nwbfile.devices["camera1"]],
+            )
+        self.assertIs(pe.device, self.nwbfile.devices["camera1"])
+
+    def test_device_list_multiple_raises(self):
+        """Test that a list of more than one device passed via 'device' raises a clear, actionable error
+        instead of HDMF's generic type-mismatch error.
+        """
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = (
+            "PoseEstimation now represents pose estimates from a single camera view and supports only one "
+            "device, but multiple Device objects are linked from this PoseEstimation. This is likely "
+            "because the file was written with ndx-pose < 0.4.0, when a PoseEstimation object could link "
+            "to multiple cameras. Reading files with more than one camera linked to a single "
+            "PoseEstimation object is not supported; each camera view now needs its own PoseEstimation "
+            "object inside a MultiCameraPoseEstimation object."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                device=[self.nwbfile.devices["camera1"], self.nwbfile.devices["camera2"]],
+            )
+
+    def test_deprecated_devices_property_getter(self):
+        """Test that the deprecated .devices property still works and warns."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+        pe = PoseEstimation(
+            pose_estimation_series=pose_estimation_series,
+            skeleton=skeleton,
+            device=self.nwbfile.devices["camera1"],
+        )
+        msg = "PoseEstimation.devices is deprecated. Please use PoseEstimation.device instead."
+        with self.assertWarnsWith(DeprecationWarning, msg):
+            devices = pe.devices
+        self.assertEqual(devices, [self.nwbfile.devices["camera1"]])
+
+    def test_deprecated_devices_property_getter_no_device(self):
+        """Test that the deprecated .devices property returns an empty list when no device is set."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+        pe = PoseEstimation(pose_estimation_series=pose_estimation_series, skeleton=skeleton)
+        with self.assertWarnsWith(DeprecationWarning, "PoseEstimation.devices is deprecated. Please use PoseEstimation.device instead."):
+            devices = pe.devices
+        self.assertEqual(devices, [])
 
     def test_constructor_nodes_edges(self):
         """Test the old constructor for PoseEstimation with nodes and edges."""
@@ -610,6 +677,15 @@ class TestMultiCameraPoseEstimationConstructor(TestCase):
         self.assertIsNone(mcpe.description)
         self.assertIsNone(mcpe.skeleton)
         self.assertEqual(len(mcpe.pose_estimations), 0)
+
+    def test_source_software_version_without_source_software_raises(self):
+        """Test that setting source_software_version without source_software raises, matching PoseEstimation."""
+        msg = (
+            "'source_software_version' was specified without 'source_software'. The version is stored as an "
+            "attribute on the 'source_software' dataset, so 'source_software' must be provided as well."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            MultiCameraPoseEstimation(source_software_version="2.0.0")
 
     def test_mock_helper(self):
         mcpe = mock_MultiCameraPoseEstimation(nwbfile=self.nwbfile)
