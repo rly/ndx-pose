@@ -26,6 +26,9 @@
 - Set `num_samples` on the external `ImageSeries` objects used in the mocks, tests, and examples. pynwb 4.0
   requires `num_samples` when `format='external'` and timing is specified with `rate`, because the empty data
   array cannot be used to infer the number of frames. @rly (#62)
+- `PoseEstimation` now raises when `source_software_version` is set without `source_software`. The version is
+  stored as an attribute on the `source_software` dataset, so it was previously dropped silently on roundtrip.
+  @h-mayorquin (#63)
 
 ## ndx-pose 0.3.0 (June 2, 2026)
 
