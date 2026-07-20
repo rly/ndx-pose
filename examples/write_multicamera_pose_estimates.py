@@ -102,6 +102,7 @@ for camera in cameras:
         dimension=[1280, 1024],
         starting_frame=[0],
         rate=frame_rate,
+        num_samples=n_frames,
     )
     nwbfile.add_acquisition(video)
     source_videos.append(video)
