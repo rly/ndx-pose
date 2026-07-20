@@ -564,6 +564,11 @@ class MultiCameraPoseEstimation(MultiContainerInterface):
         pose_estimation_series, pose_estimations = popargs("pose_estimation_series", "pose_estimations", kwargs)
         description, scorer = popargs("description", "scorer", kwargs)
         source_software, source_software_version = popargs("source_software", "source_software_version", kwargs)
+        if source_software_version is not None and source_software is None:
+            raise ValueError(
+                "'source_software_version' was specified without 'source_software'. The version is stored as an "
+                "attribute on the 'source_software' dataset, so 'source_software' must be provided as well."
+            )
         super().__init__(**kwargs)
 
         self.pose_estimation_series = pose_estimation_series
