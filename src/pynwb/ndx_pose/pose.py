@@ -183,11 +183,14 @@ class PoseEstimation(MultiContainerInterface):
         },
         {
             "name": "device",
-            "type": Device,
+            "type": (Device, list, tuple),
             "doc": (
                 "The camera device used to record the video for this pose estimation. Must be added to the "
                 "NWBFile before being linked here. Use a CalibratedCamera instead of a plain Device when "
-                "intrinsic/extrinsic calibration coordinates are available."
+                "intrinsic/extrinsic calibration coordinates are available. NOTE: when reading a file written "
+                "with ndx-pose < 0.4.0 that links more than one Device to a PoseEstimation object, HDMF resolves "
+                "all of those links by type and passes them here as a list, which is handled the same way as "
+                "the deprecated 'devices' argument below."
             ),
             "default": None,
         },
@@ -296,14 +299,26 @@ class PoseEstimation(MultiContainerInterface):
         # device must be added to the NWBFile before being linked to from a PoseEstimation object.
         # otherwise, it will be added as a child of the PoseEstimation object.
         device, devices = popargs("device", "devices", kwargs)
+        if isinstance(device, (list, tuple)):
+            # When reading a file written with ndx-pose < 0.4.0 that links more than one Device to a
+            # PoseEstimation object, HDMF resolves all of the Device-typed links by type (regardless of the
+            # current spec's quantity) and passes them here as a list instead of routing them through the
+            # 'devices' constructor arg. Treat this exactly like the deprecated 'devices' argument.
+            if devices is not None:
+                raise ValueError("Cannot specify both 'device' and 'devices'. Please use 'device' only.")
+            devices = device
+            device = None
         if devices is not None:
             if device is not None:
                 raise ValueError("Cannot specify both 'device' and 'devices'. Please use 'device' only.")
             if len(devices) > 1:
                 raise ValueError(
                     "PoseEstimation now represents pose estimates from a single camera view and supports only one "
-                    "device. For multi-camera setups, add one PoseEstimation per camera view to a "
-                    "MultiCameraPoseEstimation object instead of passing multiple 'devices' here."
+                    "device, but multiple Device objects are linked from this PoseEstimation. This is likely "
+                    "because the file was written with ndx-pose < 0.4.0, when a PoseEstimation object could link "
+                    "to multiple cameras. Reading files with more than one camera linked to a single "
+                    "PoseEstimation object is not supported; each camera view now needs its own PoseEstimation "
+                    "object inside a MultiCameraPoseEstimation object."
                 )
             # warn on new, no warning on construction from existing file
             if not self._in_construct_mode:
@@ -372,6 +387,20 @@ class PoseEstimation(MultiContainerInterface):
     def edges(self, value):
         raise ValueError(
             "Setting PoseEstimation.edges is deprecated. Please use PoseEstimation.skeleton.edges instead."
+        )
+
+    @property
+    def devices(self):
+        warnings.warn(
+            "PoseEstimation.devices is deprecated. Please use PoseEstimation.device instead.",
+            DeprecationWarning,
+        )
+        return [self.device] if self.device is not None else []
+
+    @devices.setter
+    def devices(self, value):
+        raise ValueError(
+            "Setting PoseEstimation.devices is deprecated. Please use PoseEstimation.device instead."
         )
 
 
