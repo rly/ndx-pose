@@ -9,6 +9,8 @@ from pynwb.file import Subject
 from pynwb.image import ImageSeries
 
 from ndx_pose import (
+    CalibratedCamera,
+    MultiCameraPoseEstimation,
     PoseEstimationSeries,
     Skeleton,
     PoseEstimation,
@@ -19,6 +21,9 @@ from ndx_pose import (
     SourceVideos,
 )
 from ndx_pose.testing.mock.pose import (
+    mock_CalibratedCamera,
+    mock_MultiCameraPoseEstimation,
+    mock_PoseEstimation,
     mock_PoseEstimationSeries,
     mock_SkeletonInstances,
     mock_source_video,
@@ -118,10 +123,7 @@ class TestPoseEstimationConstructor(TestCase):
         pe = PoseEstimation(
             pose_estimation_series=pose_estimation_series,
             description="Estimated positions of front paws using DeepLabCut.",
-            original_videos=["camera1.mp4", "camera2.mp4"],
-            labeled_videos=["camera1_labeled.mp4", "camera2_labeled.mp4"],
-            dimensions=np.array([[640, 480], [1024, 768]], dtype="uint16"),
-            devices=[self.nwbfile.devices["camera1"], self.nwbfile.devices["camera2"]],
+            device=self.nwbfile.devices["camera1"],
             scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
             source_software="DeepLabCut",
             source_software_version="2.2b8",
@@ -134,12 +136,7 @@ class TestPoseEstimationConstructor(TestCase):
         self.assertIs(pe.pose_estimation_series["body"], pose_estimation_series[1])
         self.assertIs(pe.pose_estimation_series["front_right_paw"], pose_estimation_series[2])
         self.assertEqual(pe.description, "Estimated positions of front paws using DeepLabCut.")
-        self.assertEqual(pe.original_videos, ["camera1.mp4", "camera2.mp4"])
-        self.assertEqual(pe.labeled_videos, ["camera1_labeled.mp4", "camera2_labeled.mp4"])
-        np.testing.assert_array_equal(pe.dimensions, np.array([[640, 480], [1024, 768]], dtype="uint16"))
-        self.assertEqual(len(pe.devices), 2)
-        self.assertIs(pe.devices[0], self.nwbfile.devices["camera1"])
-        self.assertIs(pe.devices[1], self.nwbfile.devices["camera2"])
+        self.assertIs(pe.device, self.nwbfile.devices["camera1"])
         self.assertEqual(pe.scorer, "DLC_resnet50_openfieldOct30shuffle1_1600")
         self.assertEqual(pe.source_software, "DeepLabCut")
         self.assertEqual(pe.source_software_version, "2.2b8")
@@ -164,18 +161,14 @@ class TestPoseEstimationConstructor(TestCase):
             # the values are the indices of the nodes in the nodes list.
             edges=np.array([[0, 1], [1, 2]], dtype="uint8"),
         )
-        camera1 = Device(name="camera1")
-        camera2 = Device(name="camera2")
+        orphan_camera = Device(name="orphan_camera")
 
-        msg = "All devices linked to from a PoseEstimation object must be added to the NWBFile first."
+        msg = "The device linked from a PoseEstimation object must be added to the NWBFile first."
         with self.assertRaisesWith(ValueError, msg):
             PoseEstimation(
                 pose_estimation_series=pose_estimation_series,
                 description="Estimated positions of front paws using DeepLabCut.",
-                original_videos=["camera1.mp4", "camera2.mp4"],
-                labeled_videos=["camera1_labeled.mp4", "camera2_labeled.mp4"],
-                dimensions=np.array([[640, 480], [1024, 768]], dtype="uint16"),
-                devices=[camera1, camera2],
+                device=orphan_camera,
                 scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
                 source_software="DeepLabCut",
                 source_software_version="2.2b8",
@@ -203,6 +196,121 @@ class TestPoseEstimationConstructor(TestCase):
                 source_software_version="2.2b8",
             )
 
+    def test_deprecated_devices_single(self):
+        """Test that the deprecated 'devices' argument still works with a single device."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = (
+            "The 'devices' constructor argument is deprecated. Please use the 'device' argument instead. "
+            "This will be removed in a future release."
+        )
+        with self.assertWarnsWith(DeprecationWarning, msg):
+            pe = PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                devices=[self.nwbfile.devices["camera1"]],
+            )
+        self.assertIs(pe.device, self.nwbfile.devices["camera1"])
+
+    def test_deprecated_devices_multiple_raises(self):
+        """Test that passing more than one device via the deprecated 'devices' argument raises an error."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = (
+            "PoseEstimation now represents pose estimates from a single camera view and supports only one "
+            "device, but multiple Device objects are linked from this PoseEstimation. This is likely "
+            "because the file was written with ndx-pose < 0.4.0, when a PoseEstimation object could link "
+            "to multiple cameras. Reading files with more than one camera linked to a single "
+            "PoseEstimation object is not supported; each camera view now needs its own PoseEstimation "
+            "object inside a MultiCameraPoseEstimation object."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                devices=[self.nwbfile.devices["camera1"], self.nwbfile.devices["camera2"]],
+            )
+
+    def test_device_and_devices_raises(self):
+        """Test that passing both 'device' and 'devices' raises an error."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = "Cannot specify both 'device' and 'devices'. Please use 'device' only."
+        with self.assertRaisesWith(ValueError, msg):
+            PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                device=self.nwbfile.devices["camera1"],
+                devices=[self.nwbfile.devices["camera2"]],
+            )
+
+    def test_device_list_single_treated_like_deprecated_devices(self):
+        """Test that a list passed via 'device' (as HDMF does when resolving links by type from a file
+        written with ndx-pose < 0.4.0) is handled the same way as the deprecated 'devices' argument.
+        """
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = (
+            "The 'devices' constructor argument is deprecated. Please use the 'device' argument instead. "
+            "This will be removed in a future release."
+        )
+        with self.assertWarnsWith(DeprecationWarning, msg):
+            pe = PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                device=[self.nwbfile.devices["camera1"]],
+            )
+        self.assertIs(pe.device, self.nwbfile.devices["camera1"])
+
+    def test_device_list_multiple_raises(self):
+        """Test that a list of more than one device passed via 'device' raises a clear, actionable error
+        instead of HDMF's generic type-mismatch error.
+        """
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = (
+            "PoseEstimation now represents pose estimates from a single camera view and supports only one "
+            "device, but multiple Device objects are linked from this PoseEstimation. This is likely "
+            "because the file was written with ndx-pose < 0.4.0, when a PoseEstimation object could link "
+            "to multiple cameras. Reading files with more than one camera linked to a single "
+            "PoseEstimation object is not supported; each camera view now needs its own PoseEstimation "
+            "object inside a MultiCameraPoseEstimation object."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                device=[self.nwbfile.devices["camera1"], self.nwbfile.devices["camera2"]],
+            )
+
+    def test_deprecated_devices_property_getter(self):
+        """Test that the deprecated .devices property still works and warns."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+        pe = PoseEstimation(
+            pose_estimation_series=pose_estimation_series,
+            skeleton=skeleton,
+            device=self.nwbfile.devices["camera1"],
+        )
+        msg = "PoseEstimation.devices is deprecated. Please use PoseEstimation.device instead."
+        with self.assertWarnsWith(DeprecationWarning, msg):
+            devices = pe.devices
+        self.assertEqual(devices, [self.nwbfile.devices["camera1"]])
+
+    def test_deprecated_devices_property_getter_no_device(self):
+        """Test that the deprecated .devices property returns an empty list when no device is set."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+        pe = PoseEstimation(pose_estimation_series=pose_estimation_series, skeleton=skeleton)
+        with self.assertWarnsWith(DeprecationWarning, "PoseEstimation.devices is deprecated. Please use PoseEstimation.device instead."):
+            devices = pe.devices
+        self.assertEqual(devices, [])
+
     def test_constructor_nodes_edges(self):
         """Test the old constructor for PoseEstimation with nodes and edges."""
         front_left_paw = mock_PoseEstimationSeries(
@@ -226,13 +334,7 @@ class TestPoseEstimationConstructor(TestCase):
             pe = PoseEstimation(
                 pose_estimation_series=pose_estimation_series,
                 description="Estimated positions of front paws using DeepLabCut.",
-                original_videos=["camera1.mp4", "camera2.mp4"],
-                labeled_videos=["camera1_labeled.mp4", "camera2_labeled.mp4"],
-                dimensions=np.array([[640, 480], [1024, 768]], dtype="uint16"),
-                devices=[
-                    self.nwbfile.devices["camera1"],
-                    self.nwbfile.devices["camera2"],
-                ],
+                device=self.nwbfile.devices["camera1"],
                 scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
                 source_software="DeepLabCut",
                 source_software_version="2.2b8",
@@ -269,8 +371,7 @@ class TestPoseEstimationConstructor(TestCase):
         pe = PoseEstimation(
             pose_estimation_series=pose_estimation_series,
             description="Estimated positions of front paws using DeepLabCut.",
-            original_videos=["camera1.mp4"],
-            devices=[self.nwbfile.devices["camera1"]],
+            device=self.nwbfile.devices["camera1"],
             scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
             source_software="DeepLabCut",
             source_software_version="2.2b8",
@@ -309,8 +410,7 @@ class TestPoseEstimationConstructor(TestCase):
         pe = PoseEstimation(
             pose_estimation_series=pose_estimation_series,
             description="Estimated positions of front paws using DeepLabCut.",
-            labeled_videos=["camera1_labeled.mp4"],
-            devices=[self.nwbfile.devices["camera1"]],
+            device=self.nwbfile.devices["camera1"],
             scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
             source_software="DeepLabCut",
             source_software_version="2.2b8",
@@ -478,3 +578,119 @@ class TestPoseTrainingImages(TestCase):
         self.assertIs(pose_training.training_frames.training_frames["frame10"], sk1_training_frame)
         self.assertIs(pose_training.training_frames.training_frames["frame11"], sk2_training_frame)
         self.assertIsNone(pose_training.source_videos)
+
+
+class TestCalibratedCameraConstructor(TestCase):
+    def test_constructor_full(self):
+        K = np.eye(3, dtype="float32")
+        R = np.eye(3, dtype="float32")
+        t = np.zeros(3, dtype="float32")
+        d = np.zeros(5, dtype="float32")
+
+        camera = CalibratedCamera(
+            name="camera1",
+            description="A camera.",
+            manufacturer="Basler",
+            intrinsic_matrix=K,
+            rotation_matrix=R,
+            translation_vector=t,
+            distortion_coefficients=d,
+        )
+
+        self.assertEqual(camera.name, "camera1")
+        np.testing.assert_array_equal(camera.intrinsic_matrix, K)
+        np.testing.assert_array_equal(camera.rotation_matrix, R)
+        np.testing.assert_array_equal(camera.translation_vector, t)
+        np.testing.assert_array_equal(camera.distortion_coefficients, d)
+
+    def test_constructor_intrinsics_only(self):
+        K = np.eye(3, dtype="float32")
+        camera = CalibratedCamera(name="camera1", intrinsic_matrix=K)
+        np.testing.assert_array_equal(camera.intrinsic_matrix, K)
+        self.assertIsNone(camera.rotation_matrix)
+        self.assertIsNone(camera.translation_vector)
+        self.assertIsNone(camera.distortion_coefficients)
+
+    def test_mock_helper(self):
+        nwbfile = NWBFile(
+            session_description="session_description",
+            identifier="identifier",
+            session_start_time=datetime.datetime.now(datetime.timezone.utc),
+        )
+        camera = mock_CalibratedCamera(nwbfile=nwbfile, name="camera1")
+        self.assertIsInstance(camera, CalibratedCamera)
+        self.assertEqual(camera.intrinsic_matrix.shape, (3, 3))
+        self.assertIs(nwbfile.devices["camera1"], camera)
+
+
+class TestMultiCameraPoseEstimationConstructor(TestCase):
+    def setUp(self):
+        self.nwbfile = NWBFile(
+            session_description="session_description",
+            identifier="identifier",
+            session_start_time=datetime.datetime.now(datetime.timezone.utc),
+        )
+
+    def test_constructor_full(self):
+        self.nwbfile.create_device(name="camera1")
+        self.nwbfile.create_device(name="camera2")
+        skeleton = mock_Skeleton(nodes=["nose", "spine", "tail"])
+        pes_3d = [mock_PoseEstimationSeries(name=n, unit="millimeters") for n in skeleton.nodes]
+        pe1 = mock_PoseEstimation(
+            nwbfile=self.nwbfile,
+            name="PoseEstimation_camera1",
+            skeleton=skeleton,
+            device=self.nwbfile.devices["camera1"],
+            add_to_nwbfile=False,
+        )
+        pe2 = mock_PoseEstimation(
+            nwbfile=self.nwbfile,
+            name="PoseEstimation_camera2",
+            skeleton=skeleton,
+            device=self.nwbfile.devices["camera2"],
+            add_to_nwbfile=False,
+        )
+
+        mcpe = MultiCameraPoseEstimation(
+            name="DANNCE_pose",
+            pose_estimation_series=pes_3d,
+            pose_estimations=[pe1, pe2],
+            description="3D pose estimated by DANNCE.",
+            scorer="DANNCE",
+            source_software="DANNCE",
+            source_software_version="2.0.0",
+            skeleton=skeleton,
+        )
+
+        self.assertEqual(mcpe.name, "DANNCE_pose")
+        self.assertEqual(len(mcpe.pose_estimation_series), 3)
+        self.assertEqual(len(mcpe.pose_estimations), 2)
+        self.assertIs(mcpe.pose_estimations[pe1.name], pe1)
+        self.assertIs(mcpe.pose_estimations[pe2.name], pe2)
+        self.assertEqual(mcpe.description, "3D pose estimated by DANNCE.")
+        self.assertEqual(mcpe.source_software_version, "2.0.0")
+        self.assertIs(mcpe.skeleton, skeleton)
+
+    def test_constructor_minimal(self):
+        mcpe = MultiCameraPoseEstimation()
+        self.assertEqual(mcpe.name, "MultiCameraPoseEstimation")
+        self.assertIsNone(mcpe.description)
+        self.assertIsNone(mcpe.skeleton)
+        self.assertEqual(len(mcpe.pose_estimations), 0)
+
+    def test_source_software_version_without_source_software_raises(self):
+        """Test that setting source_software_version without source_software raises, matching PoseEstimation."""
+        msg = (
+            "'source_software_version' was specified without 'source_software'. The version is stored as an "
+            "attribute on the 'source_software' dataset, so 'source_software' must be provided as well."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            MultiCameraPoseEstimation(source_software_version="2.0.0")
+
+    def test_mock_helper(self):
+        mcpe = mock_MultiCameraPoseEstimation(nwbfile=self.nwbfile)
+        self.assertIsInstance(mcpe, MultiCameraPoseEstimation)
+        self.assertEqual(len(mcpe.pose_estimations), 2)
+        for pe in mcpe.pose_estimations.values():
+            self.assertIsNotNone(pe.device)
+            self.assertIsInstance(pe.device, CalibratedCamera)

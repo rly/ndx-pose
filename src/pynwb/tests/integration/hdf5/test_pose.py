@@ -6,6 +6,8 @@ from pynwb.image import ImageSeries
 from pynwb.testing import TestCase, remove_test_file, NWBH5IOFlexMixin
 
 from ndx_pose import (
+    CalibratedCamera,
+    MultiCameraPoseEstimation,
     PoseEstimationSeries,
     PoseEstimation,
     PoseTraining,
@@ -14,6 +16,7 @@ from ndx_pose import (
     TrainingFrames,
 )
 from ndx_pose.testing.mock.pose import (
+    mock_MultiCameraPoseEstimation,
     mock_PoseEstimationSeries,
     mock_Skeleton,
     mock_PoseEstimation,
@@ -160,10 +163,7 @@ class TestPoseEstimationRoundtrip(TestCase):
         pe = PoseEstimation(
             pose_estimation_series=pose_estimation_series,
             description="Estimated positions of front paws using DeepLabCut.",
-            original_videos=["camera1.mp4"],
-            labeled_videos=["camera1_labeled.mp4"],
-            dimensions=np.array([[640, 480]], dtype="uint16"),
-            devices=[self.nwbfile.devices["camera1"]],
+            device=self.nwbfile.devices["camera1"],
             scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
             source_software="DeepLabCut",
             source_software_version="2.2b8",
@@ -186,8 +186,7 @@ class TestPoseEstimationRoundtrip(TestCase):
             self.assertContainerEqual(read_pe.pose_estimation_series["node2"], pose_estimation_series[1])
             self.assertContainerEqual(read_pe.pose_estimation_series["node3"], pose_estimation_series[2])
             self.assertContainerEqual(read_pe.skeleton, skeleton)
-            self.assertEqual(len(read_pe.devices), 1)
-            self.assertContainerEqual(read_pe.devices[0], self.nwbfile.devices["camera1"])
+            self.assertContainerEqual(read_pe.device, self.nwbfile.devices["camera1"])
 
 
 class TestPoseEstimationRoundtripSourceVideo(TestCase):
@@ -227,9 +226,7 @@ class TestPoseEstimationRoundtripSourceVideo(TestCase):
         pe = PoseEstimation(
             pose_estimation_series=pose_estimation_series,
             description="Estimated positions of front paws using DeepLabCut.",
-            original_videos=["camera1.mp4"],
-            dimensions=np.array([[640, 480]], dtype="uint16"),
-            devices=[self.nwbfile.devices["camera1"]],
+            device=self.nwbfile.devices["camera1"],
             scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
             source_software="DeepLabCut",
             source_software_version="2.2b8",
@@ -288,9 +285,7 @@ class TestPoseEstimationRoundtripLabeledVideo(TestCase):
         pe = PoseEstimation(
             pose_estimation_series=pose_estimation_series,
             description="Estimated positions of front paws using DeepLabCut.",
-            labeled_videos=["camera1_labeled.mp4"],
-            dimensions=np.array([[640, 480]], dtype="uint16"),
-            devices=[self.nwbfile.devices["camera1"]],
+            device=self.nwbfile.devices["camera1"],
             scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
             source_software="DeepLabCut",
             source_software_version="2.2b8",
@@ -376,3 +371,222 @@ class TestPoseTrainingRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
 
     def getContainer(self, nwbfile: NWBFile):
         return nwbfile.processing["behavior"]["PoseTraining"]
+
+
+class TestCalibratedCameraRoundtrip(TestCase):
+    """Simple roundtrip test for CalibratedCamera."""
+
+    def setUp(self):
+        self.nwbfile = NWBFile(
+            session_description="session_description",
+            identifier="identifier",
+            session_start_time=datetime.datetime.now(datetime.timezone.utc),
+        )
+        self.path = "test_calibrated_camera.nwb"
+
+    def tearDown(self):
+        remove_test_file(self.path)
+
+    def test_roundtrip(self):
+        """Write a CalibratedCamera and verify all matrices survive the roundtrip."""
+        rng = np.random.default_rng(0)
+
+        intrinsic = np.eye(3, dtype="float32")
+        intrinsic[0, 0] = 800.0
+        intrinsic[1, 1] = 800.0
+        intrinsic[0, 2] = 320.0
+        intrinsic[1, 2] = 240.0
+        rotation = np.eye(3, dtype="float32")
+        translation = rng.standard_normal(3).astype("float32")
+        distortion = np.zeros(5, dtype="float32")
+
+        camera = CalibratedCamera(
+            name="camera1",
+            intrinsic_matrix=intrinsic,
+            rotation_matrix=rotation,
+            translation_vector=translation,
+            distortion_coefficients=distortion,
+        )
+        self.nwbfile.add_device(camera)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            read_nwbfile = io.read()
+            read_camera = read_nwbfile.devices["camera1"]
+
+            self.assertIsInstance(read_camera, CalibratedCamera)
+            np.testing.assert_array_almost_equal(read_camera.intrinsic_matrix, intrinsic)
+            np.testing.assert_array_almost_equal(read_camera.rotation_matrix, rotation)
+            np.testing.assert_array_almost_equal(read_camera.translation_vector, translation)
+            np.testing.assert_array_almost_equal(read_camera.distortion_coefficients, distortion)
+
+    def test_roundtrip_intrinsics_only(self):
+        """CalibratedCamera with only intrinsic_matrix (all optional fields omitted)."""
+        intrinsic = np.eye(3, dtype="float32")
+
+        camera = CalibratedCamera(name="camera1", intrinsic_matrix=intrinsic)
+        self.nwbfile.add_device(camera)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            read_nwbfile = io.read()
+            read_camera = read_nwbfile.devices["camera1"]
+            np.testing.assert_array_almost_equal(read_camera.intrinsic_matrix, intrinsic)
+            self.assertIsNone(read_camera.rotation_matrix)
+            self.assertIsNone(read_camera.translation_vector)
+            self.assertIsNone(read_camera.distortion_coefficients)
+
+
+class TestMultiCameraPoseEstimationRoundtrip(TestCase):
+    """Simple roundtrip test for MultiCameraPoseEstimation."""
+
+    def setUp(self):
+        self.nwbfile = NWBFile(
+            session_description="session_description",
+            identifier="identifier",
+            session_start_time=datetime.datetime.now(datetime.timezone.utc),
+        )
+        self.path = "test_multicamera_pose.nwb"
+
+    def tearDown(self):
+        remove_test_file(self.path)
+
+    def test_roundtrip(self):
+        """Write a MultiCameraPoseEstimation and verify all fields survive the roundtrip."""
+        skeleton = mock_Skeleton(nodes=["nose", "spine", "tail"])
+        skeletons = Skeletons(skeletons=[skeleton])
+
+        rng = np.random.default_rng(1)
+        camera1 = CalibratedCamera(
+            name="camera1",
+            intrinsic_matrix=np.eye(3, dtype="float32"),
+            rotation_matrix=np.eye(3, dtype="float32"),
+            translation_vector=rng.standard_normal(3).astype("float32"),
+            distortion_coefficients=np.zeros(5, dtype="float32"),
+        )
+        camera2 = CalibratedCamera(
+            name="camera2",
+            intrinsic_matrix=np.eye(3, dtype="float32"),
+            rotation_matrix=np.eye(3, dtype="float32"),
+            translation_vector=rng.standard_normal(3).astype("float32"),
+            distortion_coefficients=np.zeros(5, dtype="float32"),
+        )
+        self.nwbfile.add_device(camera1)
+        self.nwbfile.add_device(camera2)
+
+        video1 = ImageSeries(
+            name="camera1_video", description="cam1", unit="NA",
+            format="external", external_file=["cam1.mp4"], rate=30.0, num_samples=10,
+        )
+        video2 = ImageSeries(
+            name="camera2_video", description="cam2", unit="NA",
+            format="external", external_file=["cam2.mp4"], rate=30.0, num_samples=10,
+        )
+        self.nwbfile.add_acquisition(video1)
+        self.nwbfile.add_acquisition(video2)
+
+        pes_list = [
+            mock_PoseEstimationSeries(
+                name=node,
+                data=np.arange(30, dtype=np.float64).reshape((10, 3)),
+                unit="millimeters",
+                reference_frame="(0,0,0) is the midpoint of the camera rig.",
+            )
+            for node in skeleton.nodes
+        ]
+
+        pose_estimations = [
+            PoseEstimation(
+                name="PoseEstimation_camera1",
+                pose_estimation_series=[
+                    mock_PoseEstimationSeries(name=node, unit="pixels") for node in skeleton.nodes
+                ],
+                description="2D pose estimates from camera1.",
+                device=camera1,
+                source_video=video1,
+                skeleton=skeleton,
+            ),
+            PoseEstimation(
+                name="PoseEstimation_camera2",
+                pose_estimation_series=[
+                    mock_PoseEstimationSeries(name=node, unit="pixels") for node in skeleton.nodes
+                ],
+                description="2D pose estimates from camera2.",
+                device=camera2,
+                source_video=video2,
+                skeleton=skeleton,
+            ),
+        ]
+
+        mcpe = MultiCameraPoseEstimation(
+            pose_estimation_series=pes_list,
+            pose_estimations=pose_estimations,
+            description="3D pose estimated by DANNCE.",
+            scorer="DANNCE",
+            source_software="DANNCE",
+            source_software_version="2.0.0",
+            skeleton=skeleton,
+        )
+
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm.add(mcpe)
+        behavior_pm.add(skeletons)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            read_nwbfile = io.read()
+            read_mcpe = read_nwbfile.processing["behavior"]["MultiCameraPoseEstimation"]
+
+            self.assertEqual(read_mcpe.description, "3D pose estimated by DANNCE.")
+            self.assertEqual(read_mcpe.scorer, "DANNCE")
+            self.assertEqual(read_mcpe.source_software, "DANNCE")
+            self.assertEqual(read_mcpe.source_software_version, "2.0.0")
+            self.assertContainerEqual(read_mcpe.skeleton, skeleton)
+
+            self.assertEqual(len(read_mcpe.pose_estimation_series), 3)
+            self.assertIn("nose", read_mcpe.pose_estimation_series)
+
+            self.assertEqual(len(read_mcpe.pose_estimations), 2)
+            read_pe1 = read_mcpe.pose_estimations["PoseEstimation_camera1"]
+            self.assertContainerEqual(read_pe1.device, camera1)
+            self.assertIsInstance(read_pe1.device, CalibratedCamera)
+            np.testing.assert_array_almost_equal(read_pe1.device.intrinsic_matrix, camera1.intrinsic_matrix)
+            self.assertEqual(read_pe1.source_video.external_file[0], "cam1.mp4")
+
+    def test_roundtrip_minimal(self):
+        """MultiCameraPoseEstimation with only required fields (name) survives roundtrip."""
+        mcpe = MultiCameraPoseEstimation(name="MultiCameraPoseEstimation")
+
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm.add(mcpe)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            read_nwbfile = io.read()
+            read_mcpe = read_nwbfile.processing["behavior"]["MultiCameraPoseEstimation"]
+            self.assertIsNone(read_mcpe.description)
+            self.assertIsNone(read_mcpe.scorer)
+            self.assertIsNone(read_mcpe.skeleton)
+            self.assertEqual(len(read_mcpe.pose_estimation_series), 0)
+            self.assertEqual(len(read_mcpe.pose_estimations), 0)
+
+
+class TestMultiCameraPoseEstimationRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
+    """Full roundtrip test using the pynwb.testing infrastructure."""
+
+    def getContainerType(self):
+        return "MultiCameraPoseEstimation"
+
+    def addContainer(self):
+        mock_MultiCameraPoseEstimation(nwbfile=self.nwbfile)
+
+    def getContainer(self, nwbfile: NWBFile):
+        return nwbfile.processing["behavior"]["MultiCameraPoseEstimation"]
