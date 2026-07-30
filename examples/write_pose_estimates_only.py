@@ -50,8 +50,8 @@ camera1 = nwbfile.create_device(
 )
 
 # create ImageSeries that point to the source and labeled video files and add them to the NWBFile.
-# the PoseEstimation object links to these below via 'source_video' and 'labeled_video', providing a formal
-# reference to the videos instead of relying only on the string paths in 'original_videos'/'labeled_videos'.
+# each ImageSeries holds the path to the video file along with its pixel dimensions, frame rate, and frame
+# count. the PoseEstimation object links to them below via 'source_video' and 'labeled_video'.
 source_video = ImageSeries(
     name="source_video",
     description="Video recorded by camera1 and used for pose estimation.",
@@ -131,10 +131,7 @@ pose_estimation = PoseEstimation(
     name="PoseEstimation",
     pose_estimation_series=pose_estimation_series,
     description="Estimated positions of front paws of subject1 using DeepLabCut.",
-    original_videos=["path/to/camera1.mp4"],
-    labeled_videos=["path/to/camera1_labeled.mp4"],
-    dimensions=np.array([[640, 480]], dtype="uint16"),  # pixel dimensions of the video
-    devices=[camera1],
+    device=camera1,
     scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
     source_software="DeepLabCut",
     source_software_version="2.3.8",

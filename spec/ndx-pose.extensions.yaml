@@ -94,9 +94,9 @@ groups:
         shape:
           - null
         doc:
-          DEPRECATED. Path to the original video file. Note that this string path might be fragile
-          unless a relative path is used and care is taken to keep it consistent.
-          Consider using the 'source_video' link instead for a formal reference.
+          DEPRECATED. Please use the 'source_video' link instead.
+          Paths to the original video files. Note that these string paths might be fragile
+          unless relative paths are used and care is taken to keep them consistent.
         quantity: "?"
       - name: labeled_videos
         dtype: text
@@ -105,9 +105,9 @@ groups:
         shape:
           - null
         doc:
-          DEPRECATED. Path to the labeled video file. Note that this string path might be fragile
-          unless a relative path is used and care is taken to keep it consistent.
-          Consider using the 'labeled_video' link instead for a formal reference.
+          DEPRECATED. Please use the 'labeled_video' link instead.
+          Paths to the labeled video files. Note that these string paths might be fragile
+          unless relative paths are used and care is taken to keep them consistent.
         quantity: "?"
       - name: dimensions
         dtype: uint8
@@ -117,7 +117,10 @@ groups:
         shape:
           - null
           - 2
-        doc: DEPRECATED. Dimensions of the labeled video file.
+        doc:
+          DEPRECATED. Please use the 'dimension' field of the ImageSeries linked as
+          'source_video' or 'labeled_video' instead.
+          Dimensions of each labeled video file.
         quantity: "?"
       - name: scorer
         dtype: text
@@ -154,17 +157,16 @@ groups:
         target_type: ImageSeries
         doc: Link to an ImageSeries containing the source video used for pose
           estimation. The ImageSeries should be stored in the NWBFile (e.g., in
-          acquisition). When available, this field should be preferred over
-          'original_videos' as it provides a formal reference rather than a file
-          path string.
+          acquisition). It holds the video data, or the path to an external video
+          file, along with the dimensions and frame timing of the video.
         quantity: "?"
       - name: labeled_video
         target_type: ImageSeries
         doc: Link to an ImageSeries containing the labeled video (with pose
           estimation overlays) produced from the source video. The ImageSeries
-          should be stored in the NWBFile (e.g., in acquisition). When available,
-          this field should be preferred over 'labeled_videos' as it provides a
-          formal reference rather than a file path string.
+          should be stored in the NWBFile (e.g., in acquisition). It holds the video
+          data, or the path to an external video file, along with the dimensions and
+          frame timing of the video.
         quantity: "?"
   - neurodata_type_def: TrainingFrame
     neurodata_type_inc: NWBDataInterface

@@ -154,9 +154,9 @@ class PoseEstimation(MultiContainerInterface):
             "type": ("array_data", "data"),
             "shape": (None,),
             "doc": (
-                "Paths to the original video files. The number of files should equal the number of camera devices. "
-                "Note: these string paths might be fragile unless relative paths are used and care is taken to "
-                "keep them consistent. Consider using 'source_video' instead for a formal link to an ImageSeries."
+                "DEPRECATED. Please use the 'source_video' argument instead. "
+                "Paths to the original video files. Note: these string paths might be fragile unless relative "
+                "paths are used and care is taken to keep them consistent."
             ),
             "default": None,
         },
@@ -165,9 +165,9 @@ class PoseEstimation(MultiContainerInterface):
             "type": ("array_data", "data"),
             "shape": (None,),
             "doc": (
-                "Paths to the labeled video files. The number of files should equal the number of camera devices. "
-                "Note: these string paths might be fragile unless relative paths are used and care is taken to "
-                "keep them consistent. Consider using 'labeled_video' instead for a formal link to an ImageSeries."
+                "DEPRECATED. Please use the 'labeled_video' argument instead. "
+                "Paths to the labeled video files. Note: these string paths might be fragile unless relative "
+                "paths are used and care is taken to keep them consistent."
             ),
             "default": None,
         },
@@ -176,8 +176,9 @@ class PoseEstimation(MultiContainerInterface):
             "type": ("array_data", "data"),
             "shape": (None, 2),
             "doc": (
-                "Dimensions of each labeled video file. The number of dimension pairs should equal the number of "
-                "camera devices."
+                "DEPRECATED. Please use the 'dimension' field of the ImageSeries linked as 'source_video' or "
+                "'labeled_video' instead. "
+                "Dimensions of each labeled video file."
             ),
             "default": None,
         },
@@ -238,8 +239,8 @@ class PoseEstimation(MultiContainerInterface):
             "doc": (
                 "Link to an ImageSeries containing the source video used for pose estimation. "
                 "The ImageSeries should be stored in the NWBFile (e.g., in acquisition) and linked here. "
-                "When available, this field should be preferred over 'original_videos' as it provides "
-                "a formal reference rather than a file path string."
+                "It holds the video data, or the path to an external video file, along with the "
+                "dimensions and frame timing of the video."
             ),
             "default": None,
         },
@@ -249,8 +250,8 @@ class PoseEstimation(MultiContainerInterface):
             "doc": (
                 "Link to an ImageSeries containing the labeled video (with pose estimation overlays) "
                 "produced from the source video. The ImageSeries should be stored in the NWBFile "
-                "(e.g., in acquisition) and linked here. When available, this field should be preferred "
-                "over 'labeled_videos' as it provides a formal reference rather than a file path string."
+                "(e.g., in acquisition) and linked here. It holds the video data, or the path to an "
+                "external video file, along with the dimensions and frame timing of the video."
             ),
             "default": None,
         },
@@ -332,6 +333,27 @@ class PoseEstimation(MultiContainerInterface):
             raise ValueError("The device linked from a PoseEstimation object must be added to the NWBFile first.")
 
         original_videos, labeled_videos, dimensions = popargs("original_videos", "labeled_videos", "dimensions", kwargs)
+        # warn on new, no warning on construction from existing file
+        if not self._in_construct_mode:
+            if original_videos is not None:
+                msg = (
+                    "The 'original_videos' constructor argument is deprecated. Please use the 'source_video' "
+                    "argument instead. This will be removed in a future release."
+                )
+                warnings.warn(msg, DeprecationWarning)
+            if labeled_videos is not None:
+                msg = (
+                    "The 'labeled_videos' constructor argument is deprecated. Please use the 'labeled_video' "
+                    "argument instead. This will be removed in a future release."
+                )
+                warnings.warn(msg, DeprecationWarning)
+            if dimensions is not None:
+                msg = (
+                    "The 'dimensions' constructor argument is deprecated. Please use the 'dimension' field of the "
+                    "ImageSeries linked as 'source_video' or 'labeled_video' instead. This will be removed in a "
+                    "future release."
+                )
+                warnings.warn(msg, DeprecationWarning)
 
         pose_estimation_series, description = popargs("pose_estimation_series", "description", kwargs)
         scorer = popargs("scorer", kwargs)

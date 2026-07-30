@@ -29,6 +29,12 @@
 ### Minor updates
 - Bumped the minimum supported `pynwb` to 4.0.0 (and `hdmf` to 6.1.0). `num_samples` on `ImageSeries` and the
   requirement to set it for external, rate-timed videos are only available in pynwb 4.0. @rly (#62)
+- The `original_videos`, `labeled_videos`, and `dimensions` constructor arguments of `PoseEstimation` are
+  deprecated and raise a `DeprecationWarning` when set. Use the `source_video` and `labeled_video` links,
+  which reference an `ImageSeries` in the NWBFile and carry the pixel dimensions in its `dimension` field.
+  The three fields are still read from existing files without warning. The check that the number of video
+  paths and dimension pairs matches the number of camera devices, which warned since 0.2.0, is removed:
+  a `PoseEstimation` object covers one camera view as of 0.4.0. @alessandratrapani (#57)
 
 ### Bug fixes
 - Set `num_samples` on the external `ImageSeries` objects used in the mocks, tests, and examples. pynwb 4.0

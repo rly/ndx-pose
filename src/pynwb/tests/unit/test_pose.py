@@ -312,6 +312,58 @@ class TestPoseEstimationConstructor(TestCase):
             devices = pe.devices
         self.assertEqual(devices, [])
 
+    def test_deprecated_original_videos(self):
+        """Test that the deprecated 'original_videos' argument warns."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = (
+            "The 'original_videos' constructor argument is deprecated. Please use the 'source_video' "
+            "argument instead. This will be removed in a future release."
+        )
+        with self.assertWarnsWith(DeprecationWarning, msg):
+            pe = PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                original_videos=["camera1.mp4"],
+            )
+        self.assertEqual(pe.original_videos, ["camera1.mp4"])
+
+    def test_deprecated_labeled_videos(self):
+        """Test that the deprecated 'labeled_videos' argument warns."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = (
+            "The 'labeled_videos' constructor argument is deprecated. Please use the 'labeled_video' "
+            "argument instead. This will be removed in a future release."
+        )
+        with self.assertWarnsWith(DeprecationWarning, msg):
+            pe = PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                labeled_videos=["camera1_labeled.mp4"],
+            )
+        self.assertEqual(pe.labeled_videos, ["camera1_labeled.mp4"])
+
+    def test_deprecated_dimensions(self):
+        """Test that the deprecated 'dimensions' argument warns."""
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        msg = (
+            "The 'dimensions' constructor argument is deprecated. Please use the 'dimension' field of the "
+            "ImageSeries linked as 'source_video' or 'labeled_video' instead. This will be removed in a "
+            "future release."
+        )
+        with self.assertWarnsWith(DeprecationWarning, msg):
+            pe = PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                dimensions=np.array([[640, 480]], dtype="uint16"),
+            )
+        np.testing.assert_array_equal(pe.dimensions, np.array([[640, 480]], dtype="uint16"))
+
     def test_constructor_nodes_edges(self):
         """Test the old constructor for PoseEstimation with nodes and edges."""
         front_left_paw = mock_PoseEstimationSeries(
