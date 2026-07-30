@@ -56,8 +56,8 @@ nwbfile.subject = subject
 # 2. Add calibrated camera devices (must be in NWBFile before linking).
 #    Each CalibratedCamera carries its own intrinsic/extrinsic calibration, so there is no
 #    row-order matching against a separate calibration object, and the same camera can be
-#    linked from multiple PoseEstimation/MultiCameraPoseEstimation objects (e.g., one per
-#    subject in a multi-subject session) without duplicating the rig.
+#    linked from multiple PoseEstimation objects (e.g., one per subject in a multi-subject
+#    session) without duplicating the rig.
 #    A CalibratedCamera is a Device, so it accepts the full Device metadata, including a link
 #    to a DeviceModel shared by all cameras of the same make and model.
 # ---------------------------------------------------------------------------

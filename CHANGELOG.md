@@ -14,9 +14,9 @@
 - Added `CalibratedCamera` neurodata type, a `Device` extended with intrinsic and extrinsic calibration
   parameters (intrinsic matrix, rotation matrix, translation vector, distortion coefficients) for that
   single camera. Because it is a `Device`, it is added once to the NWBFile and can be linked to by
-  reference from multiple `PoseEstimation`/`MultiCameraPoseEstimation` objects (e.g., one per subject in
-  a multi-subject recording session such as sDANNCE), so the camera rig and its calibration are never
-  duplicated and there is no row-order matching to maintain. @alessandratrapani (#57)
+  reference from multiple `PoseEstimation` objects (e.g., one per subject in a multi-subject recording
+  session such as sDANNCE), so the camera rig and its calibration are never duplicated and there is no
+  row-order matching to maintain. @alessandratrapani (#57)
 - Added `MultiCameraPoseEstimation` neurodata type for storing 3D world-space pose estimates from
   multi-camera setups (e.g. DANNCE, Anipose). It contains `PoseEstimationSeries` in world coordinates,
   one `PoseEstimation` per camera view, and an optional link to a `Skeleton`. @alessandratrapani (#57)

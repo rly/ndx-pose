@@ -31,9 +31,8 @@ For multi-camera setups that produce 3D world-space coordinates (e.g. DANNCE, An
 
 - `CalibratedCamera` which extends `Device` with intrinsic and extrinsic calibration parameters (intrinsic matrix,
   rotation matrix, translation vector, distortion coefficients) for that single camera. Because it is a `Device`,
-  it is added once to the NWBFile and can be linked to by reference from multiple `PoseEstimation`/
-  `MultiCameraPoseEstimation` objects (e.g., one per subject in a multi-subject session), so the camera rig and
-  its calibration are never duplicated.
+  it is added once to the NWBFile and can be linked to by reference from multiple `PoseEstimation` objects
+  (e.g., one per subject in a multi-subject session), so the camera rig and its calibration are never duplicated.
 - `MultiCameraPoseEstimation` which stores 3D world-space `PoseEstimationSeries`, one `PoseEstimation` per camera
   view (holding that camera's 2D pixel-space estimates and its device link), and an optional link to a `Skeleton`.
 

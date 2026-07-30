@@ -304,9 +304,9 @@ groups:
       CalibratedCamera (instead of a plain Device) from a PoseEstimation object
       wherever calibration coordinates are available. Because it is a Device, it is
       added once to the NWBFile (e.g., in general/devices) and can be linked to by
-      reference from multiple PoseEstimation and MultiCameraPoseEstimation objects
-      (e.g., one per subject in a multi-subject recording session), so the camera
-      rig and its calibration are never duplicated.
+      reference from multiple PoseEstimation objects (e.g., one per subject in a
+      multi-subject recording session), so the camera rig and its calibration are
+      never duplicated.
     datasets:
       - name: intrinsic_matrix
         dtype: float32

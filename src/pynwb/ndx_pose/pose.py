@@ -416,8 +416,8 @@ class CalibratedCamera(Device):
     """A Device representing a single camera, extended with its calibration parameters.
 
     Because it is a Device, a CalibratedCamera is added once to the NWBFile and can be linked to by
-    reference from multiple PoseEstimation and MultiCameraPoseEstimation objects (e.g., one per subject
-    in a multi-subject recording session), so the camera rig and its calibration are never duplicated.
+    reference from multiple PoseEstimation objects (e.g., one per subject in a multi-subject recording
+    session), so the camera rig and its calibration are never duplicated.
     """
 
     __nwbfields__ = (
