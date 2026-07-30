@@ -104,7 +104,7 @@ def mock_PoseEstimation(
     NWBFile should be provided so that the device and skeleton can be added to the NWBFile.
     """
     skeleton = skeleton or mock_Skeleton()
-    pose_estimation_series = pose_estimation_series or [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+    pose_estimation_series = pose_estimation_series or [mock_PoseEstimationSeries(name=node) for node in skeleton.nodes]
     pe = PoseEstimation(
         name=name or "PoseEstimation",
         pose_estimation_series=pose_estimation_series,
