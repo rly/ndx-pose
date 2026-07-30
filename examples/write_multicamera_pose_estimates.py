@@ -27,6 +27,7 @@ import datetime
 
 import numpy as np
 from pynwb import NWBHDF5IO, NWBFile
+from pynwb.device import DeviceModel
 from pynwb.file import Subject
 from pynwb.image import ImageSeries
 
@@ -57,17 +58,28 @@ nwbfile.subject = subject
 #    row-order matching against a separate calibration object, and the same camera can be
 #    linked from multiple PoseEstimation/MultiCameraPoseEstimation objects (e.g., one per
 #    subject in a multi-subject session) without duplicating the rig.
+#    A CalibratedCamera is a Device, so it accepts the full Device metadata, including a link
+#    to a DeviceModel shared by all cameras of the same make and model.
 # ---------------------------------------------------------------------------
 rng = np.random.default_rng(0)
 
+camera_model = DeviceModel(
+    name="acA1300",
+    manufacturer="Basler",
+    model_number="acA1300-200um",
+    description="Basler ace USB 3.0 monochrome camera.",
+)
+nwbfile.add_device_model(camera_model)
+
 camera_names = ["camera1", "camera2", "camera3"]
 camera_descriptions = [
-    "Basler acA1300 - lateral view, left side",
-    "Basler acA1300 - lateral view, right side",
-    "Basler acA1300 - top-down view",
+    "Lateral view, left side",
+    "Lateral view, right side",
+    "Top-down view",
 ]
+camera_serial_numbers = ["SN-0001", "SN-0002", "SN-0003"]
 cameras = []
-for name, description in zip(camera_names, camera_descriptions):
+for name, description, serial_number in zip(camera_names, camera_descriptions, camera_serial_numbers):
     intrinsic_matrix = np.eye(3, dtype="float32")
     intrinsic_matrix[0, 0] = 800.0  # fx
     intrinsic_matrix[1, 1] = 800.0  # fy
@@ -76,7 +88,8 @@ for name, description in zip(camera_names, camera_descriptions):
     camera = CalibratedCamera(
         name=name,
         description=description,
-        manufacturer="Basler",
+        model=camera_model,
+        serial_number=serial_number,
         intrinsic_matrix=intrinsic_matrix,
         rotation_matrix=np.eye(3, dtype="float32"),
         translation_vector=rng.standard_normal(3).astype("float32"),
@@ -210,6 +223,8 @@ with NWBHDF5IO(path, mode="r", load_namespaces=True) as io:
     pe1 = read_mcpe.pose_estimations["PoseEstimation_camera1"]
     camera1 = pe1.device
     print(f"  camera1 device        : {camera1.name}")
+    print(f"  camera1 model         : {camera1.model.name} ({camera1.model.manufacturer})")
+    print(f"  camera1 serial number : {camera1.serial_number}")
     print(f"  camera1 intrinsic     : {camera1.intrinsic_matrix[:]}")
     print(f"  camera1 video         : {pe1.source_video.external_file[0]}")
     print(f"  camera1 2D keypoints  : {len(pe1.pose_estimation_series)} (none for sDANNCE)")

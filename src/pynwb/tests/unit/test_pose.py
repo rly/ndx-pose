@@ -2,7 +2,7 @@ import datetime
 import numpy as np
 
 from pynwb import NWBFile
-from pynwb.device import Device
+from pynwb.device import Device, DeviceModel
 from pynwb.testing import TestCase
 from pynwb.file import Subject
 
@@ -588,10 +588,12 @@ class TestCalibratedCameraConstructor(TestCase):
         t = np.zeros(3, dtype="float32")
         d = np.zeros(5, dtype="float32")
 
+        model = DeviceModel(name="acA1300", manufacturer="Basler", model_number="acA1300-200um")
         camera = CalibratedCamera(
             name="camera1",
             description="A camera.",
-            manufacturer="Basler",
+            model=model,
+            serial_number="SN-0001",
             intrinsic_matrix=K,
             rotation_matrix=R,
             translation_vector=t,
@@ -599,6 +601,8 @@ class TestCalibratedCameraConstructor(TestCase):
         )
 
         self.assertEqual(camera.name, "camera1")
+        self.assertIs(camera.model, model)
+        self.assertEqual(camera.serial_number, "SN-0001")
         np.testing.assert_array_equal(camera.intrinsic_matrix, K)
         np.testing.assert_array_equal(camera.rotation_matrix, R)
         np.testing.assert_array_equal(camera.translation_vector, t)

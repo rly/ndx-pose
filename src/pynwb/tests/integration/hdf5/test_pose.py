@@ -2,6 +2,7 @@ import datetime
 import numpy as np
 
 from pynwb import NWBHDF5IO, NWBFile
+from pynwb.device import DeviceModel
 from pynwb.image import ImageSeries
 from pynwb.testing import TestCase, remove_test_file, NWBH5IOFlexMixin
 
@@ -400,8 +401,14 @@ class TestCalibratedCameraRoundtrip(TestCase):
         translation = rng.standard_normal(3).astype("float32")
         distortion = np.zeros(5, dtype="float32")
 
+        model = DeviceModel(name="acA1300", manufacturer="Basler", model_number="acA1300-200um")
+        self.nwbfile.add_device_model(model)
+
         camera = CalibratedCamera(
             name="camera1",
+            description="Lateral view, left side.",
+            model=model,
+            serial_number="SN-0001",
             intrinsic_matrix=intrinsic,
             rotation_matrix=rotation,
             translation_vector=translation,
@@ -417,6 +424,10 @@ class TestCalibratedCameraRoundtrip(TestCase):
             read_camera = read_nwbfile.devices["camera1"]
 
             self.assertIsInstance(read_camera, CalibratedCamera)
+            self.assertEqual(read_camera.description, "Lateral view, left side.")
+            self.assertEqual(read_camera.serial_number, "SN-0001")
+            self.assertEqual(read_camera.model.name, "acA1300")
+            self.assertEqual(read_camera.model.manufacturer, "Basler")
             np.testing.assert_array_almost_equal(read_camera.intrinsic_matrix, intrinsic)
             np.testing.assert_array_almost_equal(read_camera.rotation_matrix, rotation)
             np.testing.assert_array_almost_equal(read_camera.translation_vector, translation)

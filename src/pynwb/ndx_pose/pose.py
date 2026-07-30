@@ -453,7 +453,8 @@ class CalibratedCamera(Device):
             "doc": "Lens distortion coefficients for this camera.",
             "default": None,
         },
-        *get_docval(Device.__init__, "description", "manufacturer"),
+        # every Device constructor argument except 'name', which is redefined above
+        *get_docval(Device.__init__)[1:],
         allow_positional=AllowPositional.ERROR,
     )
     def __init__(self, **kwargs):
