@@ -50,9 +50,9 @@ class PoseEstimationMap(NWBContainerMapper):
             raise ValueError(
                 "This PoseEstimation group links %d Device objects, but a PoseEstimation object represents pose "
                 "estimates from a single camera view and supports only one device. The file was written with "
-                "ndx-pose < 0.4.0, when a PoseEstimation object could link to multiple cameras. Reading it is not "
-                "supported; each camera view needs its own PoseEstimation object inside a "
-                "MultiCameraPoseEstimation object." % len(device_links)
+                "ndx-pose < 0.4.0, when a PoseEstimation object could link to multiple cameras. Install "
+                "ndx-pose < 0.4.0 to read this file as written, or rewrite it with each camera view as its own "
+                "PoseEstimation object inside a MultiCameraPoseEstimation object." % len(device_links)
             )
         return NO_OVERRIDE
 
