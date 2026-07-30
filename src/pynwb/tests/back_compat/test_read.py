@@ -63,17 +63,14 @@ def test_0_3_0_poseestimation_two_cameras():
     """
     f = Path(__file__).parent / "0.3.0_poseestimation_two_cameras.nwb"
     with get_io(f) as io:
-        with pytest.raises(Exception) as exc_info:
+        # HDMF reports a failed construction as a ConstructError chained to the underlying error, so match
+        # on the message HDMF interpolates and check the chained error for the type ndx-pose raises.
+        with pytest.raises(Exception, match="supports only one device") as exc_info:
             io.read()
 
-    causes = []
-    error = exc_info.value
-    while error is not None:
-        causes.append(error)
-        error = error.__cause__
-    messages = [str(c) for c in causes if isinstance(c, ValueError)]
-    assert any("supports only one device" in m for m in messages), causes
-    assert any("MultiCameraPoseEstimation" in m for m in messages), causes
+    cause = exc_info.value.__cause__
+    assert isinstance(cause, ValueError), cause
+    assert "MultiCameraPoseEstimation" in str(cause)
 
 
 @pytest.mark.parametrize(
