@@ -35,6 +35,9 @@
   The three fields are still read from existing files without warning. The check that the number of video
   paths and dimension pairs matches the number of camera devices, which warned since 0.2.0, is removed:
   a `PoseEstimation` object covers one camera view as of 0.4.0. @alessandratrapani (#57)
+- `ndx_pose.testing.mock.mock_PoseEstimation` defaults `original_videos`, `labeled_videos`, and `dimensions`
+  to `None` instead of sample values, so the mock no longer triggers the deprecation warnings for those three
+  arguments. Pass them explicitly to exercise the deprecated fields. @alessandratrapani (#57)
 
 ### Bug fixes
 - Set `num_samples` on the external `ImageSeries` objects used in the mocks, tests, and examples. pynwb 4.0
