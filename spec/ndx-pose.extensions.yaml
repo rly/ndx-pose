@@ -311,16 +311,16 @@ groups:
       - name: intrinsic_matrix
         dtype: float32
         shape:
-          - - 3
-            - 3
+          - 3
+          - 3
         doc:
           Intrinsic camera matrix K, encoding focal length and principal point.
           Shape (3, 3).
       - name: rotation_matrix
         dtype: float32
         shape:
-          - - 3
-            - 3
+          - 3
+          - 3
         doc:
           Rotation matrix R mapping world coordinates to this camera's coordinate
           frame. Shape (3, 3).
