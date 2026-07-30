@@ -1,4 +1,5 @@
 from pynwb import register_map
+from pynwb.device import Device
 from pynwb.io.base import TimeSeriesMap
 from pynwb.io.core import NWBContainerMapper
 
@@ -23,6 +24,32 @@ class PoseEstimationMap(NWBContainerMapper):
         super().__init__(spec)
         source_software_spec = self.spec.get_dataset("source_software")
         self.map_spec("source_software_version", source_software_spec.get_attribute("version"))
+
+    @NWBContainerMapper.constructor_arg("device")
+    def device(self, builder, manager):
+        """Raise when the GroupBuilder links more than one Device.
+
+        Used when constructing a PoseEstimation container from a written file.
+
+        ndx-pose 0.4.0 scoped PoseEstimation to a single camera view and named the Device link "device".
+        Data written with earlier versions holds zero or more Device links, each named after its target.
+        HDMF resolves links by type, so a PoseEstimation group that links two cameras would set the
+        'device' constructor arg to a list of Device objects. Raise here with an explanation of how that
+        data is stored as of 0.4.0.
+
+        Returning None leaves the 'device' constructor arg to HDMF's usual link resolution, which yields
+        the single linked Device, or nothing when no Device is linked.
+        """
+        device_links = [link for link in builder.links.values() if issubclass(manager.get_cls(link.builder), Device)]
+        if len(device_links) > 1:
+            raise ValueError(
+                "This PoseEstimation group links %d Device objects, but a PoseEstimation object represents pose "
+                "estimates from a single camera view and supports only one device. The file was written with "
+                "ndx-pose < 0.4.0, when a PoseEstimation object could link to multiple cameras. Reading it is not "
+                "supported; each camera view needs its own PoseEstimation object inside a "
+                "MultiCameraPoseEstimation object." % len(device_links)
+            )
+        return None
 
     @NWBContainerMapper.constructor_arg("nodes")
     def nodes(self, builder, manager):
