@@ -1,9 +1,14 @@
+from hdmf.build import ObjectMapper
 from pynwb import register_map
 from pynwb.device import Device
 from pynwb.io.base import TimeSeriesMap
 from pynwb.io.core import NWBContainerMapper
 
 from ..pose import MultiCameraPoseEstimation, PoseEstimation, PoseEstimationSeries
+
+# ObjectMapper.NO_OVERRIDE is the sentinel a constructor_arg override function returns to fall through to
+# the value built from the file. hdmf < 6.2.0 has no sentinel and uses a None return for that.
+NO_OVERRIDE = getattr(ObjectMapper, "NO_OVERRIDE", None)
 
 
 @register_map(PoseEstimationSeries)
@@ -37,8 +42,8 @@ class PoseEstimationMap(NWBContainerMapper):
         'device' constructor arg to a list of Device objects. Raise here with an explanation of how that
         data is stored as of 0.4.0.
 
-        Returning None leaves the 'device' constructor arg to HDMF's usual link resolution, which yields
-        the single linked Device, or nothing when no Device is linked.
+        Returning NO_OVERRIDE leaves the 'device' constructor arg to HDMF's usual link resolution, which
+        yields the single linked Device, or nothing when no Device is linked.
         """
         device_links = [link for link in builder.links.values() if issubclass(manager.get_cls(link.builder), Device)]
         if len(device_links) > 1:
@@ -49,7 +54,7 @@ class PoseEstimationMap(NWBContainerMapper):
                 "supported; each camera view needs its own PoseEstimation object inside a "
                 "MultiCameraPoseEstimation object." % len(device_links)
             )
-        return None
+        return NO_OVERRIDE
 
     @NWBContainerMapper.constructor_arg("nodes")
     def nodes(self, builder, manager):
@@ -62,14 +67,12 @@ class PoseEstimationMap(NWBContainerMapper):
         PoseEstimation container. When data written with ndx-pose versions < 0.2.0 are read, the 'nodes' and
         'edges' arguments in the PoseEstimation constructor are set to the values of the "nodes" and "edges"
         DatasetBuilders read from the file. When data written with ndx-pose versions >= 0.2.0 are read,
-        'nodes' and 'edges' are set to None in the PoseEstimation constructor.
+        'nodes' and 'edges' are left to the PoseEstimation constructor defaults.
         """
         nodes_builder = builder.datasets.get("nodes")
         if nodes_builder:
-            nodes = nodes_builder.data
-        else:
-            nodes = None
-        return nodes
+            return nodes_builder.data
+        return NO_OVERRIDE
 
     @NWBContainerMapper.constructor_arg("edges")
     def edges(self, builder, manager):
@@ -82,14 +85,12 @@ class PoseEstimationMap(NWBContainerMapper):
         PoseEstimation container. When data written with ndx-pose versions < 0.2.0 are read, the 'nodes' and
         'edges' arguments in the PoseEstimation constructor are set to the values of the "nodes" and "edges"
         DatasetBuilders read from the file. When data written with ndx-pose versions >= 0.2.0 are read,
-        'nodes' and 'edges' are set to None in the PoseEstimation constructor.
+        'nodes' and 'edges' are left to the PoseEstimation constructor defaults.
         """
         edges_builder = builder.datasets.get("edges")
         if edges_builder:
-            edges = edges_builder.data
-        else:
-            edges = None
-        return edges
+            return edges_builder.data
+        return NO_OVERRIDE
 
 
 @register_map(MultiCameraPoseEstimation)
