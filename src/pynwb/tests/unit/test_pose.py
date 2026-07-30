@@ -307,7 +307,8 @@ class TestPoseEstimationConstructor(TestCase):
         skeleton = mock_Skeleton()
         pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
         pe = PoseEstimation(pose_estimation_series=pose_estimation_series, skeleton=skeleton)
-        with self.assertWarnsWith(DeprecationWarning, "PoseEstimation.devices is deprecated. Please use PoseEstimation.device instead."):
+        msg = "PoseEstimation.devices is deprecated. Please use PoseEstimation.device instead."
+        with self.assertWarnsWith(DeprecationWarning, msg):
             devices = pe.devices
         self.assertEqual(devices, [])
 
