@@ -2,6 +2,14 @@
 
 ## ndx-pose 0.4.0 (upcoming)
 
+### Breaking changes
+- Reading an NWB file written with ndx-pose < 0.4.0 in which a single `PoseEstimation` object links more than
+  one camera `Device` raises an error. A `PoseEstimation` object covers one camera view as of 0.4.0, so there
+  is no single `device` to assign those links to. Store each camera view as its own `PoseEstimation` object
+  inside a `MultiCameraPoseEstimation` object. Files in which a `PoseEstimation` object links zero or one
+  camera `Device` are unaffected and read as before, with the linked camera available as
+  `PoseEstimation.device`. @alessandratrapani (#57)
+
 ### New neurodata types
 - Added `CalibratedCamera` neurodata type, a `Device` extended with intrinsic and extrinsic calibration
   parameters (intrinsic matrix, rotation matrix, translation vector, distortion coefficients) for that
