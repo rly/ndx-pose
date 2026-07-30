@@ -457,7 +457,10 @@ class CalibratedCamera(Device):
             "name": "distortion_coefficients",
             "type": ("array_data", "data"),
             "shape": (None,),
-            "doc": "Lens distortion coefficients for this camera.",
+            "doc": (
+                "Lens distortion coefficients for this camera. Length depends on the distortion model "
+                "(typically 4 or 5 for radial-tangential)."
+            ),
             "default": None,
         },
         # every Device constructor argument except 'name', which is redefined above
