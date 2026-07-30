@@ -1,4 +1,6 @@
 import datetime
+import warnings
+
 import numpy as np
 
 from pynwb import NWBHDF5IO, NWBFile
@@ -188,6 +190,55 @@ class TestPoseEstimationRoundtrip(TestCase):
             self.assertContainerEqual(read_pe.pose_estimation_series["node3"], pose_estimation_series[2])
             self.assertContainerEqual(read_pe.skeleton, skeleton)
             self.assertContainerEqual(read_pe.device, self.nwbfile.devices["camera1"])
+
+
+class TestPoseEstimationRoundtripDeprecatedVideoFields(TestCase):
+    """Roundtrip test for the deprecated original_videos, labeled_videos, and dimensions fields."""
+
+    def setUp(self):
+        self.nwbfile = NWBFile(
+            session_description="session_description",
+            identifier="identifier",
+            session_start_time=datetime.datetime.now(datetime.timezone.utc),
+        )
+        self.nwbfile.create_device(name="camera1")
+        self.path = "test_pose.nwb"
+
+    def tearDown(self):
+        remove_test_file(self.path)
+
+    def test_roundtrip(self):
+        """Write a PoseEstimation with the deprecated video fields set and read the values back."""
+        skeleton = mock_Skeleton()
+        skeletons = Skeletons(skeletons=[skeleton])
+
+        pose_estimation_series = [mock_PoseEstimationSeries(name=node) for node in skeleton.nodes]
+        dimensions = np.array([[640, 480]], dtype="uint16")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            pe = PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                description="Estimated positions of front paws using DeepLabCut.",
+                original_videos=["camera1.mp4"],
+                labeled_videos=["camera1_labeled.mp4"],
+                dimensions=dimensions,
+                device=self.nwbfile.devices["camera1"],
+                skeleton=skeleton,
+            )
+
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm.add(pe)
+        behavior_pm.add(skeletons)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            read_nwbfile = io.read()
+            read_pe = read_nwbfile.processing["behavior"]["PoseEstimation"]
+            np.testing.assert_array_equal(read_pe.original_videos[:], ["camera1.mp4"])
+            np.testing.assert_array_equal(read_pe.labeled_videos[:], ["camera1_labeled.mp4"])
+            np.testing.assert_array_equal(read_pe.dimensions[:], dimensions)
 
 
 class TestPoseEstimationRoundtripSourceVideo(TestCase):
