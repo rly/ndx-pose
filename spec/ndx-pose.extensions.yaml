@@ -350,7 +350,7 @@ groups:
     doc:
       Group that holds 3D pose estimation data computed from multiple synchronized
       cameras. Unlike PoseEstimation (single-camera, pixel-space), this type stores
-      keypoints in a shared 3D world-space reference frame and organises per-camera
+      keypoints in a shared 3D world-space reference frame and organizes per-camera
       2D data through PoseEstimation children, one per camera view, each of which
       links to the camera Device (typically a CalibratedCamera, so that calibration
       travels with the camera rather than being duplicated here). Designed for

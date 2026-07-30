@@ -482,7 +482,7 @@ class MultiCameraPoseEstimation(MultiContainerInterface):
 
     Unlike PoseEstimation (single-camera, pixel-space), this type stores keypoints in a shared 3D
     world-space reference frame. Per-camera 2D data (device link, source video, optional 2D estimates)
-    is organised through PoseEstimation children, one per camera view.
+    is organized through PoseEstimation children, one per camera view.
     """
 
     __clsconf__ = [

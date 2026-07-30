@@ -154,9 +154,9 @@ pose_estimations = [
 # ---------------------------------------------------------------------------
 # 6. Simulate 3D pose estimation output.
 #    sDANNCE triangulates directly from the raw multi-camera video (no intermediate
-#    per-camera 2D keypoints) into (n_frames, 3) arrays in millimetres (world space).
+#    per-camera 2D keypoints) into (n_frames, 3) arrays in millimeters (world space).
 # ---------------------------------------------------------------------------
-reference_frame = "(0, 0, 0) is the geometric centre of the sDANNCE camera rig."
+reference_frame = "(0, 0, 0) is the geometric center of the sDANNCE camera rig."
 confidence_definition = "Maximum probability from the 3D volumetric heatmap."
 
 pose_estimation_series_3d = []
@@ -191,7 +191,7 @@ mcpe = MultiCameraPoseEstimation(
 )
 
 # ---------------------------------------------------------------------------
-# 8. Add everything to a behaviour processing module
+# 8. Add everything to a behavior processing module
 # ---------------------------------------------------------------------------
 behavior_pm = nwbfile.create_processing_module(
     name="behavior",
