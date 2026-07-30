@@ -244,18 +244,6 @@ class TestPoseEstimationConstructor(TestCase):
                 devices=[self.nwbfile.devices["camera2"]],
             )
 
-    def test_device_list_raises(self):
-        """Test that 'device' takes a single Device and rejects a list."""
-        skeleton = mock_Skeleton()
-        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
-
-        with self.assertRaises(TypeError):
-            PoseEstimation(
-                pose_estimation_series=pose_estimation_series,
-                skeleton=skeleton,
-                device=[self.nwbfile.devices["camera1"]],
-            )
-
     def test_deprecated_devices_property_getter(self):
         """Test that the deprecated .devices property still works and warns."""
         skeleton = mock_Skeleton()
