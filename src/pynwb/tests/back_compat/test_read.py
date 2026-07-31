@@ -41,6 +41,34 @@ def test_0_1_1_poseestimation_nodes_edges():
         )
 
 
+def test_0_3_0_poseestimation_one_camera():
+    """Test that a PoseEstimation object written before 0.4.0 with one camera device is read correctly.
+
+    The Device link is stored under the name of its target rather than the name "device" used by the 0.4.0
+    schema, so this exercises how the link is resolved when reading.
+    """
+    f = Path(__file__).parent / "0.3.0_poseestimation_one_camera.nwb"
+    with get_io(f) as io:
+        read_nwbfile = io.read()
+        pe = read_nwbfile.processing["behavior"]["PoseEstimation"]
+        assert pe.device is read_nwbfile.devices["camera1"]
+        npt.assert_array_equal(pe.original_videos[:], ["camera1.mp4"])
+
+
+def test_0_3_0_poseestimation_two_cameras():
+    """Test that a PoseEstimation object written before 0.4.0 with two camera devices raises on read.
+
+    A PoseEstimation object holds at most one device as of 0.4.0, so there is no single device to assign the
+    two linked cameras to. The error directs the reader to MultiCameraPoseEstimation.
+    """
+    f = Path(__file__).parent / "0.3.0_poseestimation_two_cameras.nwb"
+    with get_io(f) as io:
+        with pytest.raises(ValueError, match="supports only one device") as exc_info:
+            io.read()
+
+    assert "MultiCameraPoseEstimation" in str(exc_info.value)
+
+
 @pytest.mark.parametrize(
     "file_path,expected_warnings,expected_errors",
     [
@@ -51,6 +79,11 @@ def test_0_1_1_poseestimation_nodes_edges():
         ),
         (
             Path(__file__).parent / "0.1.1_poseestimation_no_cameras.nwb",
+            [],
+            [],
+        ),
+        (
+            Path(__file__).parent / "0.3.0_poseestimation_one_camera.nwb",
             [],
             [],
         ),

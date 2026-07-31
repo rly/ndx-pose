@@ -1,10 +1,43 @@
 # Changelog for ndx-pose
 
-## ndx-pose 0.3.1 (upcoming)
+## ndx-pose 0.4.0 (upcoming)
+
+### Breaking changes
+- Reading an NWB file written with ndx-pose < 0.4.0 in which a single `PoseEstimation` object links more than
+  one camera `Device` raises an error. A `PoseEstimation` object covers one camera view as of 0.4.0, so there
+  is no single `device` to assign those links to. Store each camera view as its own `PoseEstimation` object
+  inside a `MultiCameraPoseEstimation` object. Files in which a `PoseEstimation` object links zero or one
+  camera `Device` are unaffected and read as before, with the linked camera available as
+  `PoseEstimation.device`. @alessandratrapani (#57)
+
+### New neurodata types
+- Added `CalibratedCamera` neurodata type, a `Device` extended with intrinsic and extrinsic calibration
+  parameters (intrinsic matrix, rotation matrix, translation vector, distortion coefficients) for that
+  single camera. Because it is a `Device`, it is added once to the NWBFile and can be linked to by
+  reference from multiple `PoseEstimation` objects (e.g., one per subject in a multi-subject recording
+  session such as sDANNCE), so the camera rig and its calibration are never duplicated and there is no
+  row-order matching to maintain. @alessandratrapani (#57)
+- Added `MultiCameraPoseEstimation` neurodata type for storing 3D world-space pose estimates from
+  multi-camera setups (e.g. DANNCE, Anipose). It contains `PoseEstimationSeries` in world coordinates,
+  one `PoseEstimation` per camera view, and an optional link to a `Skeleton`. @alessandratrapani (#57)
+- `PoseEstimation` now represents pose estimates from a single camera view (it links to at most one
+  `Device`, ideally a `CalibratedCamera`), so it can be reused directly as the per-camera child of
+  `MultiCameraPoseEstimation` instead of introducing a separate, largely overlapping type for that
+  purpose. The `devices` constructor argument (a list) is deprecated in favor of the singular `device`
+  argument; passing more than one device now raises an error. @alessandratrapani (#57)
 
 ### Minor updates
 - Bumped the minimum supported `pynwb` to 4.0.0 (and `hdmf` to 6.1.0). `num_samples` on `ImageSeries` and the
   requirement to set it for external, rate-timed videos are only available in pynwb 4.0. @rly (#62)
+- The `original_videos`, `labeled_videos`, and `dimensions` constructor arguments of `PoseEstimation` are
+  deprecated and raise a `DeprecationWarning` when set. Use the `source_video` and `labeled_video` links,
+  which reference an `ImageSeries` in the NWBFile and carry the pixel dimensions in its `dimension` field.
+  The three fields are still read from existing files without warning. The check that the number of video
+  paths and dimension pairs matches the number of camera devices, which warned since 0.2.0, is removed:
+  a `PoseEstimation` object covers one camera view as of 0.4.0. @alessandratrapani (#57)
+- `ndx_pose.testing.mock.mock_PoseEstimation` defaults `original_videos`, `labeled_videos`, and `dimensions`
+  to `None` instead of sample values, so the mock no longer triggers the deprecation warnings for those three
+  arguments. Pass them explicitly to exercise the deprecated fields. @alessandratrapani (#57)
 
 ### Bug fixes
 - Set `num_samples` on the external `ImageSeries` objects used in the mocks, tests, and examples. pynwb 4.0
