@@ -38,6 +38,11 @@
 - `ndx_pose.testing.mock.mock_PoseEstimation` defaults `original_videos`, `labeled_videos`, and `dimensions`
   to `None` instead of sample values, so the mock no longer triggers the deprecation warnings for those three
   arguments. Pass them explicitly to exercise the deprecated fields. @alessandratrapani (#57)
+- `src/spec/create_extension_spec.py` defines `CalibratedCamera` and `MultiCameraPoseEstimation` and the
+  updated `PoseEstimation`, and the YAML in `spec/` is regenerated from it. The regenerated
+  `CalibratedCamera.intrinsic_matrix` and `CalibratedCamera.rotation_matrix` carry the placeholder dimension
+  names `dim_0` and `dim_1` that hdmf assigns to a dataset declared with a shape and no dimension names.
+  @rly (#64)
 
 ### Bug fixes
 - Set `num_samples` on the external `ImageSeries` objects used in the mocks, tests, and examples. pynwb 4.0

@@ -149,8 +149,11 @@ def main():
         neurodata_type_def="PoseEstimation",
         neurodata_type_inc="NWBDataInterface",
         doc=(
-            "Group that holds estimated position data for multiple body parts, computed from the same video with "
-            "the same tool/algorithm. The timestamps of each child PoseEstimationSeries type should be the same."
+            "Group that holds estimated position data for multiple body parts, computed from a single camera view "
+            "with the same tool/algorithm. The timestamps of each child PoseEstimationSeries type should be the "
+            "same. To store pose estimates from multiple synchronized cameras (e.g., triangulated 3D estimates), "
+            "use a MultiCameraPoseEstimation object, which holds one PoseEstimation child per camera view "
+            "alongside the shared 3D estimates."
         ),
         default_name="PoseEstimation",
         groups=[
@@ -167,18 +170,25 @@ def main():
                 quantity="?",
             ),
             NWBLinkSpec(
+                name="device",
                 target_type="Device",
-                doc="Cameras used to record the videos.",
-                quantity="*",
+                doc=(
+                    "The camera device used to record the video for this pose estimation. Must be added to the "
+                    "NWBFile before being linked here. Use a CalibratedCamera instead of a plain Device when "
+                    "intrinsic/extrinsic calibration coordinates are available, e.g., for multi-camera 3D pose "
+                    "estimation, where a PoseEstimation object represents a single camera view within a "
+                    "MultiCameraPoseEstimation object."
+                ),
+                quantity="?",
             ),
             NWBLinkSpec(
                 name="source_video",
                 target_type="ImageSeries",
                 doc=(
                     "Link to an ImageSeries containing the source video used for pose estimation. The "
-                    "ImageSeries should be stored in the NWBFile (e.g., in acquisition). When available, this "
-                    "field should be preferred over 'original_videos' as it provides a formal reference rather "
-                    "than a file path string."
+                    "ImageSeries should be stored in the NWBFile (e.g., in acquisition). It holds the video "
+                    "data, or the path to an external video file, along with the dimensions and frame timing of "
+                    "the video."
                 ),
                 quantity="?",
             ),
@@ -188,8 +198,8 @@ def main():
                 doc=(
                     "Link to an ImageSeries containing the labeled video (with pose estimation overlays) "
                     "produced from the source video. The ImageSeries should be stored in the NWBFile (e.g., in "
-                    "acquisition). When available, this field should be preferred over 'labeled_videos' as it "
-                    "provides a formal reference rather than a file path string."
+                    "acquisition). It holds the video data, or the path to an external video file, along with "
+                    "the dimensions and frame timing of the video."
                 ),
                 quantity="?",
             ),
@@ -204,10 +214,9 @@ def main():
             NWBDatasetSpec(
                 name="original_videos",
                 doc=(
-                    "Paths to the original video files. The number of files should equal the number of camera "
-                    "devices. Note that these string paths might be fragile unless relative paths are used and "
-                    "care is taken to keep them consistent. Consider using the 'source_video' link instead for "
-                    "a formal reference."
+                    "DEPRECATED. Please use the 'source_video' link instead. Paths to the original video files. "
+                    "Note that these string paths might be fragile unless relative paths are used and care is "
+                    "taken to keep them consistent."
                 ),
                 dtype="text",
                 dims=["num_files"],
@@ -217,10 +226,9 @@ def main():
             NWBDatasetSpec(
                 name="labeled_videos",
                 doc=(
-                    "Paths to the labeled video files. The number of files should equal the number of camera "
-                    "devices. Note that these string paths might be fragile unless relative paths are used and "
-                    "care is taken to keep them consistent. Consider using the 'labeled_video' link instead for "
-                    "a formal reference."
+                    "DEPRECATED. Please use the 'labeled_video' link instead. Paths to the labeled video files. "
+                    "Note that these string paths might be fragile unless relative paths are used and care is "
+                    "taken to keep them consistent."
                 ),
                 dtype="text",
                 dims=["num_files"],
@@ -229,7 +237,10 @@ def main():
             ),
             NWBDatasetSpec(
                 name="dimensions",
-                doc="Dimensions of each labeled video file.",
+                doc=(
+                    "DEPRECATED. Please use the 'dimension' field of the ImageSeries linked as 'source_video' "
+                    "or 'labeled_video' instead. Dimensions of each labeled video file."
+                ),
                 dtype="uint8",
                 dims=["num_files", "width, height"],
                 shape=[None, 2],
@@ -418,6 +429,125 @@ def main():
         ],
     )
 
+    calibrated_camera = NWBGroupSpec(
+        neurodata_type_def="CalibratedCamera",
+        neurodata_type_inc="Device",
+        doc=(
+            "A Device representing a single camera in a multi-camera pose estimation setup, extended with its "
+            "intrinsic and extrinsic calibration parameters. Link a CalibratedCamera (instead of a plain Device) "
+            "from a PoseEstimation object wherever calibration coordinates are available. Because it is a "
+            "Device, it is added once to the NWBFile (e.g., in general/devices) and can be linked to by "
+            "reference from multiple PoseEstimation objects (e.g., one per subject in a multi-subject recording "
+            "session), so the camera rig and its calibration are never duplicated."
+        ),
+        datasets=[
+            NWBDatasetSpec(
+                name="intrinsic_matrix",
+                doc="Intrinsic camera matrix K, encoding focal length and principal point. Shape (3, 3).",
+                dtype="float32",
+                shape=[3, 3],
+                quantity=1,
+            ),
+            NWBDatasetSpec(
+                name="rotation_matrix",
+                doc="Rotation matrix R mapping world coordinates to this camera's coordinate frame. Shape (3, 3).",
+                dtype="float32",
+                shape=[3, 3],
+                quantity="?",
+            ),
+            NWBDatasetSpec(
+                name="translation_vector",
+                doc="Translation vector t mapping world coordinates to this camera's coordinate frame. Shape (3,).",
+                dtype="float32",
+                dims=["x, y, z"],
+                shape=[3],
+                quantity="?",
+            ),
+            NWBDatasetSpec(
+                name="distortion_coefficients",
+                doc=(
+                    "Lens distortion coefficients for this camera. Length depends on the distortion model "
+                    "(typically 4 or 5 for radial-tangential)."
+                ),
+                dtype="float32",
+                dims=["num_distortion_params"],
+                shape=[None],
+                quantity="?",
+            ),
+        ],
+    )
+
+    multi_camera_pose_estimation = NWBGroupSpec(
+        neurodata_type_def="MultiCameraPoseEstimation",
+        neurodata_type_inc="NWBDataInterface",
+        doc=(
+            "Group that holds 3D pose estimation data computed from multiple synchronized cameras. Unlike "
+            "PoseEstimation (single-camera, pixel-space), this type stores keypoints in a shared 3D world-space "
+            "reference frame and organizes per-camera 2D data through PoseEstimation children, one per camera "
+            "view, each of which links to the camera Device (typically a CalibratedCamera, so that calibration "
+            "travels with the camera rather than being duplicated here). Designed for systems such as DANNCE or "
+            "Anipose that triangulate 3D positions from synchronized multi-camera footage."
+        ),
+        default_name="MultiCameraPoseEstimation",
+        groups=[
+            NWBGroupSpec(
+                neurodata_type_inc="PoseEstimationSeries",
+                doc=(
+                    "Estimated 3D position (x, y, z) of each body part in a shared world-space coordinate frame. "
+                    "The unit should be a physical length unit (e.g. 'meters' or 'millimeters'), not 'pixels'."
+                ),
+                quantity="*",
+            ),
+            NWBGroupSpec(
+                neurodata_type_inc="PoseEstimation",
+                doc=(
+                    "Per-camera 2D pose estimates, one PoseEstimation per camera view. Each PoseEstimation links "
+                    "to the camera Device (ideally a CalibratedCamera) used to record that view and, optionally, "
+                    "to that view's source video and 2D pose estimates in pixel space."
+                ),
+                quantity="*",
+            ),
+        ],
+        links=[
+            NWBLinkSpec(
+                target_type="Skeleton",
+                doc=(
+                    "Layout of body part locations and connections. The Skeleton object should be placed in a "
+                    "Skeletons object at the same level as this container."
+                ),
+                quantity="?",
+            ),
+        ],
+        datasets=[
+            NWBDatasetSpec(
+                name="description",
+                doc="Description of the pose estimation procedure and output.",
+                dtype="text",
+                quantity="?",
+            ),
+            NWBDatasetSpec(
+                name="scorer",
+                doc="Name of the scorer / algorithm used.",
+                dtype="text",
+                quantity="?",
+            ),
+            NWBDatasetSpec(
+                name="source_software",
+                doc="Name of the software tool used. Specifying the version attribute is strongly encouraged.",
+                dtype="text",
+                quantity="?",
+                attributes=[
+                    NWBAttributeSpec(
+                        name="version",
+                        doc="Version string of the software tool used.",
+                        dtype="text",
+                        required=False,
+                    ),
+                ],
+            ),
+        ],
+    )
+
     new_data_types = [
         skeleton,
         pose_estimation_series,
@@ -429,6 +559,8 @@ def main():
         source_videos,
         skeletons,
         pose_training,
+        calibrated_camera,
+        multi_camera_pose_estimation,
     ]
 
     # export the spec to yaml files in the spec folder
