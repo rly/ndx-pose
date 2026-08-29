@@ -5,10 +5,31 @@ from pynwb.behavior import SpatialSeries
 from pynwb.core import MultiContainerInterface
 from pynwb.device import Device
 from pynwb.image import ImageSeries
+from hdmf.common import DynamicTableRegion
 
 # TODO validate Skeleton nodes and edges correspondence, convert edges to uint
 # TODO validate that all Skeleton nodes are used in edges
-Skeleton = get_class("Skeleton", "ndx-pose")
+_Skeleton = get_class("Skeleton", "ndx-pose")
+
+
+@register_class("Skeleton", "ndx-pose")
+class Skeleton(_Skeleton):
+    """A Skeleton, with the deprecated link to a Subject warned about on write.
+
+    Auto-generated from the spec apart from the warning, which needs a constructor to live in.
+    """
+
+    @docval(*get_docval(_Skeleton.__init__), allow_positional=AllowPositional.ERROR)
+    def __init__(self, **kwargs):
+        # warn on new, no warning on construction from existing file
+        if kwargs.get("subject") is not None and not self._in_construct_mode:
+            msg = (
+                "The 'subject' constructor argument of Skeleton is deprecated. Please use the 'subject' "
+                "field of PoseEstimation instead. A Skeleton describes a morphology and may be shared by "
+                "several subjects, so it cannot say which one. This will be removed in a future release."
+            )
+            warnings.warn(msg, DeprecationWarning)
+        super().__init__(**kwargs)
 Skeletons = get_class("Skeletons", "ndx-pose")
 SkeletonInstance = get_class("SkeletonInstance", "ndx-pose")
 SkeletonInstances = get_class("SkeletonInstances", "ndx-pose")
@@ -124,6 +145,8 @@ class PoseEstimation(MultiContainerInterface):
         "skeleton",  # <-- this is a link to a Skeleton object
         "source_video",  # <-- this is a link to an ImageSeries object
         "labeled_video",  # <-- this is a link to an ImageSeries object
+        # a child rather than a link: the region is owned by this container, only its table is elsewhere
+        {"name": "subject", "child": True},
     )
 
     # custom mapper in ndx_pose.io.pose maps:
@@ -253,6 +276,18 @@ class PoseEstimation(MultiContainerInterface):
             "default": None,
         },
         {
+            "name": "subject",
+            "type": DynamicTableRegion,
+            "doc": (
+                "Region selecting the single row of a subjects table that describes the subject these "
+                "pose estimates are of. Not needed for a file with one root-level Subject, since every "
+                "object in such a file is about that subject. Absent where the estimates are of no subject "
+                "at all, as for the arena landmarks a DeepLabCut project stores as unique bodyparts. The "
+                "region may reference any DynamicTable."
+            ),
+            "default": None,
+        },
+        {
             "name": "nodes",
             "type": ("array_data", "data"),
             "doc": (
@@ -275,8 +310,8 @@ class PoseEstimation(MultiContainerInterface):
         allow_positional=AllowPositional.ERROR,
     )
     def __init__(self, **kwargs):
-        nodes, edges, skeleton, source_video, labeled_video = popargs(
-            "nodes", "edges", "skeleton", "source_video", "labeled_video", kwargs
+        nodes, edges, skeleton, source_video, labeled_video, subject = popargs(
+            "nodes", "edges", "skeleton", "source_video", "labeled_video", "subject", kwargs
         )
         if nodes is not None or edges is not None:
             if skeleton is not None:
@@ -362,6 +397,7 @@ class PoseEstimation(MultiContainerInterface):
         self.skeleton = skeleton
         self.source_video = source_video
         self.labeled_video = labeled_video
+        self.subject = subject
 
         # TODO include calibration images for 3D estimates?
         # TODO validate that the nodes correspond to the names of the pose estimation series objects

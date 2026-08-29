@@ -65,14 +65,20 @@ class TestPoseEstimationSeriesConstructor(TestCase):
 class TestSkeleton(TestCase):
     def test_init(self):
         subject = Subject(subject_id="MOUSE001", species="Mus musculus")
-        skeleton = Skeleton(
-            name="subject1",
-            nodes=["front_left_paw", "body", "front_right_paw"],
-            # edge between front left paw and body, edge between body and front right paw.
-            # the values are the indices of the nodes in the nodes list.
-            edges=np.array([[0, 1], [1, 2]], dtype="uint8"),
-            subject=subject,
+        msg = (
+            "The 'subject' constructor argument of Skeleton is deprecated. Please use the 'subject' "
+            "field of PoseEstimation instead. A Skeleton describes a morphology and may be shared by "
+            "several subjects, so it cannot say which one. This will be removed in a future release."
         )
+        with self.assertWarnsWith(DeprecationWarning, msg):
+            skeleton = Skeleton(
+                name="subject1",
+                nodes=["front_left_paw", "body", "front_right_paw"],
+                # edge between front left paw and body, edge between body and front right paw.
+                # the values are the indices of the nodes in the nodes list.
+                edges=np.array([[0, 1], [1, 2]], dtype="uint8"),
+                subject=subject,
+            )
         self.assertEqual(skeleton.name, "subject1")
         self.assertEqual(skeleton.nodes, ["front_left_paw", "body", "front_right_paw"])
         np.testing.assert_array_equal(skeleton.edges, np.array([[0, 1], [1, 2]], dtype="uint8"))

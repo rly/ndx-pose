@@ -7,6 +7,7 @@ from pynwb import NWBHDF5IO, NWBFile
 from pynwb.device import DeviceModel
 from pynwb.image import ImageSeries
 from pynwb.testing import TestCase, remove_test_file, NWBH5IOFlexMixin
+from hdmf.common import DynamicTable
 
 from ndx_pose import (
     CalibratedCamera,
@@ -298,6 +299,84 @@ class TestPoseEstimationRoundtripSourceVideo(TestCase):
             read_pe = read_nwbfile.processing["behavior"]["PoseEstimation"]
             self.assertContainerEqual(read_pe.source_video, source_video)
             self.assertEqual(read_pe.source_video.external_file[0], "camera1.mp4")
+
+
+class TestPoseEstimationRoundtripSubjectRow(TestCase):
+    """Roundtrip test for PoseEstimation with a subject region.
+
+    The region is written against a plain DynamicTable rather than a subjects table from another
+    extension, which is the point of typing the reference generically.
+    """
+
+    def setUp(self):
+        self.nwbfile = NWBFile(
+            session_description="session_description",
+            identifier="identifier",
+            session_start_time=datetime.datetime.now(datetime.timezone.utc),
+        )
+        self.path = "test_pose.nwb"
+
+    def tearDown(self):
+        remove_test_file(self.path)
+
+    def test_roundtrip(self):
+        """Test that the region resolves back to the row it selected."""
+        subjects_table = DynamicTable(name="SubjectsTable", description="The subjects in this session.")
+        subjects_table.add_column(name="subject_id", description="ID of the subject.")
+        subjects_table.add_row(subject_id="mouse_1")
+        subjects_table.add_row(subject_id="mouse_2")
+        subjects_pm = self.nwbfile.create_processing_module(name="subjects", description="subjects")
+        subjects_pm.add(subjects_table)
+
+        skeleton = mock_Skeleton()
+        skeletons = Skeletons(skeletons=[skeleton])
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+        pe = PoseEstimation(
+            pose_estimation_series=pose_estimation_series,
+            description="Estimated positions of the second subject.",
+            skeleton=skeleton,
+            subject=subjects_table.create_region(
+                name="subject",
+                region=[1],
+                description="The subject these pose estimates are of.",
+            ),
+        )
+
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm.add(pe)
+        behavior_pm.add(skeletons)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            read_nwbfile = io.read()
+            read_pe = read_nwbfile.processing["behavior"]["PoseEstimation"]
+            self.assertEqual(read_pe.subject.data[:], [1])
+            self.assertEqual(read_pe.subject.table.name, "SubjectsTable")
+            self.assertEqual(read_pe.subject[0]["subject_id"].item(), "mouse_2")
+
+    def test_roundtrip_without_subject(self):
+        """A file with one Subject sets no region, and the field reads back as None."""
+        skeleton = mock_Skeleton()
+        skeletons = Skeletons(skeletons=[skeleton])
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+        pe = PoseEstimation(
+            pose_estimation_series=pose_estimation_series,
+            description="Estimated positions of the only subject.",
+            skeleton=skeleton,
+        )
+
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm.add(pe)
+        behavior_pm.add(skeletons)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            read_nwbfile = io.read()
+            self.assertIsNone(read_nwbfile.processing["behavior"]["PoseEstimation"].subject)
 
 
 class TestPoseEstimationRoundtripLabeledVideo(TestCase):

@@ -9,6 +9,11 @@
   inside a `MultiCameraPoseEstimation` object. Files in which a `PoseEstimation` object links zero or one
   camera `Device` are unaffected and read as before, with the linked camera available as
   `PoseEstimation.device`. @alessandratrapani (#57)
+- The `subject` constructor argument of `Skeleton` is deprecated and raises a `DeprecationWarning` when set,
+  in favour of a new optional `subject` field on `PoseEstimation`, a `DynamicTableRegion` selecting the row
+  of a subjects table that describes the subject. A `Skeleton` describes a morphology and may be shared by
+  several subjects, so it cannot say which one. The field is still read from existing files without warning.
+  @h-mayorquin (#66)
 
 ### New neurodata types
 - Added `CalibratedCamera` neurodata type, a `Device` extended with intrinsic and extrinsic calibration
