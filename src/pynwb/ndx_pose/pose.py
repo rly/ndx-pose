@@ -547,6 +547,8 @@ class MultiCameraPoseEstimation(MultiContainerInterface):
         "source_software",
         "source_software_version",
         "skeleton",
+        # a child rather than a link: the region is owned by this container, only its table is elsewhere
+        {"name": "subject", "child": True},
     )
 
     @docval(
@@ -604,10 +606,21 @@ class MultiCameraPoseEstimation(MultiContainerInterface):
             ),
             "default": None,
         },
+        {
+            "name": "subject",
+            "type": DynamicTableRegion,
+            "doc": (
+                "Region selecting the single row of a subjects table that describes the subject these pose "
+                "estimates are of, with the same meaning as the 'subject' field of PoseEstimation. Every camera "
+                "view is of the same subject, so a PoseEstimation child either leaves its own 'subject' unset or "
+                "selects the same row of the same table."
+            ),
+            "default": None,
+        },
         allow_positional=AllowPositional.ERROR,
     )
     def __init__(self, **kwargs):
-        skeleton = popargs("skeleton", kwargs)
+        skeleton, subject = popargs("skeleton", "subject", kwargs)
         pose_estimation_series, pose_estimations = popargs("pose_estimation_series", "pose_estimations", kwargs)
         description, scorer = popargs("description", "scorer", kwargs)
         source_software, source_software_version = popargs("source_software", "source_software_version", kwargs)
@@ -618,6 +631,24 @@ class MultiCameraPoseEstimation(MultiContainerInterface):
             )
         super().__init__(**kwargs)
 
+        # check on new, not on construction from an existing file, so a file that breaks the rule still reads
+        if not self._in_construct_mode:
+            for pose_estimation in pose_estimations or []:
+                child_subject = pose_estimation.subject
+                if child_subject is None:
+                    continue
+                if (
+                    subject is None
+                    or child_subject.table is not subject.table
+                    or list(child_subject.data) != list(subject.data)
+                ):
+                    raise ValueError(
+                        f"PoseEstimation '{pose_estimation.name}' selects a different subject than the "
+                        "MultiCameraPoseEstimation that holds it. Every camera view is of the same subject, so set "
+                        "'subject' on the MultiCameraPoseEstimation and leave it unset on its PoseEstimation "
+                        "children, or have them select the same row of the same table."
+                    )
+
         self.pose_estimation_series = pose_estimation_series
         self.pose_estimations = pose_estimations
         self.description = description
@@ -625,3 +656,4 @@ class MultiCameraPoseEstimation(MultiContainerInterface):
         self.source_software = source_software
         self.source_software_version = source_software_version
         self.skeleton = skeleton
+        self.subject = subject

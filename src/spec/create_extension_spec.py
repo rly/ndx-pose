@@ -564,6 +564,17 @@ def main():
                     ),
                 ],
             ),
+            NWBDatasetSpec(
+                name="subject",
+                neurodata_type_inc="DynamicTableRegion",
+                doc=(
+                    "Region selecting the single row of a subjects table that describes the subject these "
+                    "pose estimates are of, with the same meaning as the 'subject' field of PoseEstimation. "
+                    "Every camera view is of the same subject, so a PoseEstimation child either leaves its own "
+                    "'subject' unset or selects the same row of the same table."
+                ),
+                quantity="?",
+            ),
         ],
     )
 
