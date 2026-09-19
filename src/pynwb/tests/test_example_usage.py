@@ -28,3 +28,12 @@ def test_example_usage_multicamera():
     # Remove the generated test_multicamera_pose.nwb if it exists
     if Path("test_multicamera_pose.nwb").exists():
         Path("test_multicamera_pose.nwb").unlink()
+
+
+def test_example_usage_segmentation_contours():
+    """Call examples/write_segmentation_contours.py and check that it runs without errors."""
+    subprocess.run(["python", "examples/write_segmentation_contours.py"], check=True)
+
+    # Remove the generated test_pose.nwb if it exists
+    if Path("test_pose.nwb").exists():
+        Path("test_pose.nwb").unlink()

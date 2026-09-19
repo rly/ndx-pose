@@ -9,6 +9,7 @@ from pynwb.testing.mock.device import mock_Device
 
 from ...pose import (
     CalibratedCamera,
+    ContourSeries,
     MultiCameraPoseEstimation,
     PoseEstimationSeries,
     Skeleton,
@@ -61,6 +62,56 @@ def mock_PoseEstimationSeries(
     )
 
     return pes
+
+
+def mock_ContourSeries(
+    *,
+    name: Optional[str] = None,
+    description: Optional[str] = "A description.",
+    reference_frame: str = "(0, 0) is the top left corner of the video frame.",
+    data=None,
+    vertex_count=None,
+    is_external=None,
+    contour_group=None,
+    unit: Optional[str] = "pixels",
+    resolution: float = -1.0,
+    conversion: float = 1.0,
+    offset: float = 0.0,
+    timestamps=None,
+    starting_time: Optional[float] = None,
+    rate: Optional[float] = None,
+):
+    if data is None:
+        # 10 frames, 2 contour slots, up to 5 vertices each
+        data = np.arange(10 * 2 * 5 * 2, dtype=np.int32).reshape((10, 2, 5, 2))
+    if vertex_count is None:
+        # the first slot uses every vertex, the second is unused, so the mock covers padding
+        vertex_count = np.tile(np.array([5, 0], dtype=np.uint32), (len(data), 1))
+    if is_external is None:
+        is_external = np.tile(np.array([True, False]), (len(data), 1))
+    if contour_group is None:
+        # both slots describe one component, so the unused second slot shares its label
+        contour_group = np.zeros((len(data), data.shape[1]), dtype=np.uint32)
+    if timestamps is not None:
+        rate = None
+    if timestamps is None and rate is None:
+        timestamps = np.linspace(0, 10, num=len(data))  # a timestamp for every frame
+    return ContourSeries(
+        name=name or name_generator("ContourSeries"),
+        reference_frame=reference_frame,
+        data=data,
+        vertex_count=vertex_count,
+        is_external=is_external,
+        contour_group=contour_group,
+        unit=unit,
+        resolution=resolution,
+        conversion=conversion,
+        offset=offset,
+        timestamps=timestamps,
+        starting_time=starting_time,
+        rate=rate,
+        description=description,
+    )
 
 
 def mock_Skeleton(

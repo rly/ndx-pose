@@ -25,6 +25,20 @@ This extension consists of several new neurodata types. They are divided into tw
 - `PoseEstimation` which stores the estimated position data (`PoseEstimationSeries`) for multiple body parts,
   computed from a single camera view with the same tool/algorithm, and links to the `Device` (camera) used.
 
+### Segmentation types
+
+- `ContourSeries` which stores polygon contours outlining a segmented instance over time, e.g. the per-frame
+  silhouette an instance segmentation model produces alongside the keypoints. Each frame holds a fixed number of
+  contour slots, and `vertex_count` records how many vertices of each slot are real, so the padding needed to keep
+  the array rectangular is never mistaken for data. `is_external` distinguishes an outer boundary from a hole, so an
+  animal that curls around a gap, or that an occluder splits into disjoint parts, is represented exactly. The
+  optional `contour_group` records which connected component each contour belongs to, so a hole stays attached to
+  the part of a split instance that contains it; omit it when that structure is not known. `reference_frame` records
+  where (0, 0) is and which way each axis increases, as a `SpatialSeries` does; `ContourSeries` extends `TimeSeries`
+  rather than `SpatialSeries` because the vertex array has more dimensions than a `SpatialSeries` permits. Store a
+  `ContourSeries` inside a `PoseEstimation` object to keep the contours, the keypoints, and the subject for one
+  instance together.
+
 ### Multi-camera 3D pose estimation types
 
 For multi-camera setups that produce 3D world-space coordinates (e.g. DANNCE, Anipose):
@@ -77,6 +91,8 @@ The `test`, `docs`, and `min-reqs` groups can be installed individually with `pi
 2. [Example writing training data to an NWB file](examples/write_pose_training.py).
 
 3. [Example writing 3D multi-camera pose estimates to an NWB file](examples/write_multicamera_pose_estimates.py).
+
+4. [Example writing segmentation contours alongside pose estimates to an NWB file](examples/write_segmentation_contours.py).
 
 ## Handling pose estimates for multiple subjects
 
@@ -144,6 +160,18 @@ classDiagram
             reference_frame: str
         }
 
+        class ContourSeries{
+            <<TimeSeries>>
+            name : str
+            description : str
+            timestamps : array[float; dims [frame]]
+            data : array[numeric; dims [frame, contour, vertex, [x, y]]]
+            reference_frame : str
+            vertex_count : array[uint32; dims [frame, contour]]
+            is_external : array[bool; dims [frame, contour]]
+            contour_group : array[uint32; dims [frame, contour]], optional
+        }
+
         class PoseEstimation {
             <<NWBDataInterface>>
             name : str
@@ -155,6 +183,7 @@ classDiagram
             source_software : str, optional
             source_software__version : str, optional
             PoseEstimationSeries
+            ContourSeries
             Skeleton, link, optional
             device : Device, link, optional
             source_video : ImageSeries, link, optional
@@ -199,6 +228,7 @@ classDiagram
     class ImageSeries
 
     PoseEstimation --o PoseEstimationSeries : contains 0 or more
+    PoseEstimation --o ContourSeries : contains 0 or more
     PoseEstimation --> Skeleton : links to
     PoseEstimation --> Device : links to (device)
     PoseEstimation --> ImageSeries : links to (source_video)
@@ -230,6 +260,18 @@ classDiagram
             reference_frame: str
         }
 
+        class ContourSeries{
+            <<TimeSeries>>
+            name : str
+            description : str
+            timestamps : array[float; dims [frame]]
+            data : array[numeric; dims [frame, contour, vertex, [x, y]]]
+            reference_frame : str
+            vertex_count : array[uint32; dims [frame, contour]]
+            is_external : array[bool; dims [frame, contour]]
+            contour_group : array[uint32; dims [frame, contour]], optional
+        }
+
         class PoseEstimation {
             <<NWBDataInterface>>
             name : str
@@ -241,6 +283,7 @@ classDiagram
             source_software : str, optional
             source_software__version : str, optional
             PoseEstimationSeries
+            ContourSeries
             Skeleton, link, optional
             device : Device, link, optional
             source_video : ImageSeries, link, optional
@@ -324,6 +367,7 @@ classDiagram
     class Image
 
     PoseEstimation --o PoseEstimationSeries : contains 0 or more
+    PoseEstimation --o ContourSeries : contains 0 or more
     PoseEstimation --> Skeleton : links to
     PoseEstimation --> Device : links to (device)
     PoseEstimation --> ImageSeries : links to (source_video)

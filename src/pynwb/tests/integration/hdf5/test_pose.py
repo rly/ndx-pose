@@ -10,6 +10,7 @@ from pynwb.testing import TestCase, remove_test_file, NWBH5IOFlexMixin
 
 from ndx_pose import (
     CalibratedCamera,
+    ContourSeries,
     MultiCameraPoseEstimation,
     PoseEstimationSeries,
     PoseEstimation,
@@ -19,6 +20,7 @@ from ndx_pose import (
     TrainingFrames,
 )
 from ndx_pose.testing.mock.pose import (
+    mock_ContourSeries,
     mock_MultiCameraPoseEstimation,
     mock_PoseEstimationSeries,
     mock_Skeleton,
@@ -137,6 +139,83 @@ class TestPoseEstimationSeriesRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
 
     def getContainer(self, nwbfile: NWBFile):
         return nwbfile.processing["behavior"]["test_PES"]
+
+
+class TestContourSeriesRoundtrip(TestCase):
+    """Simple roundtrip test for ContourSeries."""
+
+    def setUp(self):
+        self.nwbfile = NWBFile(
+            session_description="session_description",
+            identifier="identifier",
+            session_start_time=datetime.datetime.now(datetime.timezone.utc),
+        )
+        self.path = "test_pose.nwb"
+
+    def tearDown(self):
+        remove_test_file(self.path)
+
+    def test_roundtrip(self):
+        """Write a ContourSeries nested in a PoseEstimation and verify every field survives."""
+        # 100 frames, up to 3 contours per frame, up to 20 vertices per contour
+        data = np.random.randint(0, 500, size=(100, 3, 20, 2)).astype(np.int32)
+        vertex_count = np.random.randint(0, 21, size=(100, 3)).astype(np.uint32)
+        is_external = np.random.rand(100, 3) > 0.5
+        timestamps = np.linspace(0, 10, num=100)  # a timestamp for every frame
+        cs = ContourSeries(
+            name="contours",
+            reference_frame="(0, 0) is the top left corner of the video frame.",
+            description="Outline of the segmented animal.",
+            data=data,
+            vertex_count=vertex_count,
+            is_external=is_external,
+            unit="pixels",
+            timestamps=timestamps,
+        )
+        pes = mock_PoseEstimationSeries(
+            name="front_left_paw", data=np.random.rand(100, 2), timestamps=timestamps
+        )
+        skeleton = mock_Skeleton(name="subject1")
+        pe = PoseEstimation(
+            name="subject1",
+            pose_estimation_series=[pes],
+            contour_series=[cs],
+            skeleton=skeleton,
+        )
+
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm.add(Skeletons(skeletons=[skeleton]))
+        behavior_pm.add(pe)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            read_nwbfile = io.read()
+            read_cs = read_nwbfile.processing["behavior"]["subject1"].contour_series["contours"]
+            self.assertContainerEqual(cs, read_cs)
+            # assertContainerEqual compares fields, but check the arrays explicitly: the padding
+            # and the integer dtype of the vertex positions are the point of this type.
+            np.testing.assert_array_equal(read_cs.data[:], data)
+            np.testing.assert_array_equal(read_cs.vertex_count[:], vertex_count)
+            np.testing.assert_array_equal(read_cs.is_external[:], is_external)
+            self.assertEqual(read_cs.data.dtype, data.dtype)
+            self.assertEqual(read_cs.reference_frame, cs.reference_frame)
+
+
+class TestContourSeriesRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
+    """Complex, more complete roundtrip test for ContourSeries using pynwb.testing infrastructure."""
+
+    def getContainerType(self):
+        return "ContourSeries"
+
+    def addContainer(self):
+        cs = mock_ContourSeries(name="contours")
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm.add(cs)
+
+    def getContainer(self, nwbfile: NWBFile):
+        return nwbfile.processing["behavior"]["contours"]
 
 
 class TestPoseEstimationRoundtrip(TestCase):
@@ -652,3 +731,79 @@ class TestMultiCameraPoseEstimationRoundtripPyNWB(NWBH5IOFlexMixin, TestCase):
 
     def getContainer(self, nwbfile: NWBFile):
         return nwbfile.processing["behavior"]["MultiCameraPoseEstimation"]
+
+
+class TestContourSeriesGroupRoundtrip(TestCase):
+    """Roundtrip test for contour_group, the field that disambiguates split instances."""
+
+    def setUp(self):
+        self.nwbfile = NWBFile(
+            session_description="session_description",
+            identifier="identifier",
+            session_start_time=datetime.datetime.now(datetime.timezone.utc),
+        )
+        self.path = "test_pose.nwb"
+
+    def tearDown(self):
+        remove_test_file(self.path)
+
+    def test_roundtrip_split_instance_with_hole(self):
+        """An instance split into two blobs, one holding a hole, survives unambiguously.
+
+        Without contour_group the file records that a hole exists but not which blob owns
+        it, which is the case this field exists for.
+        """
+        num_frames = 8
+        data = np.zeros((num_frames, 3, 6, 2), dtype=np.int32)
+        # blob A, blob B, and a hole inside blob B
+        data[:, 0] = np.array([[0, 0], [10, 0], [10, 10], [0, 10], [0, 0], [0, 0]])
+        data[:, 1] = np.array([[50, 0], [80, 0], [80, 30], [50, 30], [50, 0], [50, 0]])
+        data[:, 2] = np.array([[60, 10], [70, 10], [70, 20], [60, 20], [60, 10], [60, 10]])
+        vertex_count = np.tile(np.array([4, 4, 4], dtype=np.uint32), (num_frames, 1))
+        is_external = np.tile(np.array([True, True, False]), (num_frames, 1))
+        contour_group = np.tile(np.array([0, 1, 1], dtype=np.uint32), (num_frames, 1))
+
+        cs = ContourSeries(
+            name="contours",
+            reference_frame="(0, 0) is the top left corner of the video frame.",
+            description="Instance split in two, the second part holding a hole.",
+            data=data,
+            vertex_count=vertex_count,
+            is_external=is_external,
+            contour_group=contour_group,
+            rate=30.0,
+        )
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="d")
+        behavior_pm.add(cs)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            read_cs = io.read().processing["behavior"]["contours"]
+            np.testing.assert_array_equal(read_cs.contour_group[:], contour_group)
+            np.testing.assert_array_equal(read_cs.is_external[:], is_external)
+
+            # the hole reads back attributed to the blob that contains it
+            groups, external = read_cs.contour_group[0], read_cs.is_external[0]
+            (hole,) = np.flatnonzero(~np.asarray(external))
+            owners = [i for i in np.flatnonzero(np.asarray(external)) if groups[i] == groups[hole]]
+            assert owners == [1]
+
+    def test_roundtrip_without_contour_group(self):
+        """Omitting contour_group must survive as an absent field, not a zero-filled one."""
+        cs = ContourSeries(
+            name="contours",
+            reference_frame="(0, 0) is the top left corner of the video frame.",
+            data=np.zeros((4, 2, 5, 2)),
+            vertex_count=np.full((4, 2), 5, dtype=np.uint32),
+            is_external=np.ones((4, 2), dtype=bool),
+            rate=30.0,
+        )
+        self.nwbfile.create_processing_module(name="behavior", description="d").add(cs)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
+            assert io.read().processing["behavior"]["contours"].contour_group is None

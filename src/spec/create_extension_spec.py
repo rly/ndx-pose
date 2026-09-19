@@ -145,6 +145,97 @@ def main():
         ],
     )
 
+    contour_series = NWBGroupSpec(
+        neurodata_type_def="ContourSeries",
+        neurodata_type_inc="TimeSeries",
+        doc=(
+            "Polygon contours outlining a segmented instance over time. Each frame holds a fixed number of "
+            "contour slots, and 'vertex_count' gives the number of valid vertices in each slot, so trailing "
+            "slots and trailing vertices are unused padding. More than one contour may be needed to describe "
+            "an instance on a frame: an outer boundary plus one or more holes, or a body that an occluder "
+            "splits into disjoint parts. Vertex positions are in the frame of reference described by "
+            "'reference_frame'. Store this inside a PoseEstimation object to associate the contours "
+            "with the pose estimates and subject for the same instance."
+        ),
+        datasets=[
+            NWBDatasetSpec(
+                name="data",
+                doc=(
+                    "Contour vertex positions (x, y). Only the first 'vertex_count' vertices of each contour "
+                    "slot hold a position; the remaining values are padding and carry no meaning."
+                ),
+                dtype="numeric",
+                dims=["num_frames", "num_contours", "num_vertices", "x, y"],
+                shape=[None, None, None, 2],
+                attributes=[
+                    NWBAttributeSpec(
+                        name="unit",
+                        dtype="text",
+                        default_value="pixels",
+                        doc=(
+                            "Base unit of measurement for working with the data. The default value "
+                            "is 'pixels'. Actual stored values are not necessarily stored in these units. "
+                            "To access the data in these units, multiply 'data' by 'conversion'."
+                        ),
+                        required=True,
+                    ),
+                ],
+            ),
+            NWBDatasetSpec(
+                name="vertex_count",
+                doc=(
+                    "Number of valid vertices in each contour slot. 0 means the slot holds no contour on "
+                    "that frame. No count may exceed the number of vertices each slot of 'data' holds."
+                ),
+                dtype="uint32",
+                dims=["num_frames", "num_contours"],
+                shape=[None, None],
+            ),
+            NWBDatasetSpec(
+                name="is_external",
+                doc=(
+                    "True where the contour slot is an external boundary, i.e. an outer edge of the instance, "
+                    "and False where it is an internal boundary, i.e. a hole. Has no meaning where "
+                    "'vertex_count' is 0. A producer that retrieves only outer boundaries sets this "
+                    "True throughout."
+                ),
+                dtype="bool",
+                dims=["num_frames", "num_contours"],
+                shape=[None, None],
+            ),
+            NWBDatasetSpec(
+                name="contour_group",
+                doc=(
+                    "Index grouping contours into connected components within a frame. Contours describing "
+                    "the same component share a value, and a hole carries the value of the component that "
+                    "contains it, so an instance that an occluder splits into disjoint parts keeps each hole "
+                    "with the part it belongs to. Values are arbitrary labels that need only be distinct "
+                    "within a frame, not indices into anything. Has no meaning where 'vertex_count' is 0. "
+                    "Omit this dataset when the component structure is not known; a consumer can then "
+                    "attribute each hole to the smallest external contour containing it, which is correct "
+                    "even when one component lies inside another's hole."
+                ),
+                dtype="uint32",
+                dims=["num_frames", "num_contours"],
+                shape=[None, None],
+                quantity="?",
+            ),
+            NWBDatasetSpec(
+                name="reference_frame",
+                doc=(
+                    "Description defining what the zero-position (0, 0) of the vertex coordinates is and "
+                    "which way each axis increases, e.g. '(0, 0) is the top left corner of the video frame, "
+                    "x increases rightward and y increases downward'. This is the same description a "
+                    "SpatialSeries carries; ContourSeries extends TimeSeries rather than SpatialSeries "
+                    "because the vertex array has more dimensions than a SpatialSeries permits, so the "
+                    "field is declared here instead of inherited. Give the same frame of reference as the "
+                    "PoseEstimationSeries objects describing the same instance."
+                ),
+                dtype="text",
+            ),
+        ],
+    )
+
     pose_estimation = NWBGroupSpec(
         neurodata_type_def="PoseEstimation",
         neurodata_type_inc="NWBDataInterface",
@@ -160,6 +251,11 @@ def main():
             NWBGroupSpec(
                 neurodata_type_inc="PoseEstimationSeries",
                 doc="Estimated position data for each body part.",
+                quantity="*",
+            ),
+            NWBGroupSpec(
+                neurodata_type_inc="ContourSeries",
+                doc="Segmentation contours outlining the instance described by this PoseEstimation.",
                 quantity="*",
             ),
         ],
@@ -551,6 +647,7 @@ def main():
     new_data_types = [
         skeleton,
         pose_estimation_series,
+        contour_series,
         pose_estimation,
         training_frame,
         skeleton_instance,

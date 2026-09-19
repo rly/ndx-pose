@@ -17,6 +17,7 @@ load_namespaces(str(__spec_path))
 from . import io as __io  # import to register custom I/O mappers
 from .pose import (
     CalibratedCamera,
+    ContourSeries,
     MultiCameraPoseEstimation,
     PoseEstimation,
     PoseEstimationSeries,
@@ -32,6 +33,7 @@ from .pose import (
 
 __all__ = [
     "CalibratedCamera",
+    "ContourSeries",
     "MultiCameraPoseEstimation",
     "PoseEstimation",
     "PoseEstimationSeries",

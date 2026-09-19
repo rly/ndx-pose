@@ -1,5 +1,5 @@
 import warnings
-from hdmf.utils import docval, popargs, get_docval, AllowPositional
+from hdmf.utils import docval, popargs, get_docval, get_data_shape, AllowPositional
 from pynwb import register_class, TimeSeries, get_class
 from pynwb.behavior import SpatialSeries
 from pynwb.core import MultiContainerInterface
@@ -90,6 +90,186 @@ class PoseEstimationSeries(SpatialSeries):
         self.confidence = confidence
         self.confidence_definition = confidence_definition
 
+def _shapes_agree(shape_a, shape_b):
+    """Return whether two shapes match, treating a dimension of unknown length as a match.
+
+    hdmf's get_data_shape reports None for a dimension whose length it cannot determine without
+    consuming an iterator, so an unknown dimension is not treated as a mismatch.
+    """
+    if len(shape_a) != len(shape_b):
+        return False
+    return all(a is None or b is None or a == b for a, b in zip(shape_a, shape_b))
+
+
+def _max_value(values):
+    """Return the largest value in an in-memory array, or None when it is not one.
+
+    Only an array that is already in memory is scanned. Finding the maximum of an h5py
+    dataset or a chunk iterator would read the whole array, which for a long recording is
+    the largest thing in the file. numpy arrays expose 'max'; those lazy objects do not.
+    """
+    if isinstance(values, (list, tuple)):
+        maxima = [max(row) for row in values if len(row)]
+        return max(maxima) if maxima else None
+    if not hasattr(values, "max"):
+        return None
+    try:
+        return values.max()
+    except ValueError:  # an empty array has no maximum
+        return None
+
+
+@register_class("ContourSeries", "ndx-pose")
+class ContourSeries(TimeSeries):
+    """Polygon contours outlining a segmented instance over time.
+
+    Each frame holds a fixed number of contour slots. ``vertex_count`` gives the number of valid
+    vertices in each slot, so trailing slots and trailing vertices in ``data`` are unused padding
+    and carry no meaning. More than one contour may be needed to describe an instance on a frame:
+    an outer boundary plus one or more holes, or a body that an occluder splits into disjoint parts.
+    ``is_external`` tells the two apart, without which the polygons cannot be rendered or measured,
+    so it is required. ``contour_group``, when known, records which component each contour belongs
+    to, so a hole stays attached to the part of a split instance that contains it.
+
+    Vertex positions are in the frame of reference described by ``reference_frame``. This type extends
+    TimeSeries rather than SpatialSeries, whose ``data`` may have at most two dimensions, so it declares
+    ``reference_frame`` itself instead of inheriting it.
+
+    Store this inside a PoseEstimation object to associate the contours with the pose estimates and
+    subject for the same instance.
+    """
+
+    __nwbfields__ = ("reference_frame", "vertex_count", "is_external", "contour_group")
+
+    @docval(
+        {
+            "name": "name",
+            "type": str,
+            "doc": "Name of this ContourSeries.",
+        },
+        {
+            "name": "data",
+            "type": ("array_data", "data", TimeSeries),
+            "shape": (None, None, None, 2),
+            "doc": (
+                "Contour vertex positions (x, y), with shape "
+                "(num_frames, num_contours, num_vertices, 2). Only the first 'vertex_count' "
+                "vertices of each contour slot hold a position; the rest are padding."
+            ),
+        },
+        {
+            "name": "reference_frame",
+            "type": str,
+            "doc": (
+                "Description defining what the zero-position (0, 0) of the vertex coordinates is and "
+                "which way each axis increases. Give the same frame of reference as the "
+                "PoseEstimationSeries objects describing the same instance."
+            ),
+        },
+        {
+            "name": "vertex_count",
+            "type": ("array_data", "data"),
+            "shape": (None, None),
+            "doc": (
+                "Number of valid vertices in each contour slot, with shape "
+                "(num_frames, num_contours). 0 means the slot holds no contour on that frame. "
+                "No count may exceed the number of vertices each slot of 'data' holds."
+            ),
+        },
+        {
+            "name": "is_external",
+            "type": ("array_data", "data"),
+            "shape": (None, None),
+            "doc": (
+                "True where the contour slot is an external boundary, i.e. an outer edge of the "
+                "instance, and False where it is an internal boundary, i.e. a hole. Has no meaning "
+                "where 'vertex_count' is 0. A producer that retrieves only outer boundaries sets "
+                "this True throughout."
+            ),
+        },
+        {
+            "name": "contour_group",
+            "type": ("array_data", "data"),
+            "shape": (None, None),
+            "doc": (
+                "Index grouping contours into connected components within a frame. Contours "
+                "describing the same component share a value, and a hole carries the value of the "
+                "component that contains it. Has no meaning where 'vertex_count' is 0. Omit when "
+                "the component structure is not known."
+            ),
+            "default": None,
+        },
+        {
+            "name": "unit",
+            "type": str,
+            "doc": (
+                "Base unit of measurement for working with the data. The default value "
+                "is 'pixels'. Actual stored values are not necessarily stored in these units. "
+                "To access the data in these units, multiply 'data' by 'conversion'."
+            ),
+            "default": "pixels",
+        },
+        *get_docval(
+            TimeSeries.__init__,
+            "conversion",
+            "resolution",
+            "offset",
+            "timestamps",
+            "starting_time",
+            "rate",
+            "comments",
+            "description",
+            "control",
+            "control_description",
+        ),
+        allow_positional=AllowPositional.ERROR,
+    )
+    def __init__(self, **kwargs):
+        """Construct a new ContourSeries representing the outline of a segmented instance over time."""
+        reference_frame, vertex_count, is_external, contour_group = popargs(
+            "reference_frame", "vertex_count", "is_external", "contour_group", kwargs
+        )
+
+        # Passing a TimeSeries as 'data' to link another series resolves to that series' own
+        # array before this runs, so the shape here is the one the file will hold either way.
+        # get_data_shape still reports None for a shape it cannot determine without consuming
+        # an iterator, so skip the cross-check in that case rather than guess at it.
+        data_shape = get_data_shape(kwargs["data"])
+        count_shape = get_data_shape(vertex_count)
+        # Compare only the dimensions both shapes report; the h5py datasets read back from a
+        # file always report concrete lengths.
+        if data_shape is not None and not _shapes_agree(data_shape[:2], count_shape):
+            raise ValueError(
+                "ContourSeries 'vertex_count' shape %s must match the first two dimensions of "
+                "'data' %s (num_frames, num_contours)." % (count_shape, data_shape[:2])
+            )
+        for name, value in (("is_external", is_external), ("contour_group", contour_group)):
+            if value is None:  # only contour_group may be omitted
+                continue
+            value_shape = get_data_shape(value)
+            if not _shapes_agree(count_shape, value_shape):
+                raise ValueError(
+                    "ContourSeries '%s' shape %s must match 'vertex_count' shape %s "
+                    "(num_frames, num_contours)." % (name, value_shape, count_shape)
+                )
+
+        # A count larger than the vertex capacity of 'data' would silently truncate a
+        # contour: a reader taking data[frame, slot, :vertex_count] would get fewer
+        # vertices than it was promised, with nothing to signal the loss.
+        capacity = data_shape[2] if data_shape is not None and len(data_shape) > 2 else None
+        observed = _max_value(vertex_count)
+        if capacity is not None and observed is not None and observed > capacity:
+            raise ValueError(
+                "ContourSeries 'vertex_count' has a maximum of %d, but each contour slot of "
+                "'data' holds only %d vertices." % (observed, capacity)
+            )
+
+        super().__init__(**kwargs)
+        self.reference_frame = reference_frame
+        self.vertex_count = vertex_count
+        self.is_external = is_external
+        self.contour_group = contour_group
+
 
 @register_class("PoseEstimation", "ndx-pose")
 # NOTE: NWB MultiContainerInterface extends NWBDataInterface and HDMF MultiContainerInterface
@@ -105,6 +285,13 @@ class PoseEstimation(MultiContainerInterface):
             "create": "create_pose_estimation_series",
             "type": PoseEstimationSeries,
             "attr": "pose_estimation_series",
+        },
+        {
+            "add": "add_contour_series",
+            "get": "get_contour_series",
+            "create": "create_contour_series",
+            "type": ContourSeries,
+            "attr": "contour_series",
         },
         # NOTE: devices is a list of **linked** Device objects. Because they are linked, we do not set up
         # MultiContainerInterface-generated functions for devices.
@@ -135,6 +322,12 @@ class PoseEstimation(MultiContainerInterface):
             "name": "pose_estimation_series",
             "type": ("array_data", "data"),
             "doc": "Estimated position data for each body part.",
+            "default": None,
+        },
+        {
+            "name": "contour_series",
+            "type": ("array_data", "data"),
+            "doc": "Segmentation contours outlining the instance described by this PoseEstimation.",
             "default": None,
         },
         {
@@ -341,6 +534,7 @@ class PoseEstimation(MultiContainerInterface):
                 warnings.warn(msg, DeprecationWarning)
 
         pose_estimation_series, description = popargs("pose_estimation_series", "description", kwargs)
+        contour_series = popargs("contour_series", kwargs)
         scorer = popargs("scorer", kwargs)
         source_software, source_software_version = popargs("source_software", "source_software_version", kwargs)
         if source_software_version is not None and source_software is None:
@@ -351,6 +545,8 @@ class PoseEstimation(MultiContainerInterface):
         super().__init__(**kwargs)
 
         self.pose_estimation_series = pose_estimation_series
+        if contour_series is not None:
+            self.contour_series = contour_series
         self.description = description
         self.original_videos = original_videos
         self.labeled_videos = labeled_videos

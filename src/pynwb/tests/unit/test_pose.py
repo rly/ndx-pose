@@ -10,6 +10,7 @@ from pynwb.image import ImageSeries
 
 from ndx_pose import (
     CalibratedCamera,
+    ContourSeries,
     MultiCameraPoseEstimation,
     PoseEstimationSeries,
     Skeleton,
@@ -22,6 +23,7 @@ from ndx_pose import (
 )
 from ndx_pose.testing.mock.pose import (
     mock_CalibratedCamera,
+    mock_ContourSeries,
     mock_MultiCameraPoseEstimation,
     mock_PoseEstimation,
     mock_PoseEstimationSeries,
@@ -60,6 +62,246 @@ class TestPoseEstimationSeriesConstructor(TestCase):
         np.testing.assert_array_equal(pes.timestamps, timestamps)
         np.testing.assert_array_equal(pes.confidence, confidence)
         self.assertEqual(pes.confidence_definition, "Softmax output of the deep neural network.")
+
+
+class TestContourSeriesConstructor(TestCase):
+    def test_constructor(self):
+        # 100 frames, up to 3 contours per frame, up to 20 vertices per contour
+        data = np.random.randint(0, 500, size=(100, 3, 20, 2)).astype(np.int32)
+        vertex_count = np.random.randint(0, 21, size=(100, 3)).astype(np.uint32)
+        is_external = np.random.rand(100, 3) > 0.5
+        timestamps = np.linspace(0, 10, num=100)  # a timestamp for every frame
+        cs = ContourSeries(
+            name="contours",
+            reference_frame="(0, 0) is the top left corner of the video frame.",
+            description="Outline of the segmented animal.",
+            data=data,
+            vertex_count=vertex_count,
+            is_external=is_external,
+            unit="pixels",
+            timestamps=timestamps,
+        )
+
+        self.assertEqual(cs.name, "contours")
+        self.assertEqual(cs.description, "Outline of the segmented animal.")
+        np.testing.assert_array_equal(cs.data, data)
+        np.testing.assert_array_equal(cs.vertex_count, vertex_count)
+        np.testing.assert_array_equal(cs.is_external, is_external)
+        self.assertEqual(cs.unit, "pixels")
+        self.assertEqual(cs.reference_frame, "(0, 0) is the top left corner of the video frame.")
+        np.testing.assert_array_equal(cs.timestamps, timestamps)
+
+    def test_reference_frame_is_required(self):
+        """Contours are spatial, so the frame their coordinates are in must be recorded.
+
+        ContourSeries extends TimeSeries, which carries no coordinate convention of its own,
+        so without this a reader has no way to know where (0, 0) is or which way y points.
+        """
+        with self.assertRaises(TypeError):
+            ContourSeries(
+                name="contours",
+                data=np.zeros((4, 2, 5, 2)),
+                vertex_count=np.zeros((4, 2), dtype=np.uint32),
+                is_external=np.ones((4, 2), dtype=bool),
+                rate=30.0,
+            )
+
+    def test_data_may_link_another_series(self):
+        """'data' may link another TimeSeries, as it may on any TimeSeries."""
+        base = ContourSeries(
+            name="base",
+            reference_frame="(0, 0) is the top left corner of the video frame.",
+            data=np.zeros((4, 2, 5, 2), dtype=np.int32),
+            vertex_count=np.full((4, 2), 5, dtype=np.uint32),
+            is_external=np.ones((4, 2), dtype=bool),
+            rate=30.0,
+        )
+        linked = ContourSeries(
+            name="linked",
+            reference_frame="(0, 0) is the top left corner of the video frame.",
+            data=base,
+            vertex_count=np.full((4, 2), 5, dtype=np.uint32),
+            is_external=np.ones((4, 2), dtype=bool),
+            rate=30.0,
+        )
+        np.testing.assert_array_equal(linked.data, base.data)
+
+    def test_linked_data_is_still_shape_checked(self):
+        """A linked 'data' resolves to the target's array, so the cross-check still applies."""
+        base = ContourSeries(
+            name="base",
+            reference_frame="(0, 0) is the top left corner of the video frame.",
+            data=np.zeros((4, 2, 5, 2), dtype=np.int32),
+            vertex_count=np.full((4, 2), 5, dtype=np.uint32),
+            is_external=np.ones((4, 2), dtype=bool),
+            rate=30.0,
+        )
+        msg = (
+            "ContourSeries 'vertex_count' shape (4, 9) must match the first two dimensions of "
+            "'data' (4, 2) (num_frames, num_contours)."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            ContourSeries(
+                name="linked",
+                reference_frame="(0, 0) is the top left corner of the video frame.",
+                data=base,
+                vertex_count=np.full((4, 9), 5, dtype=np.uint32),
+                is_external=np.ones((4, 9), dtype=bool),
+                rate=30.0,
+            )
+
+    def test_is_external_is_required(self):
+        """Polygons that don't say which are holes can't be rendered or measured.
+
+        A producer that retrieves only outer boundaries passes True throughout, so this
+        costs nothing to supply.
+        """
+        with self.assertRaises(TypeError):
+            ContourSeries(
+                name="contours",
+                reference_frame="(0, 0) is the top left corner of the video frame.",
+                data=np.zeros((4, 2, 5, 2)),
+                vertex_count=np.zeros((4, 2), dtype=np.uint32),
+                rate=30.0,
+            )
+
+    def test_vertex_count_shape_mismatch_raises(self):
+        msg = (
+            "ContourSeries 'vertex_count' shape (4, 3) must match the first two dimensions of "
+            "'data' (4, 2) (num_frames, num_contours)."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            ContourSeries(
+                name="contours",
+                reference_frame="(0, 0) is the top left corner of the video frame.",
+                data=np.zeros((4, 2, 5, 2)),
+                vertex_count=np.zeros((4, 3), dtype=np.uint32),
+                is_external=np.ones((4, 3), dtype=bool),
+                rate=30.0,
+            )
+
+    def test_is_external_shape_mismatch_raises(self):
+        msg = (
+            "ContourSeries 'is_external' shape (4, 3) must match 'vertex_count' shape (4, 2) "
+            "(num_frames, num_contours)."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            ContourSeries(
+                name="contours",
+                reference_frame="(0, 0) is the top left corner of the video frame.",
+                data=np.zeros((4, 2, 5, 2)),
+                vertex_count=np.zeros((4, 2), dtype=np.uint32),
+                is_external=np.zeros((4, 3), dtype=bool),
+                rate=30.0,
+            )
+
+    def test_vertex_count_beyond_capacity_raises(self):
+        """A count larger than the vertex capacity would silently truncate a contour.
+
+        A reader taking data[frame, slot, :vertex_count] would get fewer vertices than it
+        was promised, with nothing to signal the loss, so reject it at construction.
+        """
+        msg = (
+            "ContourSeries 'vertex_count' has a maximum of 6, but each contour slot of "
+            "'data' holds only 5 vertices."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            ContourSeries(
+                name="contours",
+                reference_frame="(0, 0) is the top left corner of the video frame.",
+                data=np.zeros((4, 2, 5, 2)),
+                vertex_count=np.full((4, 2), 6, dtype=np.uint32),
+                is_external=np.ones((4, 2), dtype=bool),
+                rate=30.0,
+            )
+
+    def test_vertex_count_at_capacity_is_allowed(self):
+        """Filling every vertex slot is the ordinary case, not an off-by-one."""
+        cs = ContourSeries(
+            name="contours",
+            reference_frame="(0, 0) is the top left corner of the video frame.",
+            data=np.zeros((4, 2, 5, 2)),
+            vertex_count=np.full((4, 2), 5, dtype=np.uint32),
+            is_external=np.ones((4, 2), dtype=bool),
+            rate=30.0,
+        )
+        self.assertEqual(cs.vertex_count.max(), 5)
+
+    def test_data_must_be_four_dimensional(self):
+        with self.assertRaises(ValueError):
+            ContourSeries(
+                name="contours",
+                reference_frame="(0, 0) is the top left corner of the video frame.",
+                data=np.zeros((4, 5, 2)),
+                vertex_count=np.zeros((4, 2), dtype=np.uint32),
+                is_external=np.ones((4, 2), dtype=bool),
+                rate=30.0,
+            )
+
+    def test_constructor_contour_group(self):
+        """contour_group records which component each contour belongs to."""
+        # two disjoint blobs, and a hole belonging to the second one
+        data = np.zeros((4, 3, 6, 2), dtype=np.int32)
+        vertex_count = np.full((4, 3), 6, dtype=np.uint32)
+        is_external = np.tile(np.array([True, True, False]), (4, 1))
+        contour_group = np.tile(np.array([0, 1, 1], dtype=np.uint32), (4, 1))
+
+        cs = ContourSeries(
+            name="contours",
+            reference_frame="(0, 0) is the top left corner of the video frame.",
+            data=data,
+            vertex_count=vertex_count,
+            is_external=is_external,
+            contour_group=contour_group,
+            rate=30.0,
+        )
+
+        np.testing.assert_array_equal(cs.contour_group, contour_group)
+        # the hole is attributed to the second blob, not the first
+        assert cs.contour_group[0, 2] == cs.contour_group[0, 1]
+        assert cs.contour_group[0, 2] != cs.contour_group[0, 0]
+
+    def test_contour_group_is_optional(self):
+        """contour_group is omitted when the component structure is not known."""
+        cs = ContourSeries(
+            name="contours",
+            reference_frame="(0, 0) is the top left corner of the video frame.",
+            data=np.zeros((4, 2, 5, 2)),
+            vertex_count=np.zeros((4, 2), dtype=np.uint32),
+            is_external=np.ones((4, 2), dtype=bool),
+            rate=30.0,
+        )
+        self.assertIsNone(cs.contour_group)
+
+    def test_contour_group_shape_mismatch_raises(self):
+        msg = (
+            "ContourSeries 'contour_group' shape (4, 3) must match 'vertex_count' shape (4, 2) "
+            "(num_frames, num_contours)."
+        )
+        with self.assertRaisesWith(ValueError, msg):
+            ContourSeries(
+                name="contours",
+                reference_frame="(0, 0) is the top left corner of the video frame.",
+                data=np.zeros((4, 2, 5, 2)),
+                vertex_count=np.zeros((4, 2), dtype=np.uint32),
+                is_external=np.ones((4, 2), dtype=bool),
+                contour_group=np.zeros((4, 3), dtype=np.uint32),
+                rate=30.0,
+            )
+
+    def test_in_pose_estimation(self):
+        """A ContourSeries can be held by a PoseEstimation alongside the pose estimates."""
+        cs = mock_ContourSeries(name="contours")
+        pes = mock_PoseEstimationSeries(name="front_left_paw")
+        pe = PoseEstimation(name="subject1", pose_estimation_series=[pes], contour_series=[cs])
+
+        self.assertEqual(pe.contour_series["contours"], cs)
+        self.assertEqual(pe.pose_estimation_series["front_left_paw"], pes)
+
+    def test_pose_estimation_without_contours(self):
+        """contour_series is optional, so existing PoseEstimation usage is unaffected."""
+        pe = PoseEstimation(name="subject1", pose_estimation_series=[mock_PoseEstimationSeries()])
+        self.assertEqual(dict(pe.contour_series), {})
 
 
 class TestSkeleton(TestCase):
