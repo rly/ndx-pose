@@ -342,8 +342,8 @@ class TestPoseEstimationConstructor(TestCase):
     def test_constructor_nodes_edges_raises(self):
         """Test that the deprecated 'nodes' and 'edges' arguments raise when creating a new PoseEstimation.
 
-        The Skeleton they describe would be reachable only from the PoseEstimation object, so the resulting
-        link would have no target in the NWBFile and the object could not be written.
+        The Skeleton they describe has no parent, so writing the PoseEstimation object fails unless that
+        Skeleton is separately added to the NWBFile.
         """
         front_left_paw = mock_PoseEstimationSeries(
             name="front_left_paw",
@@ -360,10 +360,9 @@ class TestPoseEstimationConstructor(TestCase):
 
         msg = (
             "The 'nodes' and 'edges' constructor arguments are deprecated and cannot be used to create a new "
-            "PoseEstimation object. The Skeleton they describe is reachable only from this object, so the "
-            "resulting link has no target in the NWBFile and the object cannot be written. Construct a Skeleton "
-            "with these nodes and edges, place it in a Skeletons object in the NWBFile, and pass it as the "
-            "'skeleton' argument."
+            "PoseEstimation object. The Skeleton they describe has no parent, so writing the object fails unless "
+            "that Skeleton is separately added to the NWBFile. Construct a Skeleton with these nodes and edges, "
+            "place it in a Skeletons object in the NWBFile, and pass it as the 'skeleton' argument."
         )
         with self.assertRaisesWith(ValueError, msg):
             PoseEstimation(

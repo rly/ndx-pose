@@ -109,7 +109,11 @@ def mock_PoseEstimation(
     """
     skeleton = skeleton or mock_Skeleton()
     pose_estimation_series = pose_estimation_series or [
-        mock_PoseEstimationSeries(name=node, data=np.arange(20, dtype=np.float64).reshape((10, 2)), unit="pixels")
+        mock_PoseEstimationSeries(
+            name=node,
+            data=np.arange(20, dtype=np.float64).reshape((10, 2)),
+            reference_frame="(0,0) corresponds to the top left corner of the video frame.",
+        )
         for node in skeleton.nodes
     ]
     pe = PoseEstimation(

@@ -289,14 +289,15 @@ class PoseEstimation(MultiContainerInterface):
             if not self._in_construct_mode:
                 raise ValueError(
                     "The 'nodes' and 'edges' constructor arguments are deprecated and cannot be used to create a "
-                    "new PoseEstimation object. The Skeleton they describe is reachable only from this object, so "
-                    "the resulting link has no target in the NWBFile and the object cannot be written. Construct a "
-                    "Skeleton with these nodes and edges, place it in a Skeletons object in the NWBFile, and pass "
-                    "it as the 'skeleton' argument."
+                    "new PoseEstimation object. The Skeleton they describe has no parent, so writing the object "
+                    "fails unless that Skeleton is separately added to the NWBFile. Construct a Skeleton with these "
+                    "nodes and edges, place it in a Skeletons object in the NWBFile, and pass it as the 'skeleton' "
+                    "argument."
                 )
             # Files written before ndx-pose 0.2.0 store nodes and edges on the PoseEstimation group itself. The
             # Skeleton built here carries those values so that they are reachable as PoseEstimation.skeleton.
-            # It has no parent, so a PoseEstimation constructed this way cannot be written.
+            # It has no parent, so writing a PoseEstimation constructed this way fails unless that Skeleton is
+            # added to the NWBFile.
             skeleton = Skeleton(name="subject", nodes=nodes, edges=edges)
 
         # device must be added to the NWBFile before being linked to from a PoseEstimation object.

@@ -568,7 +568,7 @@ class TestMultiCameraPoseEstimationRoundtrip(TestCase):
             PoseEstimation(
                 name="PoseEstimation_camera1",
                 pose_estimation_series=[
-                    mock_PoseEstimationSeries(name=node, data=pixel_data, unit="pixels") for node in skeleton.nodes
+                    mock_PoseEstimationSeries(name=node, data=pixel_data) for node in skeleton.nodes
                 ],
                 description="2D pose estimates from camera1.",
                 device=camera1,
@@ -578,7 +578,7 @@ class TestMultiCameraPoseEstimationRoundtrip(TestCase):
             PoseEstimation(
                 name="PoseEstimation_camera2",
                 pose_estimation_series=[
-                    mock_PoseEstimationSeries(name=node, data=pixel_data, unit="pixels") for node in skeleton.nodes
+                    mock_PoseEstimationSeries(name=node, data=pixel_data) for node in skeleton.nodes
                 ],
                 description="2D pose estimates from camera2.",
                 device=camera2,

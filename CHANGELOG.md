@@ -4,10 +4,10 @@
 
 ### Breaking changes
 - Passing the deprecated `nodes` and `edges` constructor arguments to create a new `PoseEstimation` object
-  raises a `ValueError`. The `Skeleton` built from them is reachable only from the `PoseEstimation` object, so
-  the resulting link has no target in the NWBFile and the object fails to write with an
-  `OrphanContainerBuildError`. Construct a `Skeleton`, place it in a `Skeletons` object in the NWBFile, and
-  pass it as `skeleton`. Files written before ndx-pose 0.2.0, which store `nodes` and `edges` on the
+  raises a `ValueError`. The `Skeleton` built from them has no parent, so writing the object fails with an
+  `OrphanContainerBuildError` unless that `Skeleton` is separately added to the NWBFile (e.g., by placing
+  `PoseEstimation.skeleton` in a `Skeletons` object). Code that relies on that pattern must be updated.
+  Construct a `Skeleton`, place it in a `Skeletons` object in the NWBFile, and pass it as `skeleton`. Files written before ndx-pose 0.2.0, which store `nodes` and `edges` on the
   `PoseEstimation` group, still read as before. @rly (#65)
 - Reading an NWB file written with ndx-pose < 0.4.0 in which a single `PoseEstimation` object links more than
   one camera `Device` raises an error. A `PoseEstimation` object covers one camera view as of 0.4.0, so there
