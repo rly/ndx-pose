@@ -1,4 +1,6 @@
 import datetime
+import warnings
+
 import numpy as np
 
 from pynwb import NWBFile
@@ -230,6 +232,23 @@ class TestPoseEstimationConstructor(TestCase):
                 devices=[self.nwbfile.devices["camera1"], self.nwbfile.devices["camera2"]],
             )
 
+    def test_deprecated_devices_empty(self):
+        """Test that an empty 'devices' list sets no device and does not warn.
+
+        An empty list carries no device, so it is not a use of the deprecated behavior.
+        """
+        skeleton = mock_Skeleton()
+        pose_estimation_series = [mock_PoseEstimationSeries(name=name) for name in skeleton.nodes]
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            pe = PoseEstimation(
+                pose_estimation_series=pose_estimation_series,
+                skeleton=skeleton,
+                devices=[],
+            )
+        self.assertIsNone(pe.device)
+
     def test_device_and_devices_raises(self):
         """Test that passing both 'device' and 'devices' raises an error."""
         skeleton = mock_Skeleton()
@@ -320,8 +339,12 @@ class TestPoseEstimationConstructor(TestCase):
             )
         np.testing.assert_array_equal(pe.dimensions, np.array([[640, 480]], dtype="uint16"))
 
-    def test_constructor_nodes_edges(self):
-        """Test the old constructor for PoseEstimation with nodes and edges."""
+    def test_constructor_nodes_edges_raises(self):
+        """Test that the deprecated 'nodes' and 'edges' arguments raise when creating a new PoseEstimation.
+
+        The Skeleton they describe has no parent, so writing the PoseEstimation object fails unless that
+        Skeleton is separately added to the NWBFile.
+        """
         front_left_paw = mock_PoseEstimationSeries(
             name="front_left_paw",
         )
@@ -336,11 +359,13 @@ class TestPoseEstimationConstructor(TestCase):
         pose_estimation_series = [front_left_paw, body, front_right_paw]
 
         msg = (
-            "The 'nodes' and 'edges' constructor arguments are deprecated. Please use the 'skeleton' argument instead. "
-            "These will be removed in a future release."
+            "The 'nodes' and 'edges' constructor arguments are deprecated and cannot be used to create a new "
+            "PoseEstimation object. The Skeleton they describe has no parent, so writing the object fails unless "
+            "that Skeleton is separately added to the NWBFile. Construct a Skeleton with these nodes and edges, "
+            "place it in a Skeletons object in the NWBFile, and pass it as the 'skeleton' argument."
         )
-        with self.assertWarnsWith(DeprecationWarning, msg):
-            pe = PoseEstimation(
+        with self.assertRaisesWith(ValueError, msg):
+            PoseEstimation(
                 pose_estimation_series=pose_estimation_series,
                 description="Estimated positions of front paws using DeepLabCut.",
                 device=self.nwbfile.devices["camera1"],
@@ -350,16 +375,16 @@ class TestPoseEstimationConstructor(TestCase):
                 nodes=["front_left_paw", "body", "front_right_paw"],
                 edges=np.array([[0, 1], [1, 2]], dtype="uint8"),
             )
-        self.assertEqual(pe.nodes, ["front_left_paw", "body", "front_right_paw"])
-        np.testing.assert_array_equal(pe.edges, np.array([[0, 1], [1, 2]], dtype="uint8"))
-        skeleton = Skeleton(
-            name="subject",
-            nodes=["front_left_paw", "body", "front_right_paw"],
-            edges=np.array([[0, 1], [1, 2]], dtype="uint8"),
-        )
-        self.assertEqual(pe.skeleton.name, skeleton.name)
-        self.assertEqual(pe.skeleton.nodes, skeleton.nodes)
-        np.testing.assert_array_equal(pe.skeleton.edges, skeleton.edges)
+
+    def test_constructor_nodes_edges_with_skeleton_raises(self):
+        """Test that passing 'nodes' or 'edges' together with 'skeleton' raises."""
+        skeleton = mock_Skeleton()
+        msg = "Cannot specify 'skeleton' with 'nodes' or 'edges'."
+        with self.assertRaisesWith(ValueError, msg):
+            PoseEstimation(
+                skeleton=skeleton,
+                nodes=["front_left_paw", "body", "front_right_paw"],
+            )
 
     def test_constructor_source_video(self):
         """Test that source_video link is set correctly."""

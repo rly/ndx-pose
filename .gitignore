@@ -1,6 +1,9 @@
 # output NWB files
 *.nwb
 
+# NWB files written by previous versions of this package, read by the back-compat tests
+!src/pynwb/tests/back_compat/*.nwb
+
 # generated docs
 docs/source/_format_auto_docs
 

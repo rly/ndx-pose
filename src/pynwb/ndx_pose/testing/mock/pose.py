@@ -101,10 +101,21 @@ def mock_PoseEstimation(
 ):
     """Create a mock PoseEstimation object, representing pose estimates from a single camera view.
 
-    NWBFile should be provided so that the device and skeleton can be added to the NWBFile.
+    NWBFile should be provided so that the device can be added to it. The skeleton is added to the NWBFile
+    only when add_to_nwbfile is True.
+
+    The default pose_estimation_series hold (x, y) positions in pixel space, matching the single camera view
+    that a PoseEstimation object represents.
     """
     skeleton = skeleton or mock_Skeleton()
-    pose_estimation_series = pose_estimation_series or [mock_PoseEstimationSeries(name=node) for node in skeleton.nodes]
+    pose_estimation_series = pose_estimation_series or [
+        mock_PoseEstimationSeries(
+            name=node,
+            data=np.arange(20, dtype=np.float64).reshape((10, 2)),
+            reference_frame="(0,0) corresponds to the top left corner of the video frame.",
+        )
+        for node in skeleton.nodes
+    ]
     pe = PoseEstimation(
         name=name or "PoseEstimation",
         pose_estimation_series=pose_estimation_series,

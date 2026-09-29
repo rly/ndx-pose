@@ -129,7 +129,7 @@ also use ndx-pose.
 ## Diagram of pose estimation types
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', "primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', 'primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
 
 classDiagram
     direction LR
@@ -174,7 +174,7 @@ classDiagram
             description : str, optional
             scorer : str, optional
             source_software : str, optional
-            source_software_version : str, optional
+            source_software__version : str, optional
             PoseEstimationSeries (3D world-space)
             PoseEstimation (one per camera view)
             Skeleton, link, optional
@@ -202,6 +202,7 @@ classDiagram
     PoseEstimation --> Skeleton : links to
     PoseEstimation --> Device : links to (device)
     PoseEstimation --> ImageSeries : links to (source_video)
+    PoseEstimation --> ImageSeries : links to (labeled_video)
 
     CalibratedCamera --|> Device : extends
 
@@ -215,7 +216,7 @@ classDiagram
 ## Diagram of all types
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', "primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#ffffff', 'primaryBorderColor': '#144E73', 'lineColor': '#D96F32'}}}%%
 
 classDiagram
     direction LR
@@ -260,7 +261,7 @@ classDiagram
             description : str, optional
             scorer : str, optional
             source_software : str, optional
-            source_software_version : str, optional
+            source_software__version : str, optional
             PoseEstimationSeries (3D world-space)
             PoseEstimation (one per camera view)
             Skeleton, link, optional
@@ -312,7 +313,7 @@ classDiagram
         }
 
         class PoseTraining {
-            <<NWBDataInterface>>>
+            <<NWBDataInterface>>
             training_frames : TrainingFrames, optional
             source_videos : SourceVideos, optional
         }
@@ -327,6 +328,7 @@ classDiagram
     PoseEstimation --> Skeleton : links to
     PoseEstimation --> Device : links to (device)
     PoseEstimation --> ImageSeries : links to (source_video)
+    PoseEstimation --> ImageSeries : links to (labeled_video)
 
     CalibratedCamera --|> Device : extends
 
@@ -344,7 +346,7 @@ classDiagram
     TrainingFrame --> Image : links to
 
     SkeletonInstances --o SkeletonInstance : contains 0 or more
-    SkeletonInstance --o Skeleton : links to
+    SkeletonInstance --> Skeleton : links to
 
     SourceVideos --o ImageSeries : contains 0 or more
 

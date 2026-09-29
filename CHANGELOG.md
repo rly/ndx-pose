@@ -3,6 +3,12 @@
 ## ndx-pose 0.4.0 (upcoming)
 
 ### Breaking changes
+- Passing the deprecated `nodes` and `edges` constructor arguments to create a new `PoseEstimation` object
+  raises a `ValueError`. The `Skeleton` built from them has no parent, so writing the object fails with an
+  `OrphanContainerBuildError` unless that `Skeleton` is separately added to the NWBFile (e.g., by placing
+  `PoseEstimation.skeleton` in a `Skeletons` object). Code that relies on that pattern must be updated.
+  Construct a `Skeleton`, place it in a `Skeletons` object in the NWBFile, and pass it as `skeleton`. Files written before ndx-pose 0.2.0, which store `nodes` and `edges` on the
+  `PoseEstimation` group, still read as before. @rly (#65)
 - Reading an NWB file written with ndx-pose < 0.4.0 in which a single `PoseEstimation` object links more than
   one camera `Device` raises an error. A `PoseEstimation` object covers one camera view as of 0.4.0, so there
   is no single `device` to assign those links to. Store each camera view as its own `PoseEstimation` object
@@ -38,6 +44,13 @@
 - `ndx_pose.testing.mock.mock_PoseEstimation` defaults `original_videos`, `labeled_videos`, and `dimensions`
   to `None` instead of sample values, so the mock no longer triggers the deprecation warnings for those three
   arguments. Pass them explicitly to exercise the deprecated fields. @alessandratrapani (#57)
+- Passing an empty list as the deprecated `devices` constructor argument of `PoseEstimation` no longer raises a
+  `DeprecationWarning`. An empty list carries no device, so it is not a use of the deprecated behavior.
+  @rly (#65)
+- The default `pose_estimation_series` of `ndx_pose.testing.mock.mock_PoseEstimation` hold (x, y) positions in
+  pixel space, matching the single camera view that a `PoseEstimation` object represents. @rly (#65)
+- `license` in `pyproject.toml` is the SPDX expression `BSD-3-Clause` (PEP 639), and `LICENSE.txt` is recorded
+  in `license-files` and bundled in the wheel. @rly (#65)
 - `src/spec/create_extension_spec.py` defines `CalibratedCamera` and `MultiCameraPoseEstimation` and the
   updated `PoseEstimation`, and the YAML in `spec/` is regenerated from it. The regenerated
   `CalibratedCamera.intrinsic_matrix` and `CalibratedCamera.rotation_matrix` carry the placeholder dimension

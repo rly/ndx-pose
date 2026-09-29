@@ -94,8 +94,11 @@ class PoseEstimationSeries(SpatialSeries):
 @register_class("PoseEstimation", "ndx-pose")
 # NOTE: NWB MultiContainerInterface extends NWBDataInterface and HDMF MultiContainerInterface
 class PoseEstimation(MultiContainerInterface):
-    """Estimated position data for multiple body parts, computed from the same video with the same tool/algorithm.
-    The timestamps of each child PoseEstimationSeries type should be the same.
+    """Estimated position data for multiple body parts, computed from a single camera view with the same
+    tool/algorithm. The timestamps of each child PoseEstimationSeries type should be the same.
+
+    To store pose estimates from multiple synchronized cameras, add one PoseEstimation object per camera view
+    to a MultiCameraPoseEstimation object, which also holds the shared 3D estimates.
     """
 
     __clsconf__ = [
@@ -256,7 +259,8 @@ class PoseEstimation(MultiContainerInterface):
             "name": "nodes",
             "type": ("array_data", "data"),
             "doc": (
-                "DEPRECATED. Please use the 'skeleton' argument instead. "
+                "DEPRECATED. Please use the 'skeleton' argument instead. Raises when passed to create a new "
+                "PoseEstimation object; accepted only when reading a file written before ndx-pose 0.2.0. "
                 "Array of body part names corresponding to the names of the PoseEstimationSeries objects within "
                 "this container."
             ),
@@ -266,7 +270,8 @@ class PoseEstimation(MultiContainerInterface):
             "name": "edges",
             "type": ("array_data", "data"),
             "doc": (
-                "DEPRECATED. Please use the 'skeleton' argument instead. "
+                "DEPRECATED. Please use the 'skeleton' argument instead. Raises when passed to create a new "
+                "PoseEstimation object; accepted only when reading a file written before ndx-pose 0.2.0. "
                 "Array of pairs of indices corresponding to edges between nodes. Index values correspond to row "
                 "indices of the 'nodes' field. Index values use 0-indexing."
             ),
@@ -281,18 +286,19 @@ class PoseEstimation(MultiContainerInterface):
         if nodes is not None or edges is not None:
             if skeleton is not None:
                 raise ValueError("Cannot specify 'skeleton' with 'nodes' or 'edges'.")
-            # TODO: this Skeleton is normally a link to a Skeleton elsewhere in the file (e.g., in a Skeletons object)
-            # Here, the Skeleton is constructed from the nodes and edges and exists only in this PoseEstimation object
-            # and not as a child; this can have unintended consequences if the file is rewritten with the latest
-            # schema. This is a limitation of the current implementation, and will be addressed in a future release.
-            skeleton = Skeleton(name="subject", nodes=nodes, edges=edges)
-            # warn on new, no warning on construction from existing file
             if not self._in_construct_mode:
-                msg = (
-                    "The 'nodes' and 'edges' constructor arguments are deprecated. Please use the 'skeleton' "
-                    "argument instead. These will be removed in a future release."
+                raise ValueError(
+                    "The 'nodes' and 'edges' constructor arguments are deprecated and cannot be used to create a "
+                    "new PoseEstimation object. The Skeleton they describe has no parent, so writing the object "
+                    "fails unless that Skeleton is separately added to the NWBFile. Construct a Skeleton with these "
+                    "nodes and edges, place it in a Skeletons object in the NWBFile, and pass it as the 'skeleton' "
+                    "argument."
                 )
-                warnings.warn(msg, DeprecationWarning)
+            # Files written before ndx-pose 0.2.0 store nodes and edges on the PoseEstimation group itself. The
+            # Skeleton built here carries those values so that they are reachable as PoseEstimation.skeleton.
+            # It has no parent, so writing a PoseEstimation constructed this way fails unless that Skeleton is
+            # added to the NWBFile.
+            skeleton = Skeleton(name="subject", nodes=nodes, edges=edges)
 
         # device must be added to the NWBFile before being linked to from a PoseEstimation object.
         # otherwise, it will be added as a child of the PoseEstimation object.
@@ -307,7 +313,7 @@ class PoseEstimation(MultiContainerInterface):
                     "MultiCameraPoseEstimation object." % len(devices)
                 )
             # warn on new, no warning on construction from existing file
-            if not self._in_construct_mode:
+            if len(devices) == 1 and not self._in_construct_mode:
                 msg = (
                     "The 'devices' constructor argument is deprecated. Please use the 'device' argument instead. "
                     "This will be removed in a future release."

@@ -43,8 +43,6 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0  # tags are required to determine the version
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -89,6 +87,6 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
           python -m venv test-wheel-env
-          test-wheel-env/Scripts/activate.bat
+          source test-wheel-env/Scripts/activate
           python -m pip install dist/*-none-any.whl
           python -c "import ndx_pose"
