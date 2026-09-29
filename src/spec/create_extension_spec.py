@@ -78,7 +78,12 @@ def main():
         ],
         links=[
             NWBLinkSpec(
-                doc="The Subject object in the NWB file, if this Skeleton corresponds to the Subject.",
+                doc=(
+                    "DEPRECATED. Please use the 'subject' field of PoseEstimation instead. The Subject object "
+                    "in the NWB file, if this Skeleton corresponds to the Subject. A Skeleton describes a "
+                    "morphology and may be shared by several subjects, so it cannot say which one in a file "
+                    "that describes more than one."
+                ),
                 target_type="Subject",
                 quantity="?",
             ),
@@ -265,6 +270,20 @@ def main():
                         required=False,
                     ),
                 ],
+            ),
+            NWBDatasetSpec(
+                name="subject",
+                neurodata_type_inc="DynamicTableRegion",
+                doc=(
+                    "Region selecting the single row of a subjects table that describes the subject these "
+                    "pose estimates are of. Not needed for a file with one root-level Subject, since every "
+                    "object in such a file is about that subject; this is for a file whose subjects are rows "
+                    "of a table, as in the ndx-multisubjects extension. Absent where the estimates are of no "
+                    "subject at all, as for the arena landmarks a DeepLabCut project stores as unique "
+                    "bodyparts. The 'table' attribute may reference any DynamicTable, so this does not tie "
+                    "ndx-pose to a particular subjects table."
+                ),
+                quantity="?",
             ),
         ],
     )
@@ -544,6 +563,17 @@ def main():
                         required=False,
                     ),
                 ],
+            ),
+            NWBDatasetSpec(
+                name="subject",
+                neurodata_type_inc="DynamicTableRegion",
+                doc=(
+                    "Region selecting the single row of a subjects table that describes the subject these "
+                    "pose estimates are of, with the same meaning as the 'subject' field of PoseEstimation. "
+                    "Every camera view is of the same subject, so a PoseEstimation child either leaves its own "
+                    "'subject' unset or selects the same row of the same table."
+                ),
+                quantity="?",
             ),
         ],
     )
