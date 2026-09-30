@@ -130,6 +130,7 @@ def main():
                 dtype="float32",
                 dims=["num_frames"],
                 shape=[None],
+                quantity="?",
                 attributes=[
                     NWBAttributeSpec(
                         name="definition",
@@ -445,6 +446,7 @@ def main():
                 name="intrinsic_matrix",
                 doc="Intrinsic camera matrix K, encoding focal length and principal point. Shape (3, 3).",
                 dtype="float32",
+                dims=["row", "column"],
                 shape=[3, 3],
                 quantity=1,
             ),
@@ -452,6 +454,7 @@ def main():
                 name="rotation_matrix",
                 doc="Rotation matrix R mapping world coordinates to this camera's coordinate frame. Shape (3, 3).",
                 dtype="float32",
+                dims=["row", "column"],
                 shape=[3, 3],
                 quantity="?",
             ),

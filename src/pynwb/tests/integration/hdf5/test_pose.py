@@ -1,4 +1,6 @@
 import datetime
+import subprocess
+import sys
 import warnings
 
 import numpy as np
@@ -72,6 +74,39 @@ class TestPoseEstimationSeriesRoundtrip(TestCase):
         with NWBHDF5IO(self.path, mode="r", load_namespaces=True) as io:
             read_nwbfile = io.read()
             self.assertContainerEqual(pes, read_nwbfile.processing["behavior"]["front_left_paw"])
+
+    def test_roundtrip_no_confidence(self):
+        """
+        Test that a PoseEstimationSeries written without confidence can be read using only the cached spec.
+
+        The read runs in a separate process that does not import ndx_pose, so pynwb generates the
+        PoseEstimationSeries class from the spec cached in the file.
+        """
+        pes = PoseEstimationSeries(
+            name="front_left_paw",
+            description="Marker placed around fingers of front left paw.",
+            data=np.random.rand(100, 3),
+            unit="pixels",
+            reference_frame="(0,0,0) corresponds to ...",
+            timestamps=np.linspace(0, 10, num=100),
+        )
+        behavior_pm = self.nwbfile.create_processing_module(name="behavior", description="processed behavioral data")
+        behavior_pm.add(pes)
+
+        with NWBHDF5IO(self.path, mode="w") as io:
+            io.write(self.nwbfile)
+
+        read_script = (
+            "import sys\n"
+            "from pynwb import NWBHDF5IO\n"
+            f"with NWBHDF5IO({self.path!r}, mode='r') as io:\n"
+            "    series = io.read().processing['behavior']['front_left_paw']\n"
+            "    assert 'ndx_pose' not in sys.modules\n"
+            "    assert type(series).__name__ == 'PoseEstimationSeries'\n"
+            "    assert series.confidence is None\n"
+        )
+        result = subprocess.run([sys.executable, "-c", read_script], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
 
     def test_roundtrip_link_timestamps(self):
         """
