@@ -21,7 +21,7 @@ This extension consists of several new neurodata types. They are divided into tw
 - `Skeleton` which stores the relationship between the body parts (nodes and edges).
 - `Skeletons` which is a container that stores multiple `Skeleton` objects.
 - `PoseEstimationSeries` which stores the estimated positions (x, y) or (x, y, z) of a body part over time as well as
-  the confidence/likelihood of the estimated positions.
+  optionally the confidence/likelihood of the estimated positions.
 - `PoseEstimation` which stores the estimated position data (`PoseEstimationSeries`) for multiple body parts,
   computed from a single camera view with the same tool/algorithm, and links to the `Device` (camera) used.
 
@@ -140,7 +140,7 @@ classDiagram
             description : str
             timestamps : array[float; dims [frame]]
             data : array[float; dims [frame, [x, y]] or [frame, [x, y, z]]]
-            confidence : array[float; dims [frame]]
+            confidence : array[float; dims [frame]], optional
             reference_frame: str
         }
 
@@ -227,7 +227,7 @@ classDiagram
             description : str
             timestamps : array[float; dims [frame]]
             data : array[float; dims [frame, [x, y]] or [frame, [x, y, z]]]
-            confidence : array[float; dims [frame]]
+            confidence : array[float; dims [frame]], optional
             reference_frame: str
         }
 

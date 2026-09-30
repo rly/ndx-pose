@@ -1,6 +1,6 @@
 # Changelog for ndx-pose
 
-## ndx-pose 0.4.0 (upcoming)
+## ndx-pose 0.4.0 (September 30, 2026)
 
 ### Breaking changes
 - Passing the deprecated `nodes` and `edges` constructor arguments to create a new `PoseEstimation` object
@@ -52,10 +52,9 @@
 - `license` in `pyproject.toml` is the SPDX expression `BSD-3-Clause` (PEP 639), and `LICENSE.txt` is recorded
   in `license-files` and bundled in the wheel. @rly (#65)
 - `src/spec/create_extension_spec.py` defines `CalibratedCamera` and `MultiCameraPoseEstimation` and the
-  updated `PoseEstimation`, and the YAML in `spec/` is regenerated from it. The regenerated
-  `CalibratedCamera.intrinsic_matrix` and `CalibratedCamera.rotation_matrix` carry the placeholder dimension
-  names `dim_0` and `dim_1` that hdmf assigns to a dataset declared with a shape and no dimension names.
-  @rly (#64)
+  updated `PoseEstimation`, and the YAML in `spec/` is regenerated from it. @rly (#64)
+- The dimensions of `CalibratedCamera.intrinsic_matrix` and `CalibratedCamera.rotation_matrix` are named
+  `row` and `column`. @rly
 
 ### Bug fixes
 - Set `num_samples` on the external `ImageSeries` objects used in the mocks, tests, and examples. pynwb 4.0
@@ -64,6 +63,11 @@
 - `PoseEstimation` now raises when `source_software_version` is set without `source_software`. The version is
   stored as an attribute on the `source_software` dataset, so it was previously dropped silently on roundtrip.
   @h-mayorquin (#63)
+- The `confidence` dataset of `PoseEstimationSeries` is optional in the schema, matching the Python API, where
+  it defaults to `None`. A `PoseEstimationSeries` written without `confidence` can be read without importing
+  `ndx_pose`. Files written with ndx-pose < 0.4.0 that lack `confidence` still record it as required in their
+  cached spec, so reading them requires importing `ndx_pose`. @rly (#61)
+
 
 ## ndx-pose 0.3.0 (June 2, 2026)
 
