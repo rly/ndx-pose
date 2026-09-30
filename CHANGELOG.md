@@ -54,7 +54,7 @@
 - `src/spec/create_extension_spec.py` defines `CalibratedCamera` and `MultiCameraPoseEstimation` and the
   updated `PoseEstimation`, and the YAML in `spec/` is regenerated from it. @rly (#64)
 - The dimensions of `CalibratedCamera.intrinsic_matrix` and `CalibratedCamera.rotation_matrix` are named
-  `row` and `column`. @rly
+  `row` and `column`. @rly (#68)
 
 ### Bug fixes
 - Set `num_samples` on the external `ImageSeries` objects used in the mocks, tests, and examples. pynwb 4.0
@@ -66,7 +66,7 @@
 - The `confidence` dataset of `PoseEstimationSeries` is optional in the schema, matching the Python API, where
   it defaults to `None`. A `PoseEstimationSeries` written without `confidence` can be read without importing
   `ndx_pose`. Files written with ndx-pose < 0.4.0 that lack `confidence` still record it as required in their
-  cached spec, so reading them requires importing `ndx_pose`. @rly (#61)
+  cached spec, so reading them requires importing `ndx_pose`. Fixes #61. @rly (#68)
 
 
 ## ndx-pose 0.3.0 (June 2, 2026)
